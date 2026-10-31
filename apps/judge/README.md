@@ -35,3 +35,14 @@ directory. Runtime logs and private round data are never scanned or bundled.
 closes the preview. No Twitch or Codex calls occur.
 It uses installed Google Chrome. Run it from a normal terminal if a nested
 macOS sandbox prevents Chrome from launching. A launch failure fails the check.
+
+After deploying the current build, verify the public site with
+`JUDGE_SMOKE_HOSTED=1 pnpm judge:smoke`. This mode never starts a local server or
+builds replacement evidence. The same proof, favicon, console and viewport checks
+run at `https://chat-vs-codex-judge.vercel.app`.
+
+The `Judge smoke` workflow runs daily at 15:19 UTC and supports manual dispatch:
+`gh workflow run judge-smoke.yml --repo StephenSook/chat-vs-codex`.
+It uses no secrets and retains screenshots/traces on failure. A newly deployed
+build must include the matching UI changes before dispatching. Scheduled Actions
+can be delayed; inspect the workflow's state and newest run age as well as its result.

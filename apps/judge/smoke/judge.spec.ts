@@ -2,12 +2,22 @@ import { expect, test } from "@playwright/test";
 
 test("committed evidence recomputes in a static preview at desktop and phone widths", async ({
   page,
+  baseURL,
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  page.on("response", (response) => {
+    if (response.status() >= 400)
+      errors.push(`HTTP ${response.status()} ${response.url()}`);
+  });
   const requests: string[] = [];
   page.on("request", (request) => requests.push(request.url()));
-  await page.goto("/");
+  const origin = new URL(baseURL ?? "http://127.0.0.1:4175").origin;
+  const response = await page.goto("/");
+  expect(response?.status()).toBe(200);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
   await expect(page.locator("h1")).toHaveAccessibleName("CHAT vs CODEX");
   await expect(page.locator(".brand-chat")).toHaveCSS(
@@ -106,8 +116,7 @@ test("committed evidence recomputes in a static preview at desktop and phone wid
   expect(errors).toEqual([]);
   expect(
     requests.every(
-      (url) =>
-        url.startsWith("http://127.0.0.1:4175/") || url.startsWith("blob:"),
+      (url) => url.startsWith(`${origin}/`) || url.startsWith("blob:"),
     ),
   ).toBe(true);
 });
