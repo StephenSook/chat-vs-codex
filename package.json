@@ -24,7 +24,7 @@
     "judge:build": "pnpm --filter @chat-vs-codex/judge build",
     "judge:preview": "pnpm --filter @chat-vs-codex/judge preview",
     "judge:smoke": "pnpm --filter @chat-vs-codex/judge smoke",
-    "hotfix:ready": "tsx tools/skills/hotfix-ready/scripts/prepare.ts",
+    "hotfix:ready": "tsx .agents/skills/hotfix-ready/scripts/prepare.ts",
     "breakout:dev": "pnpm --filter @chat-vs-codex/breakout dev",
     "breakout:build": "pnpm --filter @chat-vs-codex/breakout build",
     "breakout:pool": "tsx packages/hotfix-ready/src/cli.ts gate games/breakout",

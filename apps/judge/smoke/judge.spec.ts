@@ -79,7 +79,7 @@ test("committed evidence recomputes in a static preview at desktop and phone wid
     ).toBeVisible();
     await expect(
       second.getByRole("link", { name: "$hotfix-ready skill" }),
-    ).toHaveAttribute("href", /tools\/skills\/hotfix-ready\/SKILL\.md$/);
+    ).toHaveAttribute("href", /\.agents\/skills\/hotfix-ready\/SKILL\.md$/);
     await second
       .getByText("Pool, replay gates + commands", { exact: true })
       .click();

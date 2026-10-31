@@ -9,14 +9,9 @@ pnpm breakout:build
 
 The source contains no mutation comments. `hotfix-sites.json` binds reviewed function spans to their source SHA. Seeded tracks, golden hashes and a 20-second follow-ball canary support the six mutation gates.
 
-The reusable skill is staged in `tools/skills/hotfix-ready/` because this build sandbox denies writes to `.agents/`. Install it from a normal terminal:
-
-```sh
-mkdir -p .agents/skills
-cp -R tools/skills/hotfix-ready .agents/skills/
-```
-
-Then invoke `$hotfix-ready` in Codex. The checked CLI works through `pnpm hotfix:ready` before installation too.
+The reusable [skill](../../.agents/skills/hotfix-ready/SKILL.md) lives in
+`.agents/skills/hotfix-ready/`. Invoke `$hotfix-ready` in Codex, or run its helper
+through `pnpm hotfix:ready`.
 
 ```sh
 pnpm hotfix:ready discover games/breakout src/index.ts

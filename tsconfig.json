@@ -4,7 +4,7 @@
     "packages/**/*.ts",
     "scripts/**/*.ts",
     "games/**/*.ts",
-    "tools/**/*.ts",
+    ".agents/skills/**/*.ts",
     "vitest.config.ts"
   ],
   "exclude": ["games/**/web/**"]

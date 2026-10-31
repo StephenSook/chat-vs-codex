@@ -280,10 +280,7 @@ async function start(): Promise<void> {
       ),
       element("code", `Pool SHA-256 ${game.pool.digest}`),
       element("code", `Game source SHA-256 ${game.pool.sourceDigest}`),
-      element(
-        "code",
-        "pnpm exec tsx tools/skills/hotfix-ready/scripts/prepare.ts gate games/breakout",
-      ),
+      element("code", "pnpm hotfix:ready gate games/breakout"),
       element("code", "pnpm breakout:bench --run"),
       link("Download gated pool", game.pool.path),
       link(
@@ -292,7 +289,7 @@ async function start(): Promise<void> {
       ),
       link(
         "$hotfix-ready skill",
-        `${REPO}/blob/${evidence.commit}/tools/skills/hotfix-ready/SKILL.md`,
+        `${REPO}/blob/${evidence.commit}/.agents/skills/hotfix-ready/SKILL.md`,
       ),
       details(
         "Sites, operators and rejected candidates",
