@@ -2,7 +2,8 @@ import "@fontsource/baloo-2/latin-800.css";
 import "@fontsource/plus-jakarta-sans/latin-700.css";
 import "@fontsource/bungee/latin-400.css";
 import "./style.css";
-import { hashState, INPUT } from "@chat-vs-codex/sim";
+import { INPUT } from "@chat-vs-codex/sim";
+import { connectRoundBridge } from "./bridge.js";
 import {
   createEventBus,
   headStartSeconds,
@@ -33,7 +34,8 @@ declare global {
 
 async function start(): Promise<void> {
   const params = new URLSearchParams(location.search);
-  const mode = params.get("mode") === "play" ? "play" : "replay";
+  const bridgeUrl = params.get("bridge");
+  const mode = bridgeUrl || params.get("mode") === "play" ? "play" : "replay";
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
   const cameraMode: CameraMode =
     params.get("camera") === "overview" ? "overview" : "follow";
@@ -43,13 +45,17 @@ async function start(): Promise<void> {
   let input = 0;
   let lastCountdown: number | null = null;
   let lastRunStatus = "";
+  let bridgeError: string | null = null;
   resizeStage();
   window.addEventListener("resize", resizeStage);
   renderBroadcast(broadcast);
   element("controls").textContent =
     mode === "play" ? "← → MOVE · SPACE JUMP · R RESTART" : "";
-  element("playback-label").textContent =
-    mode === "play" ? "FREE PLAY" : "CLEAN REPLAY";
+  element("playback-label").textContent = bridgeUrl
+    ? "LOCAL ROUND"
+    : mode === "play"
+      ? "FREE PLAY"
+      : "CLEAN REPLAY";
   if (mode === "play") element("round-label").textContent = "FREE PLAY";
 
   const unsubscribe = events.subscribe((event) => {
@@ -64,13 +70,34 @@ async function start(): Promise<void> {
     events,
     snapshot: () => ({
       frame: simulation.state.frame,
-      hash: hashState(simulation.state),
+      hash: simulation.hash(),
       mode,
       filtersEnabled: !motion.matches,
       camera: cameraFor(simulation.state.x, simulation.state.y, cameraMode),
       corruption: corruptionFor(broadcast, performance.now(), motion.matches),
     }),
   };
+  const disconnectBridge = bridgeUrl
+    ? connectRoundBridge(bridgeUrl, {
+        simulation,
+        events,
+        onError(error) {
+          bridgeError = error.message;
+          element("run-status").title = error.message;
+          console.error(error);
+        },
+        onConnection(connected) {
+          if (
+            connected &&
+            bridgeError === "Round connection lost; reconnecting"
+          )
+            bridgeError = null;
+        },
+        onState(state) {
+          if (state.phase === "preparing") bridgeError = null;
+        },
+      })
+    : () => {};
 
   function key(event: KeyboardEvent): void {
     if (mode !== "play") return;
@@ -114,11 +141,13 @@ async function start(): Promise<void> {
       lastCountdown = countdown;
       renderClock(broadcast, nowMs);
     }
-    const status = !simulation.state.alive
-      ? "ϟ YOU DIED"
-      : simulation.state.won
-        ? "✓ FLAG REACHED"
-        : "RUNNING";
+    const status = bridgeError
+      ? "ROUND DISCONNECTED"
+      : !simulation.state.alive
+        ? "ϟ YOU DIED"
+        : simulation.state.won
+          ? "✓ FLAG REACHED"
+          : "RUNNING";
     if (lastRunStatus !== status) {
       element("run-status").textContent = status;
       lastRunStatus = status;
@@ -130,6 +159,7 @@ async function start(): Promise<void> {
     "pagehide",
     () => {
       unsubscribe();
+      disconnectBridge();
       window.removeEventListener("resize", resizeStage);
       window.removeEventListener("keydown", key);
       window.removeEventListener("keyup", key);

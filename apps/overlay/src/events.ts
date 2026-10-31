@@ -8,7 +8,13 @@ export type CodexStep =
   | { kind: "tests" };
 
 export type OverlayEvent =
-  | { type: "round.started"; id: string; number: number; atMs: number }
+  | {
+      type: "round.started";
+      id: string;
+      number: number;
+      atMs: number;
+      headStartMs?: number;
+    }
   | { type: "bug.active"; roundId: string; intensity: number }
   | { type: "bug.named"; roundId: string; name: string }
   | {
@@ -52,6 +58,7 @@ export interface BroadcastState {
   roundId: string | null;
   round: number;
   startedAtMs: number | null;
+  headStartMs: number;
   chat: number;
   codex: number;
   deaths: number;
@@ -68,6 +75,7 @@ export function initialBroadcast(): BroadcastState {
     roundId: null,
     round: 0,
     startedAtMs: null,
+    headStartMs: 15000,
     chat: 0,
     codex: 0,
     deaths: 0,
@@ -107,6 +115,13 @@ export function reduceBroadcast(
         roundId: event.id,
         round: event.number,
         startedAtMs: event.atMs,
+        headStartMs:
+          event.headStartMs === undefined
+            ? 15000
+            : Math.max(
+                0,
+                Number.isFinite(event.headStartMs) ? event.headStartMs : 15000,
+              ),
       };
     case "score.changed":
       return { ...state, chat: event.chat, codex: event.codex };
@@ -154,6 +169,9 @@ export function headStartSeconds(
   if (state.startedAtMs === null) return null;
   return Math.max(
     0,
-    Math.min(15, Math.ceil((state.startedAtMs + 15000 - nowMs) / 1000)),
+    Math.min(
+      Math.ceil(state.headStartMs / 1000),
+      Math.ceil((state.startedAtMs + state.headStartMs - nowMs) / 1000),
+    ),
   );
 }

@@ -33,6 +33,30 @@ describe("broadcast event contract", () => {
     expect(headStartSeconds(started(), 0)).toBe(15);
   });
 
+  it("uses the configured observed head start instead of an implicit 15 seconds", () => {
+    const state = reduceBroadcast(initialBroadcast(), {
+      type: "round.started",
+      id: "r",
+      number: 1,
+      atMs: 1000,
+      headStartMs: 3000,
+    });
+    expect(headStartSeconds(state, 1000)).toBe(3);
+    expect(headStartSeconds(state, 4000)).toBe(0);
+    expect(
+      headStartSeconds(
+        reduceBroadcast(state, {
+          type: "round.started",
+          id: "r2",
+          number: 2,
+          atMs: 4000,
+          headStartMs: 0,
+        }),
+        4000,
+      ),
+    ).toBe(0);
+  });
+
   it("preserves observed scores but resets round activity and deaths", () => {
     let state = reduceBroadcast(started(), {
       type: "score.changed",

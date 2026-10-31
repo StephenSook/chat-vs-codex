@@ -13,6 +13,49 @@ import { describe, expect, it } from "vitest";
 import { CLEAN_TRACK, FRAME_MS, SimulationPlayer } from "../src/simulation.js";
 
 describe("overlay consumes the public simulation", () => {
+  it("hot swaps actual physics without resetting state, frame, input clock carry or RNG", () => {
+    const player = new SimulationPlayer("play");
+    player.advance(FRAME_MS * 1.5, INPUT.RIGHT);
+    const before = player.state;
+    player.install({
+      createState,
+      hashState,
+      step: (state: typeof before, input: number) => ({
+        ...step(state, input),
+        x: state.x + 5 * UNIT,
+      }),
+    });
+    expect(player.state).toBe(before);
+    player.advance(FRAME_MS * 0.5, INPUT.RIGHT);
+    expect(player.state.frame).toBe(before.frame + 1);
+    expect(player.state.x).toBe(before.x + 5 * UNIT);
+    expect(player.state.rng).toEqual(before.rng);
+    player.install({ createState, hashState, step });
+    const repaired = player.state;
+    player.advance(FRAME_MS, INPUT.RIGHT);
+    expect(player.state).toEqual(step(repaired, INPUT.RIGHT));
+  });
+
+  it("rolls back incompatible module installs without mutating live state", () => {
+    const player = new SimulationPlayer("play");
+    const before = player.state;
+    expect(() =>
+      player.install({
+        createState,
+        hashState,
+        step: (state: typeof before) => {
+          (state as { x: number }).x = 0;
+          return state;
+        },
+      }),
+    ).toThrow();
+    expect(player.state).toBe(before);
+    expect(() =>
+      player.install({ createState, hashState, step: () => ({}) }),
+    ).toThrow("Invalid simulation state");
+    player.advance(FRAME_MS, INPUT.RIGHT);
+    expect(player.state).toEqual(step(before, INPUT.RIGHT));
+  });
   it.each([30, 60, 120])(
     "replays the committed inputs identically at %i display Hz",
     (hz) => {

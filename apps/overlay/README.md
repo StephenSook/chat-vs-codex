@@ -27,14 +27,13 @@ compare final states and hashes with `runTrack` at 30, 60 and 120 display Hz.
 ## Event integration
 
 `window.chatVsCodex.events` implements the typed local `OverlayEventBus` in
-`src/events.ts`. The operator bridge should translate observed `runStreamed` SDK events
-into this contract. The SDK transport is not implemented at this checkpoint. No browser
-API key is needed or accepted. Until a bridge sends activity, the ticker says
+`src/events.ts`. The loopback round server translates observed `runStreamed` SDK events
+into this contract. No browser API key is needed or accepted. Until a bridge sends activity, the ticker says
 "Waiting for Codex". Test fixtures live only in tests.
 
 - `round.started`: round id, number and start time in the receiving page's
   `performance.now()` timebase. Translate remote timestamps before publishing. Starts the
-  15 second head start and resets round-local activity and deaths.
+  configured head start (15 seconds by default) and resets round-local activity and deaths.
 - `bug.active`: active round id and intensity from 0 to 1. The ticket shows `???` until
   `bug.named` arrives. This changes presentation, not the underlying sim build.
 - `codex.step`: source item id, step, running/done/failed status and actual attempt/total.
@@ -46,8 +45,23 @@ API key is needed or accepted. Until a bridge sends activity, the ticker says
 - `simulation.death`: emitted by the local sim on an alive-to-dead transition.
 
 This is an in-process trusted interface, not a network ingestion or authentication boundary.
-The bridge must validate external events before publishing them. `snapshot()` exposes the
+The SSE bridge validates external events before publishing them. `snapshot()` exposes the
 current sim frame and hash for smoke verification, not an asserted result from a stored log.
+
+Use `?bridge=http://127.0.0.1:4317` to connect to the local round server. This switches
+to keyboard play labelled "LOCAL ROUND". `GET /api/events` supplies sequenced `round` SSE
+messages; the bridge installs each `game.build` before publishing later HUD activity.
+Artifact bytes from `/api/builds/<sha256>.js` must match their SHA-256 id before import.
+`SimulationPlayer.install()` validates the module against a frozen clone of the live
+state, then replaces only its functions. State, frame, RNG and clock carry remain intact.
+Load or validation failures retain the previous module and block green/score messages for
+that round. The page displays "ROUND DISCONNECTED" with the error in its status tooltip.
+Reconnection replays are deduplicated and ordered; stale round imports cannot replace a
+newer round. Connections close on page exit. This bridge accepts loopback origins only.
+
+Server wall-clock starts are translated to the receiving page's monotonic clock using
+the envelope's delivery-time `serverTimeMs`. Replayed envelopes therefore need a fresh
+delivery clock while retaining their original sequence and round start.
 
 ## Visual verification
 
@@ -97,7 +111,7 @@ Implemented: shared-sim renderer, clean input playback, keyboard play, scoreboar
 counter, head-start fuse and local typed ticker. Workspace integration changes only the
 workspace entries, root typecheck/test discovery and lockfile outside this app.
 
-Pending: observed SDK bridge, active mutant build playback, autopsy, ghost replay and the
+Pending: autopsy, ghost replay and the
 judge app. The judge app and its recorded-round proof start after the overlay checkpoint.
 No site has been deployed.
 

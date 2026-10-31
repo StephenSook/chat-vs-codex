@@ -63,5 +63,6 @@ export function renderClock(state: BroadcastState, nowMs: number): void {
   element("countdown").hidden = !active;
   element("fuse").hidden = !active;
   element("seconds").textContent = `${seconds ?? 15}s`;
-  element("fuse-fill").style.width = `${((seconds ?? 0) / 15) * 100}%`;
+  element("fuse-fill").style.width =
+    `${state.headStartMs > 0 ? ((seconds ?? 0) / (state.headStartMs / 1000)) * 100 : 0}%`;
 }
