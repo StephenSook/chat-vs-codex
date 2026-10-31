@@ -108,6 +108,7 @@ async function sse(origin: string, after?: number) {
         ) {
           const message = buffer.slice(0, boundary);
           buffer = buffer.slice(boundary + 2);
+          if (!message.split("\n").includes("event: round")) continue;
           const line = message
             .split("\n")
             .find((value) => value.startsWith("data: "));
@@ -155,6 +156,32 @@ async function sse(origin: string, after?: number) {
 }
 
 describe("local round HTTP and SSE boundary", () => {
+  it.each([
+    undefined,
+    { mode: "live-twitch" as const, trigger: "broadcaster-test" as const },
+  ])(
+    "sends actual session identity before any round, including an idle reconnect: %j",
+    async (session) => {
+      const running = await server(session ? { session } : {});
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const abort = new AbortController();
+        const response = await fetch(`${running.origin}/api/events`, {
+          signal: abort.signal,
+        });
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error("Missing session stream");
+        try {
+          const { value } = await reader.read();
+          expect(new TextDecoder().decode(value)).toBe(
+            `event: session\ndata: ${JSON.stringify(session ?? { mode: "local-fixture" })}\n\n`,
+          );
+        } finally {
+          abort.abort();
+          await reader.cancel().catch(() => {});
+        }
+      }
+    },
+  );
   it("labels every test-session envelope and build event, then clears the label on a normal round", async () => {
     const records: RoundEnvelope[] = [];
     const running = await server({ record: (entry) => records.push(entry) });

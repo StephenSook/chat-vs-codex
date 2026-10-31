@@ -10,9 +10,33 @@ import {
   loadVerifiedBuild,
   OrderedRoundBridge,
   parseRoundEnvelope,
+  parseRoundSession,
 } from "../src/bridge.js";
 import { createEventBus, type OverlayEvent } from "../src/events.js";
+import { roundSessionLabel } from "../src/presentation.js";
 import { FRAME_MS, SimulationPlayer } from "../src/simulation.js";
+
+it("uses host session identity for live, broadcaster-test and fixture labels", () => {
+  expect(roundSessionLabel(parseRoundSession({ mode: "live-twitch" }))).toBe(
+    "TWITCH CHAT ROUND",
+  );
+  expect(
+    roundSessionLabel(
+      parseRoundSession({ mode: "live-twitch", trigger: "broadcaster-test" }),
+    ),
+  ).toBe("TWITCH CHAT ROUND · TEST");
+  expect(roundSessionLabel(parseRoundSession({ mode: "local-fixture" }))).toBe(
+    "LOCAL ROUND",
+  );
+  for (const value of [
+    { mode: "viewer" },
+    { mode: "live-twitch", trigger: "viewer" },
+    { mode: "local-fixture", trigger: "broadcaster-test" },
+  ])
+    expect(() => parseRoundSession(value)).toThrow(
+      "Invalid round session identity",
+    );
+});
 
 const envelope = (
   sequence: number,

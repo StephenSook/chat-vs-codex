@@ -278,6 +278,12 @@ export async function runLiveCli(
     });
     const live = controller;
     server = await startRoundServer({
+      session: {
+        mode: "live-twitch",
+        ...(flags.allowBroadcasterTest
+          ? { trigger: "broadcaster-test" as const }
+          : {}),
+      },
       port: ROUND_PORT,
       overlayDirectory: join(ROOT, "apps/overlay/dist"),
       install: async (artifact, installSignal) => {

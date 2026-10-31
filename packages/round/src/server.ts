@@ -4,13 +4,19 @@ import { realpath, stat } from "node:fs/promises";
 import { createServer, type ServerResponse } from "node:http";
 import { extname, resolve, sep } from "node:path";
 import { eventStamp, monotonicMs } from "./clocks.js";
-import type { GameArtifact, RoundEnvelope, RoundEvent } from "./contracts.js";
+import type {
+  GameArtifact,
+  RoundEnvelope,
+  RoundEvent,
+  RoundSession,
+} from "./contracts.js";
 
 export async function startRoundServer(
   options: {
     port?: number;
     overlayDirectory?: string;
     now?: () => number;
+    session?: RoundSession;
     record?: (envelope: RoundEnvelope) => void;
     /** Presentation only. Recorded evidence and sandbox client retain canonical hashes. */
     present?: (event: RoundEvent) => RoundEvent;
@@ -64,6 +70,9 @@ export async function startRoundServer(
           Connection: "keep-alive",
         });
         response.flushHeaders();
+        response.write(
+          `event: session\ndata: ${JSON.stringify(options.session ?? { mode: "local-fixture" })}\n\n`,
+        );
         const after = Number(request.headers["last-event-id"] ?? 0);
         for (const envelope of ring)
           if (envelope.sequence > after) send(response, envelope);

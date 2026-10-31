@@ -7,11 +7,19 @@ import {
   UNIT,
   WIDTH,
 } from "@chat-vs-codex/sim";
-import type { RoundAutopsy } from "../../../packages/round/src/contracts.js";
+import type {
+  RoundAutopsy,
+  RoundSession,
+} from "../../../packages/round/src/contracts.js";
 import type { BroadcastState } from "./events.js";
 import type { GhostView } from "./ghost.js";
 
 export const VIEWPORT = { width: 1200, height: 560 } as const;
+export function roundSessionLabel(session: RoundSession): string {
+  return session.mode === "live-twitch"
+    ? `TWITCH CHAT ROUND${session.trigger === "broadcaster-test" ? " · TEST" : ""}`
+    : "LOCAL ROUND";
+}
 export type CameraMode = "follow" | "overview";
 const WORLD_WIDTH = (WIDTH * TILE) / UNIT;
 const WORLD_HEIGHT = (HEIGHT * TILE) / UNIT;

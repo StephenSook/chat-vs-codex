@@ -18,6 +18,7 @@ import {
   type cameraFor,
   corruptionFor,
   playfieldCamera,
+  roundSessionLabel,
 } from "./presentation.js";
 import { createScene } from "./scene.js";
 import { SimulationPlayer } from "./simulation.js";
@@ -62,7 +63,7 @@ async function start(): Promise<void> {
   element("controls").textContent =
     mode === "play" ? "← → MOVE · SPACE JUMP · R RESTART" : "";
   element("playback-label").textContent = bridgeUrl
-    ? "LOCAL ROUND"
+    ? "CONNECTING"
     : mode === "play"
       ? "FREE PLAY"
       : "CLEAN REPLAY";
@@ -96,6 +97,9 @@ async function start(): Promise<void> {
   };
   const disconnectBridge = bridgeUrl
     ? connectRoundBridge(bridgeUrl, {
+        onSession(session) {
+          element("playback-label").textContent = roundSessionLabel(session);
+        },
         simulation,
         events,
         onError(error) {

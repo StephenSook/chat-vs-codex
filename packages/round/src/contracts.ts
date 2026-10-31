@@ -3,6 +3,12 @@ import type { OverlayEvent } from "../../../apps/overlay/src/events.js";
 import type { ValidatedReplay } from "../../bench/src/validated-replay.js";
 import type { BugFamily } from "../../twitch/src/events.js";
 
+/** Host-owned session identity, sent on each SSE connection before round events. */
+export interface RoundSession {
+  mode: "local-fixture" | "live-twitch";
+  trigger?: "broadcaster-test";
+}
+
 export interface GameArtifact {
   id: string;
   code: string;

@@ -2,6 +2,7 @@ import type {
   RoundAutopsy,
   RoundEnvelope,
   RoundEvent,
+  RoundSession,
 } from "../../../packages/round/src/contracts.js";
 import {
   CODEX_ACTIONS,
@@ -277,6 +278,7 @@ export function parseRoundEnvelope(value: unknown): RoundEnvelope {
 }
 
 export interface RoundBridgeOptions {
+  onSession?: (session: RoundSession) => void;
   simulation: SimulationPlayer;
   events: OverlayEventBus;
   loadBuild: (event: BuildEvent) => Promise<unknown>;
@@ -421,6 +423,15 @@ export function connectRoundBridge(
     loadBuild: (event) => loadVerifiedBuild(origin, event),
   });
   const source = new EventSource(`${origin}/api/events`);
+  source.addEventListener("session", (message) => {
+    try {
+      options.onSession?.(
+        parseRoundSession(JSON.parse((message as MessageEvent<string>).data)),
+      );
+    } catch {
+      options.onError?.(new Error("Invalid round session identity"));
+    }
+  });
   source.addEventListener("open", () => options.onConnection?.(true));
   source.addEventListener("round", (message) => {
     try {
@@ -441,4 +452,17 @@ export function connectRoundBridge(
     bridge.close();
     source.close();
   };
+}
+
+export function parseRoundSession(value: unknown): RoundSession {
+  if (!value || typeof value !== "object")
+    throw new Error("Invalid round session identity");
+  const row = value as RoundSession;
+  if (
+    !["local-fixture", "live-twitch"].includes(row.mode) ||
+    (row.trigger !== undefined &&
+      (row.trigger !== "broadcaster-test" || row.mode !== "live-twitch"))
+  )
+    throw new Error("Invalid round session identity");
+  return { mode: row.mode, ...(row.trigger ? { trigger: row.trigger } : {}) };
 }
