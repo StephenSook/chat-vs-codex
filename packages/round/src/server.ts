@@ -27,6 +27,8 @@ export async function startRoundServer(
     commentary?: ReturnType<typeof createCommentary>;
     publicState?: (state: PublicRoundState) => void;
     record?: (envelope: RoundEnvelope) => void;
+    /** Real OBS/browser deaths only; separate from replay and sandbox client evidence. */
+    death?: (roundId: string, id: string) => void;
     /** Presentation only. Recorded evidence and sandbox client retain canonical hashes. */
     present?: (event: RoundEvent) => RoundEvent;
     install?: (artifact: GameArtifact, signal: AbortSignal) => Promise<void>;
@@ -52,6 +54,44 @@ export async function startRoundServer(
   };
   const server = createServer(async (request, response) => {
     try {
+      if (
+        request.method === "POST" &&
+        request.url === "/api/pit-wall/death" &&
+        options.death
+      ) {
+        if (
+          request.headers.origin !== origin ||
+          request.headers["content-type"] !== "application/json"
+        ) {
+          response.writeHead(403).end();
+          return;
+        }
+        let body = "";
+        for await (const chunk of request) {
+          body += String(chunk);
+          if (body.length > 512) {
+            response.writeHead(413).end();
+            return;
+          }
+        }
+        const data: unknown = JSON.parse(body);
+        if (
+          !data ||
+          typeof data !== "object" ||
+          !("roundId" in data) ||
+          !("id" in data) ||
+          typeof data.roundId !== "string" ||
+          typeof data.id !== "string" ||
+          !/^[a-f0-9-]{36}$/.test(data.roundId) ||
+          !/^[a-f0-9-]{36}$/.test(data.id)
+        ) {
+          response.writeHead(400).end();
+          return;
+        }
+        options.death(data.roundId, data.id);
+        response.writeHead(204).end();
+        return;
+      }
       if (request.method !== "GET") {
         response.writeHead(405).end();
         return;

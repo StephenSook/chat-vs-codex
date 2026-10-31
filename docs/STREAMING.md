@@ -187,3 +187,28 @@ required recovery. Dry-chat never changes the title.
 
 Verify without Twitch writes:
 `pnpm exec vitest run packages/round/test/title-scorebug.test.ts packages/twitch/test/helix.test.ts`.
+
+## Pit Wall beside the keyboard
+
+Build and install the [Expo phone app](../apps/pit-wall/README.md), then start
+`PIT_WALL=1 pnpm round:live`. The separate LAN WebSocket gateway listens on 4318;
+the loopback overlay stays on 4317. The terminal prints LAN addresses and a
+six-digit pairing code valid for five minutes, with at most four paired phones.
+Pairing tokens live only for this runner session and are saved in phone SecureStore.
+Restart the runner to renew the code or revoke all phones. With `PIT_WALL` unset,
+there is no phone listener. Never expose this plaintext LAN port to the internet.
+
+The phone shows received state, real Codex steps and the autopsy. Bug arrival
+schedules a local notification and haptic. Veto and the six family hints are
+accepted only before Codex starts, including the head start; a streamer hint
+does not score a viewer guess. Accepted and rejected actions are recorded in the
+private runner log without pairing tokens. Browser death reports are bound to
+the current round and deduplicated; open only the presenting OBS browser if you
+want its deaths alone counted. No Twitch token, raw Codex log or game source is
+served by the gateway.
+
+Keep the phone app open for continuous updates. ActivityKit and Android status
+receive local updates while it runs; there is no APNs/FCM server. Backgrounding
+preserves the last native status with a 60-second stale/expiry clock. Device
+notification delivery, haptics and Live Activities must be checked on the actual
+build before filming. The phone does not delay updates by the stream's latency.

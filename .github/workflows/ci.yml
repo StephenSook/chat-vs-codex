@@ -16,3 +16,7 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
+      - run: pnpm pit-wall:bundle
+        name: Bundle Pit Wall for both phones
+        env:
+          EXPO_NO_TELEMETRY: 1

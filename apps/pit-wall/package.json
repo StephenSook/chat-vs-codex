@@ -1,0 +1,26 @@
+{
+  "name": "@chat-vs-codex/pit-wall-app",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start --dev-client",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@chat-vs-codex/pit-wall": "workspace:*",
+    "expo": "~58.0.22",
+    "expo-dev-client": "~58.0.18",
+    "expo-haptics": "~58.0.7",
+    "expo-keep-awake": "~58.0.3",
+    "expo-modules-core": "~58.0.29",
+    "expo-notifications": "~58.1.7",
+    "expo-secure-store": "~58.0.2",
+    "react": "19.3.0",
+    "react-native": "0.88.1",
+    "react-native-safe-area-context": "~5.10.1"
+  },
+  "devDependencies": {
+    "@types/react": "~19.3.0"
+  }
+}

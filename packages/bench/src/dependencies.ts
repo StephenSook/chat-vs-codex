@@ -41,9 +41,11 @@ export async function copyDependencies(
     const pkg = JSON.parse(
       await readFile(join(real, "package.json"), "utf8"),
     ) as {
+      name?: string;
       dependencies?: Record<string, string>;
       optionalDependencies?: Record<string, string>;
       peerDependencies?: Record<string, string>;
+      peerDependenciesMeta?: Record<string, { optional?: boolean }>;
     };
     for (const [name, optional] of [
       ...Object.keys(pkg.dependencies ?? {}).map(
@@ -52,9 +54,19 @@ export async function copyDependencies(
       ...Object.keys(pkg.optionalDependencies ?? {}).map(
         (name) => [name, true] as const,
       ),
-      ...Object.keys(pkg.peerDependencies ?? {}).map(
-        (name) => [name, true] as const,
-      ),
+      // Headless replay verification does not transform CSS or run Vite's
+      // minifiers. Expo's installed minifiers must not expand every game snapshot.
+      // Preserve other optional peers: vite-node needs its optional Vite link.
+      ...Object.keys(pkg.peerDependencies ?? {})
+        .filter(
+          (name) =>
+            !(
+              pkg.name === "vite" &&
+              ["lightningcss", "terser"].includes(name) &&
+              pkg.peerDependenciesMeta?.[name]?.optional
+            ),
+        )
+        .map((name) => [name, true] as const),
     ]) {
       const source = await locate(name, real);
       if (!source) {

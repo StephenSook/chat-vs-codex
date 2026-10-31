@@ -13,5 +13,8 @@ film/
 .vscode/
 coverage/
 .cache/
+.expo/
+apps/pit-wall/ios/
+apps/pit-wall/android/
 .local/
 chat-found/.*.tmp

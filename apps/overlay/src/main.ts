@@ -240,8 +240,18 @@ async function start(): Promise<void> {
     const result = autopilot.advance(simulation, ticker.elapsedMS, input);
     element("controls").textContent =
       mode === "play" ? (autopilot.active ? "AUTOPILOT" : playControls) : "";
-    for (let death = 0; death < result.deaths; death++)
+    for (let death = 0; death < result.deaths; death++) {
       events.publish({ type: "simulation.death" });
+      if (bridgeUrl && broadcast.roundId)
+        void fetch(`${new URL(bridgeUrl).origin}/api/pit-wall/death`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            roundId: broadcast.roundId,
+            id: crypto.randomUUID(),
+          }),
+        }).catch(() => {});
+    }
     const nowMs = performance.now();
     const corruption = corruptionFor(broadcast, nowMs, motion.matches);
     element("game").dataset.corruption = corruption.treatment;

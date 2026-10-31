@@ -16,7 +16,7 @@ and repair the real TypeScript bug, checked by deterministic replay tests.
 
 Terra median 14.5 s across green trials. Recompute: `pnpm bench:summary`.
 
-701 tests. Recompute: `pnpm test`.
+724 tests. Recompute: `pnpm test`.
 
 Sol high finished green trials in a 29.40 second median. Both pass the GO gate.
 [Results and limits](bench/SUMMARY.md) include the retained infrastructure loss,
@@ -33,6 +33,8 @@ and an [offline Twitch broadcaster test](docs/rounds/82589ac9-1b1b-4393-8085-9be
 are verified. Broadcaster tests are labelled separately from viewer rounds.
 The [streaming guide](docs/STREAMING.md) covers the offline channel test, OBS scene
 import, keyboard play and Twitch account connection without a stored stream key.
+The optional [Pit Wall phone app](apps/pit-wall/README.md) pairs over the LAN on
+port 4318 for real round status, local alerts, streamer vetoes and enum hints.
 The [Channel Points guide](docs/CHANNEL-POINTS.md) covers reward creation,
 dashboard fallback and redemption settlement.
 After new verified rounds, `pnpm chat-found:pr` opens one evidence-only regression
@@ -57,7 +59,8 @@ Codex. Recompute the checkpoint's reachable commits with
 reachable commit count at build time with `git rev-list --count HEAD`.
 
 Requires Node 22 and pnpm. Run `pnpm ci:local` to mirror the workflow: frozen
-install, typecheck, lint, test. `pnpm check` repeats the checks without installing.
+install, typecheck, lint, test and both Pit Wall bundles. `pnpm check` repeats
+typecheck, lint and tests without installing.
 Set `CI=true` when running the install without a TTY.
 On a busy development machine, `CI=true VITEST_MAX_WORKERS=1 pnpm ci:local`
 runs the same checks serially without changing their assertions or time budgets.

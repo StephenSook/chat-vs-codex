@@ -26,6 +26,7 @@ import {
   extensionCredentials,
 } from "./extension-publisher.js";
 import { type LiveEngine, LiveRoundController } from "./live.js";
+import { startPitWall } from "./pit-wall.js";
 import {
   loadPreviousVerifiedRound,
   publicReceipt,
@@ -278,6 +279,7 @@ export async function runLiveCli(
   let controller: LiveRoundController | undefined;
   let scorebug: TitleScorebug | undefined;
   let extension: ExtensionPublisher | undefined;
+  let pitWall: Awaited<ReturnType<typeof startPitWall>> | undefined;
   let events: RoundEnvelope[] = [];
   try {
     const credentials = extensionCredentials(process.env, account.userId);
@@ -366,6 +368,11 @@ export async function runLiveCli(
     const live = controller;
     server = await startRoundServer({
       publicState: (state) => extension?.update(state),
+      ...(process.env.PIT_WALL === "1"
+        ? {
+            death: (roundId: string, id: string) => pitWall?.death(roundId, id),
+          }
+        : {}),
       season: (await loadSeason(join(ROOT, "docs/rounds"))).viewers,
       commentary: createCommentary({
         cacheDirectory: join(ROOT, ".local/polly"),
@@ -384,6 +391,7 @@ export async function runLiveCli(
       },
       present: (event) => live.present(event),
       record: (envelope) => {
+        pitWall?.publish(envelope);
         if (
           envelope.event.type === "round.state" &&
           envelope.event.phase === "preparing"
@@ -438,6 +446,16 @@ export async function runLiveCli(
       publish: server.publish,
       activate: server.activate,
     });
+    if (process.env.PIT_WALL === "1")
+      pitWall = await startPitWall({
+        action: (action) =>
+          engine?.streamerAction(action) ?? {
+            accepted: false,
+            reason: "runner-unavailable",
+          },
+        record,
+        announce: (message) => console.log(message),
+      });
     gate = createLiveRoundGate(
       engine,
       async (result) => {
@@ -509,6 +527,7 @@ export async function runLiveCli(
   } finally {
     signal.removeEventListener("abort", stop);
     await closeLiveResources([
+      () => pitWall?.close(),
       () => listener?.stop(),
       () => extension?.close(),
       () => engine?.stop(),
