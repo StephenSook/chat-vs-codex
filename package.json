@@ -15,6 +15,7 @@
     "replay:record": "tsx packages/replay/src/record.ts",
     "replay:check": "tsx packages/replay/src/record.ts --check",
     "mutator:pool": "tsx packages/mutator/src/cli.ts",
+    "ci:local": "pnpm install --frozen-lockfile && pnpm typecheck && pnpm lint && pnpm test",
     "check": "pnpm typecheck && pnpm lint && pnpm test"
   },
   "devDependencies": {
