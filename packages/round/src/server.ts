@@ -34,6 +34,7 @@ export async function startRoundServer(
   let closing = false;
   let activation = 0;
   let trigger: RoundEvent["trigger"];
+  let input: RoundEvent["input"];
   const send = (client: ServerResponse, envelope: RoundEnvelope) => {
     // Preserve evidence clocks; only the delivery clock changes on reconnect.
     client.write(
@@ -173,6 +174,7 @@ export async function startRoundServer(
     if (closing) return;
     if (event.type === "round.state" && event.phase === "preparing") {
       trigger = event.trigger;
+      input = event.input;
       activation++;
       ring.length = 0;
       artifacts.clear();
@@ -180,11 +182,13 @@ export async function startRoundServer(
     const stamp = { ...eventStamp(), atMs: now() };
     const envelope: RoundEnvelope = {
       sequence: ++sequence,
+      ...(input ? { input } : {}),
       ...(trigger ? { trigger } : {}),
       serverTimeMs: stamp.atMs,
       ...stamp,
       event: {
         ...event,
+        ...(input ? { input } : {}),
         ...(trigger ? { trigger } : {}),
         atMs: event.atMs ?? stamp.atMs,
         wallTime: event.wallTime ?? stamp.wallTime,

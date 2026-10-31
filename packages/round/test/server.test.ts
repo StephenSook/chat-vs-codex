@@ -226,6 +226,25 @@ describe("local round HTTP and SSE boundary", () => {
     expect(normal).not.toHaveProperty("trigger");
     expect(normal.event).not.toHaveProperty("trigger");
   });
+  it("labels build events and reconnect envelopes with the starting input and resets it for the next round", async () => {
+    const records: RoundEnvelope[] = [];
+    const running = await server({ record: (entry) => records.push(entry) });
+    running.publish({ ...preparing("whisper-round"), input: "whisper" });
+    await running.activate(artifact(), "broken", "whisper-round");
+    const stream = await sse(running.origin);
+    for (let i = 0; i < 2; i++) {
+      const row = await stream.next();
+      expect(row.input).toBe("whisper");
+      expect(row.event.input).toBe("whisper");
+      expect(records[i]?.input).toBe("whisper");
+      expect(records[i]?.event.input).toBe("whisper");
+    }
+    running.publish({ ...preparing("chat-round"), input: "chat" });
+    const next = await stream.next();
+    expect(next.input).toBe("chat");
+    expect(next.event.input).toBe("chat");
+    stream.close();
+  });
   it("enriches live SSE presentation without changing canonical recorded events or reconnect evidence", async () => {
     const records: RoundEnvelope[] = [];
     const running = await server({

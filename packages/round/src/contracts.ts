@@ -4,6 +4,20 @@ import type { ValidatedReplay } from "../../bench/src/validated-replay.js";
 import type { MutationProvenance } from "../../mutator/src/live.js";
 import type { BugFamily } from "../../twitch/src/events.js";
 
+export const ROUND_INPUTS = [
+  "chat",
+  "channel-points",
+  "whisper",
+  "raid",
+  "power-up",
+] as const;
+export type RoundInput = (typeof ROUND_INPUTS)[number];
+export function isRoundInput(value: unknown): value is RoundInput {
+  return (
+    typeof value === "string" && ROUND_INPUTS.includes(value as RoundInput)
+  );
+}
+
 /** Host-owned session identity, sent on each SSE connection before round events. */
 export interface RoundSession {
   mode: "local-fixture" | "live-twitch";
@@ -90,6 +104,8 @@ export interface RegressionTest {
 /** Terminal evidence. Missing runtime metadata remains unavailable, never inferred. */
 export interface RoundAutopsy {
   roundId: string;
+  /** Absent only on receipts recorded before input provenance. */
+  input?: RoundInput;
   trigger?: "broadcaster-test";
   status: "verified" | "rolled-back";
   reason: string | null;
@@ -176,6 +192,7 @@ type RoundEventPayload =
     };
 
 export type RoundEvent = RoundEventPayload & {
+  input?: RoundInput;
   trigger?: "broadcaster-test";
   atMs?: number;
   wallTime?: string;
@@ -183,6 +200,7 @@ export type RoundEvent = RoundEventPayload & {
 
 export interface RoundEnvelope {
   sequence: number;
+  input?: RoundInput;
   trigger?: "broadcaster-test";
   serverTimeMs: number;
   atMs?: number;

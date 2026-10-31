@@ -8,6 +8,7 @@ import {
   greenSplit,
   isEarlierTestRound,
   type JudgeEvidence,
+  roundInputLabel,
   roundLabel,
   seconds,
 } from "./evidence.js";
@@ -530,6 +531,7 @@ async function start(): Promise<void> {
     card.dataset.roundId = receipt.roundId;
     card.append(
       element("p", roundLabel(receipt), "eyebrow"),
+      element("p", roundInputLabel(receipt), "eyebrow"),
       element("h3", receipt.family ?? "Unrecorded family"),
       element(
         "strong",

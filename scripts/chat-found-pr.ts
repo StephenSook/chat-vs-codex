@@ -12,6 +12,7 @@ import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { parseRegression } from "../packages/bench/src/regressions.js";
+import { isRoundInput } from "../packages/round/src/contracts.js";
 import type { publicReceipt } from "../packages/round/src/receipt.js";
 
 const REPOSITORY = "StephenSook/chat-vs-codex";
@@ -71,6 +72,7 @@ const RECEIPT_KEYS = new Set([
   "mutation",
   "roundId",
   "trigger",
+  "input",
   "mode",
   "fixture",
   "model",
@@ -156,6 +158,8 @@ function publicFields(value: unknown): void {
       (typeof child !== "string" || !/^viewer-[a-f0-9]{16}$/.test(child))
     )
       throw new Error("Public receipt credits must be hashed viewer labels");
+    if (key === "input" && !isRoundInput(child))
+      throw new Error("Public receipt input must be a recognized enum");
     publicFields(child);
   }
 }

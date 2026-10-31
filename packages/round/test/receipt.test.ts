@@ -5,6 +5,7 @@ import { afterEach, expect, it } from "vitest";
 import { initialBroadcast } from "../../../apps/overlay/src/events.js";
 import type { ClientSnapshot } from "../src/client.js";
 import type { RoundEnvelope } from "../src/contracts.js";
+import { ROUND_INPUTS } from "../src/contracts.js";
 import type { RoundSnapshot } from "../src/engine.js";
 import {
   loadPreviousVerifiedRound,
@@ -320,6 +321,7 @@ it("retains terminal autopsy evidence without copying unrelated fields or raw vi
   input.result.autopsy = {
     roundId: input.result.roundId ?? "",
     trigger: "broadcaster-test",
+    input: "whisper",
     status: "verified",
     reason: null,
     breaker: input.breaker,
@@ -348,6 +350,8 @@ it("retains terminal autopsy evidence without copying unrelated fields or raw vi
   const receipt = publicReceipt(input);
   expect(receipt.trigger).toBe("broadcaster-test");
   expect(receipt.autopsy?.trigger).toBe("broadcaster-test");
+  expect(receipt.input).toBe("whisper");
+  expect(receipt.autopsy?.input).toBe("whisper");
   expect(receipt.firstCorrectGuesser).toBe("viewer-aaaaaaaaaaaaaaaa");
   expect(receipt.autopsy?.patch).toEqual({
     added: 1,
@@ -431,4 +435,49 @@ it("retains live mutation gate provenance without leaking candidate bytes or arb
   });
   expect(JSON.stringify(receipt)).not.toContain("secret replacement");
   expect(publicReceipt(input).mutation).toBeNull();
+});
+
+it.each(ROUND_INPUTS)(
+  "retains sanitized %s input in a receipt and its event summary",
+  (roundInput) => {
+    const input = verified();
+    input.result.input = roundInput;
+    const receipt = publicReceipt({
+      ...input,
+      events: [
+        {
+          sequence: 1,
+          serverTimeMs: 1,
+          input: roundInput,
+          event: { ...input.result },
+        },
+      ],
+    });
+    expect(receipt.input).toBe(roundInput);
+    expect(receipt.events[0]?.input).toBe(roundInput);
+  },
+);
+
+it("refuses identities and inconsistent round inputs instead of publishing them", () => {
+  const input = verified();
+  expect(() =>
+    publicReceipt({
+      ...input,
+      result: { ...input.result, input: "private-user" as never },
+    }),
+  ).toThrow("input provenance");
+  expect(() =>
+    publicReceipt({
+      ...input,
+      result: { ...input.result, input: "chat" },
+      events: [
+        {
+          sequence: 1,
+          serverTimeMs: 1,
+          event: { ...input.result, input: "whisper" },
+        },
+      ],
+    }),
+  ).toThrow("input provenance");
+  expect(publicReceipt(input)).not.toHaveProperty("input");
 });

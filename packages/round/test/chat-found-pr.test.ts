@@ -338,3 +338,18 @@ it("retries after a genuine PR creation rejection by reusing the exact remote ev
   expect(f.calls.filter((call) => call[0] === "pnpm")).toHaveLength(2);
   expect(f.prCreates()).toBe(1);
 });
+
+it("accepts input enums on public receipts and refuses names in their place", async () => {
+  const f = await fixture();
+  await f.addEvidence();
+  const receipt = JSON.parse(await readFile(join(f.root, receiptPath), "utf8"));
+  receipt.input = "channel-points";
+  receipt.autopsy.input = "channel-points";
+  await writeFile(join(f.root, receiptPath), JSON.stringify(receipt));
+  expect(await collectNewRegressions(f.root, f.run)).toHaveLength(1);
+  receipt.input = "real_twitch_username";
+  await writeFile(join(f.root, receiptPath), JSON.stringify(receipt));
+  await expect(collectNewRegressions(f.root, f.run)).rejects.toThrow(
+    "recognized enum",
+  );
+});

@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { RoundAutopsy } from "../../../packages/round/src/contracts.js";
+import { ROUND_INPUTS } from "../../../packages/round/src/contracts.js";
 import { OrderedRoundBridge, parseRoundEnvelope } from "../src/bridge.js";
 import {
   createEventBus,
@@ -63,6 +64,32 @@ const wire = (autopsy: RoundAutopsy) => ({
 afterEach(() => vi.unstubAllGlobals());
 
 describe("observed round autopsy", () => {
+  it.each(ROUND_INPUTS)(
+    "shows %s in autopsy small print after checking the enum",
+    (input) => {
+      const record = autopsyFixture({ input });
+      expect(parseRoundEnvelope(wire(record))).toBeDefined();
+      expect(autopsyView(record).input).toBe(`INPUT: ${input}`);
+    },
+  );
+  it("leaves legacy input unavailable and refuses raw names or conflicting envelopes", () => {
+    expect(autopsyView(autopsyFixture()).input).toBe("INPUT: Not recorded");
+    expect(() =>
+      parseRoundEnvelope(
+        wire(autopsyFixture({ input: "private-user" as never })),
+      ),
+    ).toThrow("Invalid round event");
+    expect(() =>
+      parseRoundEnvelope({
+        ...wire(autopsyFixture({ input: "chat" })),
+        input: "whisper",
+      }),
+    ).toThrow("input provenance");
+    expect(() =>
+      parseRoundEnvelope({ ...wire(autopsyFixture()), input: "private-user" }),
+    ).toThrow("input provenance");
+  });
+
   it("retains the explicit broadcaster-test label through the bridge and small-row presentation", () => {
     const record = autopsyFixture({ trigger: "broadcaster-test" });
     const parsed = parseRoundEnvelope(wire(record));
@@ -489,6 +516,7 @@ describe("observed round autopsy", () => {
     const record = autopsyFixture({
       explanation: payload,
       trigger: "broadcaster-test",
+      input: "chat",
       headline: payload,
       patch: { added: 1, removed: 1, preview: [`- ${payload}`, "+ safe"] },
     });
@@ -504,6 +532,7 @@ describe("observed round autopsy", () => {
       "broadcaster-test",
     );
     expect(elements.get("autopsy-trigger")?.hidden).toBe(false);
+    expect(elements.get("autopsy-input")?.textContent).toBe("INPUT: chat");
     expect(elements.get("autopsy-diff")?.children[0]?.title).toContain(payload);
     expect(
       elements.get("autopsy-diff")?.children[0]?.textContent?.length,

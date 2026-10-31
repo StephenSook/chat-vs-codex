@@ -116,6 +116,52 @@ afterEach(async () => {
   vi.useRealTimers();
 });
 
+describe("round input provenance", () => {
+  it.each([
+    ["chat", "chat"],
+    ["reward", "channel-points"],
+    ["raid", "raid"],
+    ["power-up", "power-up"],
+  ] as const)(
+    "retains the %s input without viewer identities",
+    async (source, input) => {
+      const { engine, events, repair } = setup({ headStartMs: 0 });
+      engine.handlePublic({
+        kind: "break-requested",
+        source,
+        actor: "private-user",
+        bugCount: 1,
+        severity: 1,
+      });
+      await vi.advanceTimersByTimeAsync(0);
+      repair.resolve(repaired);
+      const result = await engine.waitForRound();
+      expect(result.input).toBe(input);
+      expect(result.autopsy?.input).toBe(input);
+      expect(events.length).toBeGreaterThan(0);
+      expect(events.every((event) => event.input === input)).toBe(true);
+      expect(JSON.stringify(events)).not.toContain("private-user");
+    },
+  );
+
+  it("records a private enum selection as whisper input", async () => {
+    const { engine, events, repair } = setup({ headStartMs: 0 });
+    expect(
+      engine.handlePrivate({
+        kind: "sabotage-selected",
+        actor: "private-user",
+        family: "gravity-sign",
+      }).accepted,
+    ).toBe(true);
+    await vi.advanceTimersByTimeAsync(0);
+    repair.resolve(repaired);
+    const result = await engine.waitForRound();
+    expect(result.input).toBe("whisper");
+    expect(result.autopsy?.input).toBe("whisper");
+    expect(events.every((event) => event.input === "whisper")).toBe(true);
+  });
+});
+
 describe("round race and safe swaps", () => {
   it("publishes actual replay observations only during validation and before swapping, ignoring stale callbacks", async () => {
     const { engine, game, events, repair } = setup();

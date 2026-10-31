@@ -77,6 +77,7 @@ export function autopsyView(record: RoundAutopsy) {
     : [{ text: "Diff unavailable", source: "Diff unavailable" }];
   return {
     diffLines,
+    input: record.input ? `INPUT: ${record.input}` : "INPUT: Not recorded",
     trigger: record.trigger === "broadcaster-test" ? "broadcaster-test" : "",
     verdict:
       record.status === "rolled-back"

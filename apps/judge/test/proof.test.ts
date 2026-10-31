@@ -6,6 +6,7 @@ import {
   greenSplit,
   isEarlierTestRound,
   type Receipt,
+  roundInputLabel,
   roundLabel,
 } from "../src/evidence.js";
 import {
@@ -32,6 +33,16 @@ const replay = {
 };
 
 describe("browser proof", () => {
+  it("shows recorded input provenance and leaves legacy receipts uninferred", () => {
+    expect(roundInputLabel(receipt)).toBe("INPUT: Not recorded");
+    expect(roundInputLabel({ ...receipt, input: "channel-points" })).toBe(
+      "INPUT: channel-points",
+    );
+    expect(roundInputLabel({ ...receipt, input: "whisper" })).toBe(
+      "INPUT: whisper",
+    );
+  });
+
   it("re-simulates the producer's actual held-out route and matches its recorded frame digest", async () => {
     const computed = await replayProof(game, replay, receipt);
     expect(computed.frames).toEqual(runTrack(HELD_OUT).samples);

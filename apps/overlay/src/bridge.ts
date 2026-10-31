@@ -5,6 +5,7 @@ import type {
   RoundEvent,
   RoundSession,
 } from "../../../packages/round/src/contracts.js";
+import { isRoundInput } from "../../../packages/round/src/contracts.js";
 import {
   CODEX_ACTIONS,
   type OverlayEvent,
@@ -141,6 +142,7 @@ function validAutopsy(value: unknown): value is RoundAutopsy {
   return (
     typeof record.roundId === "string" &&
     (record.trigger === undefined || record.trigger === "broadcaster-test") &&
+    (record.input === undefined || isRoundInput(record.input)) &&
     ["verified", "rolled-back"].includes(record.status) &&
     nullableText(record.reason) &&
     alias(record.breaker) &&
@@ -235,6 +237,14 @@ export function parseRoundEnvelope(value: unknown): RoundEnvelope {
     (event.trigger !== undefined && event.trigger !== "broadcaster-test")
   )
     throw new Error("Invalid round trigger");
+  if (
+    (e.input !== undefined && !isRoundInput(e.input)) ||
+    (event.input !== undefined && !isRoundInput(event.input)) ||
+    (e.input !== undefined &&
+      event.input !== undefined &&
+      e.input !== event.input)
+  )
+    throw new Error("Invalid round input provenance");
   if (event.type === "round.mutation") {
     const mutation = event.mutation;
     const gates = mutation?.gates;
@@ -267,6 +277,13 @@ export function parseRoundEnvelope(value: unknown): RoundEnvelope {
     return e;
   }
   if (event.type === "overlay" && validateOverlay(event.event)) {
+    const input = e.input ?? event.input;
+    if (
+      input !== undefined &&
+      event.event.type === "round.autopsy" &&
+      event.event.autopsy.input !== input
+    )
+      throw new Error("Missing or inconsistent autopsy input provenance");
     if (
       (e.trigger === "broadcaster-test" ||
         event.trigger === "broadcaster-test") &&

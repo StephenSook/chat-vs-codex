@@ -10,6 +10,7 @@ import {
 import { join } from "node:path";
 import type { ClientSnapshot } from "./client.js";
 import type { PreviousVerifiedRound, RoundEnvelope } from "./contracts.js";
+import { isRoundInput } from "./contracts.js";
 import type { RoundSnapshot } from "./engine.js";
 
 export const ROUND_TIMING_DEFINITION =
@@ -127,6 +128,22 @@ export function publicReceipt(input: {
 }) {
   const { result, client } = input;
   const autopsy = result.autopsy ?? null;
+  const recordedInputs = [
+    result.input,
+    autopsy?.input,
+    ...input.events.flatMap((envelope) => [
+      envelope.input,
+      envelope.event.input,
+    ]),
+  ].filter((value) => value !== undefined);
+  if (
+    recordedInputs.some((value) => !isRoundInput(value)) ||
+    new Set(recordedInputs).size > 1
+  )
+    throw new Error("Invalid or inconsistent round input provenance");
+  const inputProvenance = recordedInputs.length
+    ? { input: recordedInputs[0] }
+    : {};
   // Any retained test marker taints the entire receipt, even if another producer
   // accidentally omitted it on the terminal state. Never publish it as a viewer run.
   const provenance =
@@ -228,6 +245,7 @@ export function publicReceipt(input: {
             },
           },
     roundId: result.roundId,
+    ...inputProvenance,
     ...provenance,
     mode: input.mode ?? "local-fixture",
     ...(input.mode === "live-twitch"
@@ -254,6 +272,7 @@ export function publicReceipt(input: {
         ? null
         : {
             roundId: autopsy.roundId,
+            ...inputProvenance,
             ...provenance,
             status: autopsy.status,
             reason: autopsy.reason,
@@ -302,6 +321,7 @@ export function publicReceipt(input: {
         )?.wallTime ?? new Date().toISOString(),
     events: input.events.map(({ sequence, event, atMs, wallTime }) => ({
       sequence,
+      ...inputProvenance,
       ...provenance,
       type: event.type === "overlay" ? event.event.type : event.type,
       ...(event.type === "round.state" || event.type === "game.build"

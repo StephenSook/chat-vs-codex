@@ -15,6 +15,7 @@ import type {
   RoundAutopsy,
   RoundDurations,
   RoundEvent,
+  RoundInput,
   RoundRuntime,
   RuntimeObservation,
   RuntimeTimings,
@@ -32,6 +33,7 @@ export interface RoundSnapshot extends PublicState {
 }
 interface ActiveRound {
   id: string;
+  input: RoundInput;
   selectedFamily?: BugFamily;
   abort: AbortController;
   prepared: PreparedGame | null;
@@ -163,7 +165,10 @@ export class RoundEngine {
         });
         return;
       }
-      this.startRound(intent.actor);
+      this.startRound(
+        intent.actor,
+        intent.source === "reward" ? "channel-points" : intent.source,
+      );
       return;
     }
     const round = this.current;
@@ -194,9 +199,14 @@ export class RoundEngine {
     }
   }
 
-  private startRound(actor: string, selectedFamily?: BugFamily): void {
+  private startRound(
+    actor: string,
+    input: RoundInput,
+    selectedFamily?: BugFamily,
+  ): void {
     const round: ActiveRound = {
       id: randomUUID(),
+      input,
       ...(selectedFamily ? { selectedFamily } : {}),
       abort: new AbortController(),
       prepared: null,
@@ -229,7 +239,7 @@ export class RoundEngine {
     if (this.current) return { accepted: false, reason: "round-active" };
     if (!BUG_FAMILIES.includes(intent.family))
       return { accepted: false, reason: "invalid-family" };
-    this.startRound(intent.actor, intent.family);
+    this.startRound(intent.actor, "whisper", intent.family);
     return { accepted: true };
   }
 
@@ -274,6 +284,7 @@ export class RoundEngine {
       .trim();
     this.autopsy = {
       roundId: round.id,
+      input: round.input,
       ...(this.options.trigger ? { trigger: this.options.trigger } : {}),
       status: verified ? "verified" : "rolled-back",
       reason: round.reason,
@@ -348,6 +359,7 @@ export class RoundEngine {
   private publish(event: RoundEvent): void {
     this.options.publish({
       ...event,
+      ...(this.current ? { input: this.current.input } : {}),
       ...(this.options.trigger ? { trigger: this.options.trigger } : {}),
       ...this.stamp(),
     });
@@ -447,6 +459,7 @@ export class RoundEngine {
     this.state = {
       type: "round.state",
       roundId: round.id,
+      input: round.input,
       ...(this.options.trigger ? { trigger: this.options.trigger } : {}),
       phase,
       headStartEndsAt:

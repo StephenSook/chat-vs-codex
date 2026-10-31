@@ -72,6 +72,7 @@ export function renderBroadcast(state: BroadcastState): void {
       "breaker",
       "guesser",
       "trigger",
+      "input",
       "patch",
       "explanation",
       "green",

@@ -49,6 +49,10 @@ export function roundLabel(receipt: Receipt): string {
     : "LOCAL ROUND / FIXTURE";
 }
 
+export function roundInputLabel(receipt: Receipt): string {
+  return receipt.input ? `INPUT: ${receipt.input}` : "INPUT: Not recorded";
+}
+
 export function seconds(value: number | null | undefined): string {
   return value == null ? "unavailable" : `${(value / 1000).toFixed(2)} s`;
 }
