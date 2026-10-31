@@ -193,6 +193,7 @@ export async function executeRepair(
     combined.throwIfAborted();
     const runtimeOptions: RuntimeOptions = {
       shortHeadline: true,
+      inspector: options.workspace.inspector === true,
       workspace: options.workspace.game,
       home: options.workspace.home,
       launcher: options.launcher,
@@ -202,6 +203,9 @@ export async function executeRepair(
       signal: combined,
       prompt:
         options.ticket +
+        (options.workspace.inspector
+          ? "\n\nGame Inspector has immutable recordings of the original buggy visible replays. Use first_divergence and diff_telemetry to inspect them before editing; replay_frames returns a bounded recorded window. Recordings do not change after an edit."
+          : "") +
         (options.hint === null ? "" : `\n\nHint: ${options.hint}`),
       event: async (value) => {
         await log({

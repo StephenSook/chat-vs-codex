@@ -18,6 +18,7 @@ import { type PooledMutant, ROOT } from "../../mutator/src/gate.js";
 import { applyCandidate } from "../../mutator/src/index.js";
 import { TRACKS } from "../../replay/src/index.js";
 import { copyDependencies } from "./dependencies.js";
+import { materializeInspector } from "./inspector.js";
 import {
   loadRegressions,
   neutralRegressions,
@@ -32,6 +33,7 @@ export const neutralReplayName = (name: string): string => {
   return `replay-${String(index + 1).padStart(2, "0")}`;
 };
 export interface TrialWorkspace {
+  inspector?: true;
   parent: string;
   game: string;
   home: string;
@@ -162,6 +164,7 @@ for (const track of tracks) it(track.name, () => {
 export async function prepareWorkspace(
   mutant: PooledMutant | null,
   regressionsDirectory = REGRESSIONS_DIRECTORY,
+  inspector = false,
 ): Promise<TrialWorkspace> {
   const parent = await mkdtemp(join(tmpdir(), "cv-"));
   const game = join(parent, "game");
@@ -299,6 +302,7 @@ for (const record of records) it(record.name, () => {
       "node_modules/\n.cache/\n.tmp/\n",
     );
     await copyDependencies(game, ROOT);
+    if (inspector) await materializeInspector(game, mutant);
     git(game, ["init", "-b", "main"]);
     git(game, [
       "add",
@@ -325,6 +329,7 @@ for (const record of records) it(record.name, () => {
     if ((await readdir(parent)).join() !== "game")
       throw new Error("Trial parent has siblings");
     return {
+      ...(inspector ? { inspector: true as const } : {}),
       parent: await realpath(parent),
       game: await realpath(game),
       home,

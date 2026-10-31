@@ -68,10 +68,12 @@ export async function validateWorkspace(
   log: (value: unknown) => Promise<void>,
   onReplay?: (replay: ValidatedReplay) => void | Promise<void>,
 ): Promise<void> {
-  const codex = execFileSync("which", ["codex"], { encoding: "utf8" }).trim();
+  let codex: string | undefined;
   async function command(program: string, args: string[]): Promise<string> {
-    const budget = Math.min(15000, remaining());
-    if (budget <= 0) throw new Error("Hard trial budget expired");
+    const budget = Math.floor(Math.min(15000, remaining()));
+    if (!Number.isSafeInteger(budget) || budget <= 0)
+      throw new Error("Hard trial budget expired");
+    codex ??= execFileSync("which", ["codex"], { encoding: "utf8" }).trim();
     const result = spawnSync(
       codex,
       sandboxCommand(profile, workspace.game, program, args),

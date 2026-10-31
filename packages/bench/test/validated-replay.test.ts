@@ -121,6 +121,30 @@ interface ValidationLog {
 }
 
 describe("real validator with an explicit test-only policy adapter", () => {
+  it.each([0.9, 0, -1, Number.NaN])(
+    "refuses an exhausted fractional budget before launching validation (%s)",
+    async (remaining) => {
+      const log = vi.fn(async (_value: unknown) => {});
+      const unusedWorkspace: TrialWorkspace = {
+        parent: ".",
+        game: ".",
+        home: ".",
+        initialHead: "",
+        before: {},
+        cleanSources: {},
+        cleanup: async () => {},
+      };
+      await expect(
+        validateWorkspace(
+          unusedWorkspace,
+          await loadProfile(),
+          () => remaining,
+          log,
+        ),
+      ).rejects.toThrow("Hard trial budget expired");
+      expect(log).not.toHaveBeenCalled();
+    },
+  );
   it.each([false, true])(
     "collects only the same successful held-out execution (held-out-only failure=%s)",
     async (failHeldOut) => {
@@ -176,7 +200,10 @@ process.exit(result.error || result.signal ? 73 : result.status ?? 74);
         const validation = validateWorkspace(
           workspace,
           await loadProfile(),
-          () => 25000 - (performance.now() - started),
+          // The successful branch deliberately starts inside the final 15 s.
+          // spawnSync requires an integer even when the monotonic clock is fractional.
+          () =>
+            (failHeldOut ? 25000 : 14999.75) - (performance.now() - started),
           async (value) => {
             logs.push(value as ValidationLog);
           },

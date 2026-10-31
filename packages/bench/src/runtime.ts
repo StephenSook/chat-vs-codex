@@ -104,7 +104,41 @@ export async function createLauncher(
   await chmod(path, 0o700);
 }
 
+/** The Inspector receives stricter filesystem access than editable game tools. */
+export function inspectorProfile(profile: string): string {
+  permissionOverrides(profile);
+  const pattern = /^"\." = "write"$/gm;
+  if ([...profile.matchAll(pattern)].length !== 1)
+    throw new Error("Inspector requires the exact workspace write rule");
+  return profile.replace(pattern, '"." = "read"');
+}
+
+/** MCP subprocesses need their own explicit sandbox; SDK thread sandboxing alone
+ * does not constrain an MCP server started by the host CLI. */
+export function inspectorOverride(workspace: string, profile: string): string {
+  const root = realpathSync(workspace);
+  const command = execFileSync("which", ["codex"], { encoding: "utf8" }).trim();
+  if (!command.startsWith("/"))
+    throw new Error("Codex executable must be absolute");
+  const args = [
+    "sandbox",
+    ...permissionOverrides(inspectorProfile(profile)).flatMap((value) => [
+      "-c",
+      value,
+    ]),
+    "--permission-profile",
+    "hotfix",
+    "--cd",
+    root,
+    "--",
+    process.execPath,
+    join(root, "fixtures/inspector/server.mjs"),
+  ];
+  return `mcp_servers.game_inspector = { command = ${JSON.stringify(command)}, args = ${JSON.stringify(args)}, cwd = ${JSON.stringify(root)}, required = true, startup_timeout_sec = 10, tool_timeout_sec = 5, enabled_tools = ["replay_frames", "first_divergence", "diff_telemetry"] }`;
+}
+
 export interface RuntimeOptions extends ModelSpec {
+  inspector?: boolean;
   workspace: string;
   home: string;
   launcher: string;
@@ -141,7 +175,12 @@ export async function runRuntime(options: RuntimeOptions): Promise<{
   await mkdir(join(options.workspace, ".tmp"), { recursive: true });
   const codex = new Codex({
     codexPathOverride: options.launcher,
-    configOverrides: permissionOverrides(options.profile),
+    configOverrides: [
+      ...permissionOverrides(options.profile),
+      ...(options.inspector
+        ? [inspectorOverride(options.workspace, options.profile)]
+        : []),
+    ],
     env: runtimeEnvironment(options.workspace, options.home, options.codexHome),
   });
   const thread = codex.startThread({

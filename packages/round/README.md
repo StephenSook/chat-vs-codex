@@ -6,6 +6,13 @@ login, app, user and all 11 scopes, runs the clean sandbox gate, then opens one
 EventSub WebSocket on `steve_sociall`, including while offline. Build the overlay
 first. No command means no Codex call. Ctrl+C stops the listener and active round.
 
+Runtime rounds register the [Game Inspector](../../inspector-mcp/README.md) stdio
+tools before repair. Immutable recordings cover only the original buggy visible
+replays. The Inspector runs with read-only workspace access, no network and the
+same outside-workspace and temporary-directory denies. Fixture tests prove SDK
+registration and actual tool replies using a fake CLI; real Inspector use is a
+separate measurement from the previously verified rounds and benchmark.
+
 Use a different viewer account: the broadcaster doubles as the bot and its own
 messages are ignored. Bare `!break` chooses a gated unlearned mutant. Whispering
 one of the six enum families to the broadcaster selects a secret round; phone

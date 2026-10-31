@@ -180,7 +180,11 @@ export function createRoundRuntime(
       if (!mutant) throw new Error("No eligible pooled mutant");
       await mkdir(runs, { recursive: true, mode: 0o700 });
       const logFile = join(runs, `${randomUUID()}.jsonl`);
-      const workspace = await prepareWorkspace(mutant, regressionsDirectory);
+      const workspace = await prepareWorkspace(
+        mutant,
+        regressionsDirectory,
+        true,
+      );
       let closed = false;
       let repairStarted = false;
       const closing = new AbortController();

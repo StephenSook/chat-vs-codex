@@ -31,6 +31,12 @@ browser, presents committed round receipts and re-simulates recorded validation
 tracks when the matching build is available. Run `pnpm judge:build`; the static
 output is `apps/judge/dist/`. Run `pnpm judge:smoke` for its Playwright preview check.
 
+The [Game Inspector MCP](packages/inspector-mcp/README.md) gives runtime rounds
+read-only player and enemy telemetry from the original visible replays. Its SDK
+wiring is tested with a fake CLI and the real validation gate. The retained
+benchmark predates Inspector; a real Inspector round and timing comparison remain
+to be measured.
+
 `packages/sim` is a DOM-free 60 Hz platformer using Q8 integers (256 units per
 pixel). State and the level live outside paired mutation regions. The replay
 package supplies seven hand-authored tracks, per-frame state hashes, recorded
