@@ -40,6 +40,22 @@ PR with hashed credits. See the [publication guide](docs/CHAT-FOUND.md).
 The real [Twitch authorization and subscription check](docs/TWITCH-VERIFICATION.md)
 verified the broadcaster and all nine subscriptions without sending chat.
 
+## Build receipt
+
+Main Codex thread: `01a19004-23e3-7883-89a7-f08faee625a5`.
+Through turn 10, the thread ran 12 completed turns, 1,184 command executions and
+146 file changes. Stephen counted the completed-turn, command-execution and
+file-change records in the thread's JSON event logs outside this repository.
+These are historical event counts, not unique files or current totals. The
+private logs are not published here.
+
+At that checkpoint, main had 54 commits, all authored by Stephen Sookra through
+Codex. Recompute the checkpoint's reachable commits with
+`git rev-list --count af1e0fe` and inspect authors with
+`git log af1e0fe --format='%an'`. The judge site's
+[build section](https://chat-vs-codex-judge.vercel.app/#build) computes the current
+reachable commit count at build time with `git rev-list --count HEAD`.
+
 Requires Node 22 and pnpm. Run `pnpm ci:local` to mirror the workflow: frozen
 install, typecheck, lint, test. `pnpm check` repeats the checks without installing.
 Set `CI=true` when running the install without a TTY.
