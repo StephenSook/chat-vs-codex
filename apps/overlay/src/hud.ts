@@ -19,6 +19,14 @@ export function resizeStage(): void {
 }
 
 export function renderBroadcast(state: BroadcastState): void {
+  const busyMachine =
+    state.machine?.busy === true &&
+    state.roundId !== null &&
+    state.autopsy === null;
+  element("machine-note").textContent = "Busy machine, results may be slow";
+  element("machine-note").hidden = !busyMachine;
+  const season = element("season-line");
+  season.hidden = busyMachine || !season.textContent;
   element("idle-cta").textContent = IDLE_CTA;
   element("idle-cta").hidden = !idleCtaVisible(state);
   element("boss-note").hidden = !state.bossNote;

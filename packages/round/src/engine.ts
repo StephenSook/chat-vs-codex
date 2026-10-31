@@ -12,6 +12,7 @@ import type {
   BossModel,
   BossReceipt,
   GameArtifact,
+  MachineLoad,
   PreparedGame,
   PreviousVerifiedRound,
   RegressionTest,
@@ -23,12 +24,15 @@ import type {
   RuntimeObservation,
   RuntimeTimings,
 } from "./contracts.js";
+import { validMachineLoad } from "./contracts.js";
+import { sampleMachine } from "./machine.js";
 import { sdkOverlayEvent } from "./sdk-events.js";
 
 const CLEANUP_BUDGET_MS = 5_000;
 
 type PublicState = Extract<RoundEvent, { type: "round.state" }>;
 export interface RoundSnapshot extends PublicState {
+  machine?: MachineLoad;
   scores: { chat: number; codex: number };
   guessClosesAt: number | null;
   active: boolean;
@@ -113,6 +117,7 @@ export class RoundEngine {
   private readonly identityKey = randomBytes(32);
   private previous: PreviousVerifiedRound | null;
   private autopsy: RoundAutopsy | null = null;
+  private machine: MachineLoad | undefined;
 
   constructor(
     private readonly options: {
@@ -125,6 +130,7 @@ export class RoundEngine {
         signal: AbortSignal,
       ): Promise<void>;
       now?: () => number;
+      inspectMachine?: () => MachineLoad;
       headStartMs?: number;
       roundLimitMs?: number;
       hardBudgetMs?: number;
@@ -158,6 +164,7 @@ export class RoundEngine {
       guessClosesAt: this.guessClosesAt,
       active: this.current !== null,
       autopsy: this.autopsy,
+      ...(this.machine ? { machine: { ...this.machine } } : {}),
     };
   }
   waitForRound(): Promise<RoundSnapshot> {
@@ -259,6 +266,12 @@ export class RoundEngine {
       }
       boss = newBossReceipt(memory);
     }
+    const machine = (
+      this.options.inspectMachine ?? (() => sampleMachine({ now: this.now }))
+    )();
+    if (!validMachineLoad(machine))
+      throw new Error("Invalid machine load measurement");
+    this.machine = { ...machine };
     this.requestedRounds++;
     const round: ActiveRound = {
       ...(boss ? { boss } : {}),
@@ -290,6 +303,17 @@ export class RoundEngine {
     this.autopsy = null;
     this.guessClosesAt = null;
     this.phase(round, "preparing");
+    this.overlay({ type: "machine.reset", roundId: round.id });
+    this.publish({
+      type: "round.machine",
+      roundId: round.id,
+      machine: { ...machine },
+    });
+    this.overlay({
+      type: "machine.load",
+      roundId: round.id,
+      machine: { ...machine },
+    });
     this.task = this.run(round);
   }
 

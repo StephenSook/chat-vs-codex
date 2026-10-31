@@ -18,6 +18,37 @@ export function isRoundInput(value: unknown): value is RoundInput {
   );
 }
 
+/** Advisory CPU sample. No model settings, budgets or game behavior depend on it. */
+export interface MachineLoad {
+  load1m: number;
+  coreCount: number;
+  busy: boolean;
+  atMs: number;
+  wallTime: string;
+}
+export function validMachineLoad(value: unknown): value is MachineLoad {
+  if (!value || typeof value !== "object") return false;
+  const sample = value as MachineLoad;
+  const keys = ["load1m", "coreCount", "busy", "atMs", "wallTime"];
+  return (
+    Object.keys(sample).length === keys.length &&
+    Object.keys(sample).every((key) => keys.includes(key)) &&
+    typeof sample.load1m === "number" &&
+    Number.isFinite(sample.load1m) &&
+    sample.load1m >= 0 &&
+    Number.isSafeInteger(sample.coreCount) &&
+    sample.coreCount > 0 &&
+    typeof sample.busy === "boolean" &&
+    sample.busy === sample.load1m > sample.coreCount &&
+    typeof sample.atMs === "number" &&
+    Number.isFinite(sample.atMs) &&
+    sample.atMs >= 0 &&
+    typeof sample.wallTime === "string" &&
+    Number.isFinite(Date.parse(sample.wallTime)) &&
+    new Date(sample.wallTime).toISOString() === sample.wallTime
+  );
+}
+
 /** Host-owned session identity, sent on each SSE connection before round events. */
 export interface RoundSession {
   mode: "local-fixture" | "live-twitch";
@@ -313,6 +344,7 @@ export interface RoundRuntime {
 }
 
 type RoundEventPayload =
+  | { type: "round.machine"; roundId: string; machine: MachineLoad }
   | {
       type: "round.boss-winner";
       roundId: string;

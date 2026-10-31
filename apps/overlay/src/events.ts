@@ -1,5 +1,6 @@
 import type {
   BossModel,
+  MachineLoad,
   RoundAutopsy,
   RoundValidationReplay,
   SymptomReplay,
@@ -31,6 +32,8 @@ export type CodexStep =
   | { kind: "activity"; action: CodexAction };
 
 export type OverlayEvent =
+  | { type: "machine.reset"; roundId: string }
+  | { type: "machine.load"; roundId: string; machine: MachineLoad }
   | { type: "boss.note"; text: "BOSS PAUSED · LOW MEMORY" }
   | { type: "boss.started"; roundId: string }
   | { type: "boss.predictions"; roundId: string; sol: number; terra: number }
@@ -89,6 +92,7 @@ export interface DisplayStep {
 }
 
 export interface BroadcastState {
+  machine: MachineLoad | null;
   boss: {
     sol: readonly DisplayStep[];
     terra: readonly DisplayStep[];
@@ -116,6 +120,7 @@ export interface BroadcastState {
 
 export function initialBroadcast(): BroadcastState {
   return {
+    machine: null,
     boss: null,
     bossNote: null,
     roundId: null,
@@ -174,6 +179,10 @@ export function reduceBroadcast(
 ): BroadcastState {
   if ("roundId" in event && event.roundId !== state.roundId) return state;
   switch (event.type) {
+    case "machine.reset":
+      return { ...state, machine: null };
+    case "machine.load":
+      return { ...state, machine: { ...event.machine } };
     case "boss.note":
       return { ...state, bossNote: event.text };
     case "boss.started":
@@ -204,6 +213,7 @@ export function reduceBroadcast(
     case "round.started":
       return {
         ...initialBroadcast(),
+        machine: state.machine,
         chat: state.chat,
         codex: state.codex,
         roundId: event.id,

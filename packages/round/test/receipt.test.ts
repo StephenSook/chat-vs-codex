@@ -481,3 +481,26 @@ it("refuses identities and inconsistent round inputs instead of publishing them"
   ).toThrow("input provenance");
   expect(publicReceipt(input)).not.toHaveProperty("input");
 });
+
+it("keeps a validated CPU load sample and refuses malformed public machine evidence", () => {
+  const input = verified();
+  const machine = {
+    load1m: 9,
+    coreCount: 8,
+    busy: true,
+    atMs: 1000,
+    wallTime: "2026-10-31T18:00:00.000Z",
+  };
+  const receipt = publicReceipt({
+    ...input,
+    result: { ...input.result, machine },
+  });
+  expect(receipt.machine).toEqual(machine);
+  expect(publicReceipt(input)).not.toHaveProperty("machine");
+  expect(() =>
+    publicReceipt({
+      ...input,
+      result: { ...input.result, machine: { ...machine, busy: false } },
+    }),
+  ).toThrow("Invalid machine load evidence");
+});

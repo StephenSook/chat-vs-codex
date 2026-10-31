@@ -8,6 +8,7 @@ import type {
 import {
   isRoundInput,
   validBossReceipt,
+  validMachineLoad,
 } from "../../../packages/round/src/contracts.js";
 import {
   parseViewerSeason,
@@ -78,6 +79,10 @@ function validateOverlay(event: unknown): event is OverlayEvent {
   const integer = (key: string) =>
     Number.isSafeInteger(e[key]) && Number(e[key]) >= 0;
   switch (e.type) {
+    case "machine.reset":
+      return typeof e.roundId === "string";
+    case "machine.load":
+      return typeof e.roundId === "string" && validMachineLoad(e.machine);
     case "boss.note":
       return e.text === "BOSS PAUSED · LOW MEMORY";
     case "boss.started":
@@ -278,6 +283,11 @@ export function parseRoundEnvelope(value: unknown): RoundEnvelope {
       e.input !== event.input)
   )
     throw new Error("Invalid round input provenance");
+  if (event.type === "round.machine") {
+    if (typeof event.roundId !== "string" || !validMachineLoad(event.machine))
+      throw new Error("Invalid machine load measurement");
+    return e;
+  }
   if (event.type === "round.boss-winner") {
     if (
       typeof event.roundId !== "string" ||

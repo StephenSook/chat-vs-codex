@@ -160,7 +160,7 @@ async function start(): Promise<void> {
     ? connectRoundBridge(bridgeUrl, {
         onSeason(season) {
           element("season-line").textContent = seasonLine(season);
-          element("season-line").hidden = false;
+          renderBroadcast(broadcast);
         },
         onSession(session) {
           element("playback-label").textContent = roundSessionLabel(session);

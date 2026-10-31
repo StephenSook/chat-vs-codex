@@ -10,7 +10,11 @@ import {
 import { join } from "node:path";
 import type { ClientSnapshot } from "./client.js";
 import type { PreviousVerifiedRound, RoundEnvelope } from "./contracts.js";
-import { isRoundInput, validBossReceipt } from "./contracts.js";
+import {
+  isRoundInput,
+  validBossReceipt,
+  validMachineLoad,
+} from "./contracts.js";
 import type { RoundSnapshot } from "./engine.js";
 
 export const ROUND_TIMING_DEFINITION =
@@ -128,6 +132,8 @@ export function publicReceipt(input: {
 }) {
   const { result, client } = input;
   const autopsy = result.autopsy ?? null;
+  if (result.machine !== undefined && !validMachineLoad(result.machine))
+    throw new Error("Invalid machine load evidence");
   if (autopsy?.boss && !validBossReceipt(autopsy.boss))
     throw new Error("Invalid boss evidence");
   const recordedInputs = [
@@ -224,6 +230,17 @@ export function publicReceipt(input: {
     mutationEvent?.type === "round.mutation" ? mutationEvent.mutation : null;
   return {
     schemaVersion: 1,
+    ...(result.machine
+      ? {
+          machine: {
+            load1m: result.machine.load1m,
+            coreCount: result.machine.coreCount,
+            busy: result.machine.busy,
+            atMs: result.machine.atMs,
+            wallTime: result.machine.wallTime,
+          },
+        }
+      : {}),
     mutation:
       mutation === null
         ? null

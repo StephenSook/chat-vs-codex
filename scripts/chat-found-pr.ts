@@ -15,6 +15,7 @@ import { parseRegression } from "../packages/bench/src/regressions.js";
 import {
   isRoundInput,
   validBossReceipt,
+  validMachineLoad,
 } from "../packages/round/src/contracts.js";
 import type { publicReceipt } from "../packages/round/src/receipt.js";
 import {
@@ -76,6 +77,10 @@ async function confinedFile(root: string, path: string): Promise<Buffer> {
 
 /** Public receipt keys only. Unknown identity fields cannot hitchhike into a PR. */
 const RECEIPT_KEYS = new Set([
+  "machine",
+  "load1m",
+  "coreCount",
+  "busy",
   "boss",
   "memory",
   "threads",
@@ -182,6 +187,8 @@ function publicFields(value: unknown): void {
       throw new Error("Public receipt credits must be hashed viewer labels");
     if (key === "input" && !isRoundInput(child))
       throw new Error("Public receipt input must be a recognized enum");
+    if (key === "machine" && !validMachineLoad(child))
+      throw new Error("Invalid machine load receipt metadata");
     if (key === "boss" && !validBossReceipt(child))
       throw new Error("Invalid boss receipt metadata");
     publicFields(child);

@@ -426,3 +426,30 @@ it("publishes two validated boss results but refuses malformed or identity metad
     "Unexpected public",
   );
 });
+
+it("accepts measured machine metadata and refuses a false advisory or extra identity fields", async () => {
+  const f = await fixture();
+  await f.addEvidence();
+  const file = join(f.root, receiptPath);
+  const row = JSON.parse(await readFile(file, "utf8"));
+  row.machine = {
+    load1m: 9,
+    coreCount: 8,
+    busy: true,
+    atMs: 1000,
+    wallTime: "2026-10-31T18:00:00.000Z",
+  };
+  await writeFile(file, JSON.stringify(row));
+  expect(await collectNewRegressions(f.root, f.run)).toHaveLength(1);
+  row.machine.busy = false;
+  await writeFile(file, JSON.stringify(row));
+  await expect(collectNewRegressions(f.root, f.run)).rejects.toThrow(
+    "Invalid machine load",
+  );
+  row.machine.busy = true;
+  row.machine.username = "never-public";
+  await writeFile(file, JSON.stringify(row));
+  await expect(collectNewRegressions(f.root, f.run)).rejects.toThrow(
+    "Invalid machine load",
+  );
+});
