@@ -68,14 +68,23 @@ body {
   display: none;
 }
 #stage {
+  --stage-scale: var(--fallback-stage-scale, 1);
   position: absolute;
   top: 50%;
   left: 50%;
   width: 1920px;
   height: 1080px;
   transform-origin: center;
+  transform: translate(-50%, -50%) scale(var(--stage-scale));
   background: radial-gradient(ellipse at 32% 56%, #fffbf1 0 38%, #f3ecdd 75%);
   overflow: hidden;
+}
+/* Viewport layout changes immediately, without waiting for a resize event.
+   Older OBS Chromium keeps the numeric JavaScript fallback above. */
+@supports (transform: scale(calc(1px / 1px))) {
+  #stage {
+    --stage-scale: min(calc(100vw / 1920px), calc(100vh / 1080px));
+  }
 }
 .card,
 .scorebug {

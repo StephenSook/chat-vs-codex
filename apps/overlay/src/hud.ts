@@ -15,7 +15,7 @@ export function element<T extends HTMLElement = HTMLElement>(id: string): T {
 export function resizeStage(): void {
   // Numeric JS scale also works in OBS Chromium versions without CSS division.
   const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-  element("stage").style.transform = `translate(-50%, -50%) scale(${scale})`;
+  element("stage").style.setProperty("--fallback-stage-scale", String(scale));
 }
 
 export function renderBroadcast(state: BroadcastState): void {
