@@ -5,7 +5,7 @@ import {
   OBS_SCENE_PATH,
   type obsSceneCollection,
 } from "../../../scripts/obs-scene.js";
-import { OVERLAY_URL, ROUND_ORIGIN, ROUND_PORT } from "../src/address.js";
+import { ROUND_ORIGIN, ROUND_PORT } from "../src/address.js";
 
 it("ships a fresh native OBS collection that resolves its browser source and uses the live runner address", async () => {
   await expect(generateObsScene(true)).resolves.toBe(OBS_SCENE_PATH);
@@ -35,7 +35,7 @@ it("ships a fresh native OBS collection that resolves its browser source and use
     ],
   });
   expect(browser?.settings).toMatchObject({
-    url: OVERLAY_URL,
+    reroute_audio: true,
     width: 1920,
     height: 1080,
     fps_custom: true,
@@ -43,7 +43,8 @@ it("ships a fresh native OBS collection that resolves its browser source and use
     shutdown: false,
     restart_when_active: false,
   });
-  const url = new URL(OVERLAY_URL);
+  const url = new URL(browser?.settings.url ?? "");
+  expect(url.searchParams.get("sound")).toBe("on");
   expect(url.origin).toBe(ROUND_ORIGIN);
   expect(Number(url.port)).toBe(ROUND_PORT);
   expect(url.searchParams.get("bridge")).toBe(ROUND_ORIGIN);

@@ -7,9 +7,17 @@ private. The runner reads the public Client ID from `TWITCH_CLIENT_ID`.
 
 ## Sound and optional voice
 
-Click **ENABLE SOUND** in the overlay, or right-click the browser source in OBS
-and choose **Interact**. Volume defaults to 15%; the same mute and volume controls
-apply to the original round sounds and optional commentary.
+The generated OBS browser-source URL includes `sound=on`, which arms sound without
+a click at 15% volume on each page load. In the browser source's **Properties**,
+enable **Control audio via OBS**, then press **Refresh cache of current page**.
+The source appears in OBS's Audio Mixer. Keep the browser-source fader at unity
+initially; the overlay already applies the stream-safe volume.
+
+The small corner speaker icon mutes audio; its adjacent slider changes volume.
+Use OBS's **Interact** window to operate those controls. Normal browsers without
+`sound=on` still require a click on the speaker icon to enable sound. If a browser
+blocks autoplay, the same icon restores the click-to-enable path. No large sound
+button or instruction is drawn on the broadcast. The controls also govern voice.
 
 Commentary is off by default. With AWS credentials already available through the
 standard provider chain, opt in for one runner session:

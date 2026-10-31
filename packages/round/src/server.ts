@@ -143,6 +143,7 @@ export async function startRoundServer(
             ".css": "text/css",
             ".svg": "image/svg+xml",
             ".woff2": "font/woff2",
+            ".wav": "audio/wav",
           };
           response.writeHead(200, {
             "Content-Type":

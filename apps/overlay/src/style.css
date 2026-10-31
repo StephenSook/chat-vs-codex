@@ -19,20 +19,38 @@
   align-items: center;
   gap: 8px;
   z-index: 5;
-  font-size: 16px;
+  font-size: 12px;
 }
 .audio-controls button {
-  border: 2px solid var(--ink);
-  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 24px;
+  border: 1px solid var(--ink);
+  border-radius: 5px;
   background: var(--cream);
   color: var(--ink);
-  box-shadow: 0 3px 0 var(--ink);
-  padding: 7px 10px;
+  box-shadow: 0 1px 0 var(--ink);
+  padding: 3px;
   font: inherit;
   cursor: pointer;
 }
+.audio-controls svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+.audio-controls .audio-on,
+.audio-controls button:not(.is-muted) .audio-off {
+  display: none;
+}
+.audio-controls button:not(.is-muted) .audio-on {
+  display: initial;
+}
 .audio-controls input {
-  width: 90px;
+  width: 64px;
   accent-color: var(--codex);
 }
 .audio-controls :focus-visible {

@@ -21,8 +21,12 @@ The bug ticket sits above the playfield; the head start and Pit Crew use a right
 
 ## Sound
 
-Click **ENABLE SOUND** once in the browser, or use OBS's browser-source **Interact**
-window. Four original short WAVs accompany an installed bug, the first correct
+For OBS, add `sound=on` to the overlay URL to arm audio without a click at 15%
+volume on every page load. Enable **Control audio via OBS** in browser-source
+Properties, then **Refresh cache of current page**. Normal browsers keep the
+click-to-enable path through the small corner speaker icon. **Interact** exposes
+that mute toggle and volume slider in OBS; no large sound instruction is shown.
+Four original short WAVs accompany an installed bug, the first correct
 chat guess, a verified fix and a failed round. Volume starts at 15%; mute and volume
 preferences persist locally. Sounds follow real round events and old events never
 queue for later playback. Focused sound controls do not move the player.

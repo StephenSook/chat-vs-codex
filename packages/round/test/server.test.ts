@@ -1,8 +1,16 @@
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import { request } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import {
   headStartSeconds,
@@ -26,6 +34,20 @@ async function server(options: Parameters<typeof startRoundServer>[0] = {}) {
   cleanups.push(() => running.close());
   return running;
 }
+
+it("serves an original SFX with its WAV media type and exact bytes on a temporary port", async () => {
+  const overlay = new URL("../../../apps/overlay/public/", import.meta.url);
+  const running = await server({ overlayDirectory: fileURLToPath(overlay) });
+  expect(new URL(running.origin).port).not.toBe("4317");
+  const response = await fetch(`${running.origin}/audio/codex-fix.wav`);
+  expect(response.status).toBe(200);
+  expect(response.headers.get("content-type")).toBe("audio/wav");
+  const bytes = Buffer.from(await response.arrayBuffer());
+  expect(bytes).toEqual(
+    await readFile(new URL("audio/codex-fix.wav", overlay)),
+  );
+  expect(bytes.toString("ascii", 0, 4)).toBe("RIFF");
+});
 
 function artifact(code = "export const marker = 1;"): GameArtifact {
   const digest = createHash("sha256").update(code).digest("hex");

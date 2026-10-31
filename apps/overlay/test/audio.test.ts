@@ -9,7 +9,7 @@ import {
 } from "../../../scripts/sound-synth.js";
 import { type AudioClip, DEFAULT_VOLUME, OverlayAudio } from "../src/audio.js";
 
-function setup() {
+function setup(autoArm = false) {
   const clips: { url: string; clip: AudioClip; end: () => void }[] = [];
   const createClip = vi.fn((url: string) => {
     const row = {
@@ -27,7 +27,7 @@ function setup() {
     clips.push(row);
     return row.clip;
   });
-  const audio = new OverlayAudio({ createClip });
+  const audio = new OverlayAudio({ createClip, autoArm });
   const start = (id = "r1") =>
     audio.observe({ type: "round.started", id, number: 1, atMs: 0 });
   return { audio, clips, createClip, start };
@@ -69,6 +69,66 @@ describe("original sound assets", () => {
 });
 
 describe("observed overlay audio", () => {
+  it("arms OBS without a click, stays silent until an actual event and keeps mute controls", async () => {
+    const { audio, clips, start } = setup(true);
+    expect(audio.snapshot()).toEqual({
+      muted: false,
+      volume: DEFAULT_VOLUME,
+      unlocked: true,
+      blocked: false,
+    });
+    expect(clips).toHaveLength(0);
+    start();
+    audio.observeBuild({ roundId: "r1", phase: "broken" });
+    expect(clips).toHaveLength(1);
+    expect(clips[0]?.url).toBe("/audio/bug-in.wav");
+    expect(clips[0]?.clip.volume).toBe(DEFAULT_VOLUME);
+    audio.setMuted(true);
+    expect(clips[0]?.clip.pause).toHaveBeenCalledOnce();
+    audio.observe({ type: "tests.green", roundId: "r1" });
+    expect(clips).toHaveLength(1);
+    audio.setMuted(false);
+    audio.setVolume(0.1);
+    start("r2");
+    audio.observeBuild({ roundId: "r2", phase: "broken" });
+    expect(clips[1]?.clip.volume).toBe(0.1);
+  });
+  it("starts explicitly armed audio at the safe default even with loud stored preferences", () => {
+    const audio = new OverlayAudio({
+      autoArm: true,
+      createClip: vi.fn(),
+      storage: {
+        getItem: () => JSON.stringify({ muted: true, volume: 1 }),
+        setItem: vi.fn(),
+      },
+    });
+    expect(audio.snapshot()).toMatchObject({
+      volume: DEFAULT_VOLUME,
+      muted: false,
+      unlocked: true,
+    });
+  });
+  it("falls back to gesture recovery if a browser refuses an armed clip without replaying it", async () => {
+    const { audio, clips, createClip, start } = setup(true);
+    start();
+    const rejected = {
+      volume: 1,
+      play: vi.fn(async () => {
+        throw new Error("NotAllowedError");
+      }),
+      pause: vi.fn(),
+      addEventListener: vi.fn(),
+    };
+    createClip.mockReturnValueOnce(rejected);
+    audio.observeBuild({ roundId: "r1", phase: "broken" });
+    await Promise.resolve();
+    expect(audio.snapshot()).toMatchObject({ blocked: true, unlocked: false });
+    await audio.unlock();
+    expect(audio.snapshot()).toMatchObject({ blocked: false, unlocked: true });
+    audio.observeBuild({ roundId: "r1", phase: "broken" });
+    expect(rejected.play).toHaveBeenCalledOnce();
+    expect(clips).toHaveLength(1); // Only the gesture's silent unlock probe.
+  });
   it("stays silent before a user gesture and never queues old events", async () => {
     const { audio, clips, start } = setup();
     expect(audio.snapshot()).toEqual({

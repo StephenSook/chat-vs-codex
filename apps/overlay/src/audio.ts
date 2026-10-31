@@ -39,6 +39,7 @@ export class OverlayAudio {
   constructor(
     private readonly options: {
       createClip: (url: string) => AudioClip;
+      autoArm?: boolean;
       storage?: AudioStorage;
       onChange?: (status: AudioStatus) => void;
     },
@@ -58,6 +59,12 @@ export class OverlayAudio {
         this.settings = { muted: raw.muted, volume: boundVolume(raw.volume) };
     } catch {
       /* Browser storage is optional, including in OBS. */
+    }
+    if (options.autoArm) {
+      // OBS permits autoplay. An ordinary browser may still refuse play(),
+      // which returns to the existing gesture path without queuing old sounds.
+      this.settings = { muted: false, volume: DEFAULT_VOLUME };
+      this.unlocked = true;
     }
   }
   snapshot(): AudioStatus {

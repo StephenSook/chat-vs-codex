@@ -53,12 +53,18 @@ async function start(): Promise<void> {
   const audioButton = element("audio-toggle") as HTMLButtonElement;
   const audioVolume = element("audio-volume") as HTMLInputElement;
   function renderAudio(status: AudioStatus): void {
-    audioButton.textContent =
+    const label =
       !status.unlocked || status.blocked
         ? "ENABLE SOUND"
         : status.muted
           ? "UNMUTE"
           : "MUTE";
+    audioButton.setAttribute("aria-label", label);
+    audioButton.title = label.toLowerCase();
+    audioButton.classList.toggle(
+      "is-muted",
+      !status.unlocked || status.blocked || status.muted,
+    );
     audioButton.setAttribute(
       "aria-pressed",
       String(status.unlocked && !status.muted),
@@ -73,6 +79,7 @@ async function start(): Promise<void> {
   }
   const audio = new OverlayAudio({
     createClip: (url) => new Audio(url),
+    autoArm: params.get("sound") === "on",
     ...(storage ? { storage } : {}),
     onChange: renderAudio,
   });

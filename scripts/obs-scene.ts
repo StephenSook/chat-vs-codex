@@ -14,6 +14,8 @@ export const OBS_SCENE_PATH = fileURLToPath(
  * Output resolution and fps are PROFILE settings, set separately in OBS Settings > Video.
  */
 export function obsSceneCollection() {
+  const overlayUrl = new URL(OVERLAY_URL);
+  overlayUrl.searchParams.set("sound", "on");
   const sceneName = "Chat vs Codex";
   const browserName = "Chat vs Codex Game";
   const browserUuid = "3c03c6b0-5383-4c49-bb1d-ecf9d6ac56d0";
@@ -30,7 +32,7 @@ export function obsSceneCollection() {
         id: "browser_source",
         versioned_id: "browser_source",
         settings: {
-          url: OVERLAY_URL,
+          url: overlayUrl.href,
           is_local_file: false,
           width: 1920,
           height: 1080,
@@ -38,7 +40,7 @@ export function obsSceneCollection() {
           fps: 60,
           shutdown: false,
           restart_when_active: false,
-          reroute_audio: false,
+          reroute_audio: true,
         },
         enabled: true,
         muted: false,
