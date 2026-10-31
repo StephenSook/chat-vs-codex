@@ -30,6 +30,7 @@
     "breakout:pool": "tsx packages/hotfix-ready/src/cli.ts gate games/breakout",
     "breakout:bench": "tsx games/breakout/bench.ts",
     "sound:generate": "tsx scripts/sound-synth.ts",
+    "chat-found:pr": "tsx scripts/chat-found-pr.ts",
     "ci:local": "pnpm install --frozen-lockfile && pnpm typecheck && pnpm lint && pnpm test",
     "check": "pnpm typecheck && pnpm lint && pnpm test"
   },

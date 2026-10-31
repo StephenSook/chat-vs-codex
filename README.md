@@ -21,6 +21,8 @@ The [streaming guide](docs/STREAMING.md) covers the offline channel test, OBS sc
 import, keyboard play and Twitch account connection without a stored stream key.
 The [Channel Points guide](docs/CHANNEL-POINTS.md) covers reward creation,
 dashboard fallback and redemption settlement.
+After new verified rounds, `pnpm chat-found:pr` opens one evidence-only regression
+PR with hashed credits. See the [publication guide](docs/CHAT-FOUND.md).
 The real [Twitch authorization and subscription check](docs/TWITCH-VERIFICATION.md)
 verified the broadcaster and all nine subscriptions without sending chat.
 
