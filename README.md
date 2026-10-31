@@ -3,11 +3,21 @@
 Chat breaks the platformer a streamer is playing. Codex races viewers to diagnose
 and repair the real TypeScript bug, checked by deterministic replay tests.
 
-This repository starts with the timing spike's simulation, replay fixtures and
-offline mutation gate and runtime Codex benchmark. Twitch and rendering are later steps.
+The runtime spike repaired 211 of 212 planted bugs. Terra low finished green trials
+in a 14.52 second median; Sol high in 29.40 seconds. Both pass the GO gate.
+[Results and limits](bench/SUMMARY.md) include the retained infrastructure loss,
+alternate fixes and per-family timings. Raw [results](bench/results.jsonl) and
+[run logs](bench/runs/) are retained for recomputation.
+
+The [broadcast overlay](apps/overlay/README.md) renders the shared simulation with
+a follow camera, keyboard play and a typed event contract. The
+[Twitch foundation](packages/twitch/README.md) provides device authorization,
+inbound EventSub routing and offline fixture replay. Connecting these to live
+rounds and runtime Codex remains unfinished.
 
 Requires Node 22 and pnpm. Run `pnpm ci:local` to mirror the workflow: frozen
 install, typecheck, lint, test. `pnpm check` repeats the checks without installing.
+Set `CI=true` when running the install without a TTY.
 
 `packages/sim` is a DOM-free 60 Hz platformer using Q8 integers (256 units per
 pixel). State and the level live outside paired mutation regions. The replay
@@ -81,7 +91,8 @@ the mandatory outside-sandbox canary and batch preflight enforce the real profil
 
 Events, validation stdout/stderr and run manifests go to `bench/runs/*.jsonl`;
 each trial appends to `bench/results.jsonl`. Return these files for committing
-after an outside-sandbox run. No measured timing or fix-rate claim exists yet.
+after an outside-sandbox run. The completed 212-trial batch is committed alongside
+[its summary](bench/SUMMARY.md).
 The single sandbox dry run exited before a model thread started: a PATH-alias
 permission warning preceded a fatal permission-profile parsing error. Its raw
 record says `sandbox-blocked`; the accompanying diagnosis identifies the fatal

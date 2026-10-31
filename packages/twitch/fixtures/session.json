@@ -1,0 +1,184 @@
+[
+  {
+    "type": "channel.chat.message",
+    "event": {
+      "broadcaster_user_id": "fixture-channel",
+      "broadcaster_user_login": "fixture_channel",
+      "broadcaster_user_name": "Fixture Channel",
+      "chatter_user_id": "fixture-viewer",
+      "chatter_user_login": "fixture_viewer",
+      "chatter_user_name": "Fixture Viewer",
+      "message_id": "chat-1",
+      "message": {
+        "text": "!break",
+        "fragments": [
+          {
+            "type": "text",
+            "text": "!break",
+            "cheermote": null,
+            "emote": null,
+            "mention": null
+          }
+        ]
+      },
+      "message_type": "text",
+      "badges": [],
+      "cheer": null,
+      "color": "",
+      "reply": null,
+      "channel_points_custom_reward_id": null,
+      "source_broadcaster_user_id": null,
+      "source_broadcaster_user_login": null,
+      "source_broadcaster_user_name": null,
+      "source_message_id": null,
+      "source_badges": null,
+      "is_source_only": null
+    }
+  },
+  {
+    "type": "user.whisper.message",
+    "event": {
+      "from_user_id": "fixture-viewer",
+      "from_user_login": "fixture_viewer",
+      "from_user_name": "Fixture Viewer",
+      "to_user_id": "fixture-channel",
+      "to_user_login": "fixture_channel",
+      "to_user_name": "Fixture Channel",
+      "whisper_id": "whisper-1",
+      "whisper": {
+        "text": "gravity-sign"
+      }
+    }
+  },
+  {
+    "type": "channel.channel_points_custom_reward_redemption.add",
+    "event": {
+      "broadcaster_user_id": "fixture-channel",
+      "broadcaster_user_login": "fixture_channel",
+      "broadcaster_user_name": "Fixture Channel",
+      "user_id": "fixture-viewer",
+      "user_login": "fixture_viewer",
+      "user_name": "Fixture Viewer",
+      "id": "redemption-1",
+      "user_input": "",
+      "status": "unfulfilled",
+      "reward": {
+        "id": "fixture-reward",
+        "title": "Break the game",
+        "cost": 100,
+        "prompt": ""
+      },
+      "redeemed_at": "2026-10-31T12:00:00Z"
+    }
+  },
+  {
+    "type": "channel.custom_power_up_redemption.add",
+    "event": {
+      "broadcaster_user_id": "fixture-channel",
+      "broadcaster_user_login": "fixture_channel",
+      "broadcaster_user_name": "Fixture Channel",
+      "user_id": "fixture-viewer",
+      "user_login": "fixture_viewer",
+      "user_name": "Fixture Viewer",
+      "id": "power-1",
+      "user_input": "",
+      "status": "unfulfilled",
+      "custom_power_up": {
+        "id": "fixture-chaos",
+        "title": "Chaos",
+        "bits": 100,
+        "prompt": ""
+      },
+      "redeemed_at": "2026-10-31T12:00:00Z"
+    }
+  },
+  {
+    "type": "channel.bits.use",
+    "event": {
+      "broadcaster_user_id": "fixture-channel",
+      "broadcaster_user_login": "fixture_channel",
+      "broadcaster_user_name": "Fixture Channel",
+      "user_id": "fixture-viewer",
+      "user_login": "fixture_viewer",
+      "user_name": "Fixture Viewer",
+      "bits": 100,
+      "type": "power_up",
+      "power_up": {
+        "type": "message_effect",
+        "emote": null,
+        "message_effect_id": "fixture-effect"
+      },
+      "message": null
+    }
+  },
+  {
+    "type": "channel.raid",
+    "event": {
+      "from_broadcaster_user_id": "fixture-raider",
+      "from_broadcaster_user_login": "fixture_raider",
+      "from_broadcaster_user_name": "Fixture Raider",
+      "to_broadcaster_user_id": "fixture-channel",
+      "to_broadcaster_user_login": "fixture_channel",
+      "to_broadcaster_user_name": "Fixture Channel",
+      "viewers": 12
+    }
+  },
+  {
+    "type": "channel.hype_train.begin",
+    "event": {
+      "broadcaster_user_id": "fixture-channel",
+      "broadcaster_user_login": "fixture_channel",
+      "broadcaster_user_name": "Fixture Channel",
+      "id": "hype-1",
+      "type": "regular",
+      "level": 5,
+      "total": 5000,
+      "top_contributions": [],
+      "is_shared_train": false,
+      "shared_train_participants": [],
+      "started_at": "2026-10-31T12:00:00Z",
+      "progress": 100,
+      "goal": 1000,
+      "expires_at": "2026-10-31T12:05:00Z",
+      "all_time_high_level": 5,
+      "all_time_high_total": 5000
+    }
+  },
+  {
+    "type": "channel.hype_train.progress",
+    "event": {
+      "broadcaster_user_id": "fixture-channel",
+      "broadcaster_user_login": "fixture_channel",
+      "broadcaster_user_name": "Fixture Channel",
+      "id": "hype-1",
+      "type": "regular",
+      "level": 5,
+      "total": 5000,
+      "top_contributions": [],
+      "is_shared_train": false,
+      "shared_train_participants": [],
+      "started_at": "2026-10-31T12:00:00Z",
+      "progress": 100,
+      "goal": 1000,
+      "expires_at": "2026-10-31T12:05:00Z"
+    }
+  },
+  {
+    "type": "channel.hype_train.end",
+    "event": {
+      "broadcaster_user_id": "fixture-channel",
+      "broadcaster_user_login": "fixture_channel",
+      "broadcaster_user_name": "Fixture Channel",
+      "id": "hype-1",
+      "type": "regular",
+      "level": 5,
+      "total": 5000,
+      "top_contributions": [],
+      "is_shared_train": false,
+      "shared_train_participants": [],
+      "started_at": "2026-10-31T12:00:00Z",
+      "ended_at": "2026-10-31T12:05:00Z",
+      "cooldown_ends_at": "2026-10-31T13:00:00Z"
+    }
+  }
+]

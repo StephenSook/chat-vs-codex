@@ -1,0 +1,19 @@
+{
+  "name": "@chat-vs-codex/twitch",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": {
+    "auth": "tsx src/cli.ts auth",
+    "listen": "tsx src/cli.ts listen",
+    "replay": "tsx src/cli.ts replay"
+  },
+  "dependencies": {
+    "@twurple/api": "8.2.0",
+    "@twurple/auth": "8.2.0",
+    "@twurple/common": "8.2.0",
+    "@twurple/eventsub-base": "8.2.0",
+    "@twurple/eventsub-ws": "8.2.0"
+  }
+}
