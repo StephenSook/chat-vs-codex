@@ -9,6 +9,7 @@ import {
 } from "@chat-vs-codex/sim";
 import type { RoundAutopsy } from "../../../packages/round/src/contracts.js";
 import type { BroadcastState } from "./events.js";
+import type { GhostView } from "./ghost.js";
 
 export const VIEWPORT = { width: 1200, height: 560 } as const;
 export type CameraMode = "follow" | "overview";
@@ -25,10 +26,43 @@ export function splitTime(milliseconds: number): string {
   const hundredths = Math.round(milliseconds / 10);
   return `${Math.floor(hundredths / 6000)}:${String(Math.floor(hundredths / 100) % 60).padStart(2, "0")}.${String(hundredths % 100).padStart(2, "0")}`;
 }
+/** Exact source substrings around the first changed column. Ellipses mark omitted context. */
+export function diffExcerpts(preview: readonly string[]) {
+  const removed = preview.find((line) => line.startsWith("-"));
+  const added = preview.find((line) => line.startsWith("+"));
+  const selected = removed && added ? [removed, added] : preview.slice(0, 2);
+  let changedColumn = 0;
+  if (removed && added) {
+    const before = removed.slice(1);
+    const after = added.slice(1);
+    while (
+      changedColumn < Math.min(before.length, after.length) &&
+      before[changedColumn] === after[changedColumn]
+    )
+      changedColumn++;
+  }
+  return selected.map((source) => {
+    let text = source;
+    if (source.length > 19) {
+      const body = source.slice(1);
+      const left = Math.max(0, Math.min(changedColumn, body.length - 1) - 7);
+      const budget = 18 - (left > 0 ? 1 : 0);
+      let right = Math.min(body.length, left + budget);
+      if (right < body.length) right--;
+      text = `${source[0]}${left > 0 ? "…" : ""}${body.slice(left, right)}${right < body.length ? "…" : ""}`;
+    }
+    return { source, text };
+  });
+}
+
 export function autopsyView(record: RoundAutopsy) {
   const restoreFailed =
     record.reason === "rollback-failed" || record.reason === "rollback-timeout";
+  const diffLines = record.patch?.preview.length
+    ? diffExcerpts(record.patch.preview)
+    : [{ text: "Diff unavailable", source: "Diff unavailable" }];
   return {
+    diffLines,
     verdict:
       record.status === "rolled-back"
         ? restoreFailed
@@ -42,15 +76,11 @@ export function autopsyView(record: RoundAutopsy) {
     family: record.family ?? "Family unavailable",
     breaker: `BREAK: ${record.breaker ?? "Not recorded"}`,
     guesser: `FOUND: ${record.firstCorrectGuesser ?? "No correct guess"}`,
-    diff: record.patch?.preview.length
-      ? record.patch.preview.slice(0, 4).join("\n")
-      : "Diff unavailable",
+    diff: diffLines.map((line) => line.text).join("\n"),
     patch: record.patch
       ? `Patch +${record.patch.added} / -${record.patch.removed}`
       : "Patch counts unavailable",
-    explanation:
-      record.explanation?.replace(/\s+/g, " ").trim() ||
-      "Explanation unavailable",
+    explanation: record.headline?.trim() || "Headline unavailable",
     green:
       record.status === "rolled-back"
         ? "NO VERIFIED GREEN"
@@ -90,6 +120,17 @@ export function autopsyView(record: RoundAutopsy) {
       ? `${record.breaker ? `Found by ${record.breaker}\n` : ""}${record.regressionTest.path}\nSHA-256 ${record.regressionTest.digest}`
       : record.regressionError,
   };
+}
+
+/** Both actors share this world camera; during validation the recorded actor leads it. */
+export function playfieldCamera(
+  state: State,
+  mode: CameraMode,
+  ghost: GhostView | null,
+  validating: boolean,
+) {
+  const sample = validating ? ghost?.replay.frames[ghost.index] : undefined;
+  return cameraFor(sample?.x ?? state.x, sample?.y ?? state.y, mode);
 }
 
 export function actorPositions(state: State) {

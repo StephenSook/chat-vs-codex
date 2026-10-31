@@ -272,6 +272,7 @@ export class RoundEngine {
       winner: round.winner,
       patch: verified ? (artifact?.patch ?? null) : null,
       explanation: verified && explanation ? explanation : null,
+      headline: verified ? (artifact?.diagnosis?.headline ?? null) : null,
       durations,
       previousRoundId: this.previous?.roundId ?? null,
       deltaMs:
@@ -387,6 +388,7 @@ export class RoundEngine {
         type: "codex.step",
         roundId: round.id,
         id: `patch-${++round.patchSequence}`,
+        startedAtMs: this.now(),
         attempt: 1,
         total: 1,
         step: {
@@ -583,7 +585,7 @@ export class RoundEngine {
               this.state.phase !== "repairing"
             )
               return;
-            const observed = sdkOverlayEvent(round.id, event);
+            const observed = sdkOverlayEvent(round.id, event, this.now());
             if (observed) this.overlay(observed);
           },
         }),

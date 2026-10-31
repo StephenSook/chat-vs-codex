@@ -13,10 +13,43 @@ import {
   cameraFor,
   corruptionFor,
   FOLLOW_ZOOM,
+  playfieldCamera,
   VIEWPORT,
 } from "../src/presentation.js";
 
 describe("broadcast camera", () => {
+  it("centers the same world camera on real recorded samples only during validation", () => {
+    const state = { ...createState(1), y: -5000 * UNIT };
+    const sample = {
+      frame: 1,
+      x: 640 * UNIT,
+      y: 200 * UNIT,
+      alive: true,
+      won: false,
+      stateHash: "a".repeat(8),
+    };
+    const ghost = {
+      replay: {
+        fps: 60 as const,
+        sourceDigest: "a".repeat(64),
+        trackDigest: "b".repeat(64),
+        frames: [sample],
+      },
+      index: 0,
+      complete: false,
+      reducedMotion: false,
+    };
+    const camera = playfieldCamera(state, "follow", ghost, true);
+    expect(camera).toEqual(cameraFor(sample.x, sample.y, "follow"));
+    expect(camera.player.x).toBeGreaterThan(0);
+    expect(camera.player.y).toBeGreaterThan(0);
+    expect(playfieldCamera(state, "follow", ghost, false)).toEqual(
+      cameraFor(state.x, state.y, "follow"),
+    );
+    expect(playfieldCamera(state, "follow", null, true)).toEqual(
+      cameraFor(state.x, state.y, "follow"),
+    );
+  });
   it("positions the visible enemy from the actual advancing simulation", () => {
     const start = createState(1);
     const next = step(start, 0);

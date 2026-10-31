@@ -5,6 +5,7 @@ import { hashState } from "@chat-vs-codex/sim";
 import { expect, test } from "@playwright/test";
 import type { RoundAutopsy } from "../../../packages/round/src/contracts.js";
 import type { OverlayEvent } from "../src/events.js";
+import { diffExcerpts } from "../src/presentation.js";
 import { CLEAN_TRACK } from "../src/simulation.js";
 
 const stillDir = resolve(
@@ -206,9 +207,13 @@ test("UI-only terminal autopsy fixture stays off the game at 720p and renders re
     patch: {
       added: 1,
       removed: 1,
-      preview: ["- return vy - GRAVITY;", "+ return vy + GRAVITY;"],
+      preview: [
+        "-  if (vy < 0) return vy - RISE_GRAVITY;",
+        "+  if (vy < 0) return vy + RISE_GRAVITY;",
+      ],
     },
     explanation: "Grounded gravity used the wrong sign.",
+    headline: "Restored grounded gravity.",
     durations: {
       headStartMs: 15000,
       repairMs: 10000,
@@ -258,7 +263,9 @@ test("UI-only terminal autopsy fixture stays off the game at 720p and renders re
     new RegExp(`Found by ${autopsy.breaker}`),
   );
   await expect(page.locator("#autopsy-diff")).toHaveText(
-    autopsy.patch?.preview.join("\n") ?? "",
+    diffExcerpts(autopsy.patch?.preview ?? [])
+      .map((line) => line.text)
+      .join(""),
   );
   await expect(page.locator("#autopsy-green")).toHaveText("GREEN 0:12.01");
   await expect(page.locator("#autopsy-delta")).toHaveText(
@@ -267,7 +274,10 @@ test("UI-only terminal autopsy fixture stays off the game at 720p and renders re
   const geometry = await page.evaluate(() => {
     const card = document.getElementById("autopsy");
     const game = document.querySelector(".game-shell");
-    if (!card || !game) throw new Error("Missing autopsy geometry");
+    const diff = document.getElementById("autopsy-diff");
+    const stage = document.getElementById("stage");
+    if (!card || !game || !diff || !stage)
+      throw new Error("Missing autopsy geometry");
     const a = card.getBoundingClientRect();
     const b = game.getBoundingClientRect();
     return {
@@ -275,9 +285,25 @@ test("UI-only terminal autopsy fixture stays off the game at 720p and renders re
       withinViewport:
         a.top >= 0 && a.right <= innerWidth && a.bottom <= innerHeight,
       contentFits: card.scrollHeight <= card.clientHeight,
+      diffPixels:
+        Number.parseFloat(getComputedStyle(diff).fontSize) *
+        (stage.getBoundingClientRect().width / 1920),
+      diffLines: document.querySelectorAll("#autopsy-diff span").length,
+      diffFits: [...document.querySelectorAll("#autopsy-diff span")].every(
+        (line) => line.scrollWidth <= line.clientWidth,
+      ),
+      lineBackgrounds: [...document.querySelectorAll("#autopsy-diff span")].map(
+        (line) => getComputedStyle(line).backgroundColor,
+      ),
     };
   });
-  expect(geometry).toEqual({
+  expect(geometry.diffPixels).toBeGreaterThanOrEqual(22);
+  expect(geometry.diffLines).toBe(2);
+  expect(geometry.diffFits).toBe(true);
+  await expect(page.locator("#autopsy-diff span").nth(0)).toContainText("vy -");
+  await expect(page.locator("#autopsy-diff span").nth(1)).toContainText("vy +");
+  expect(geometry.lineBackgrounds[0]).not.toBe(geometry.lineBackgrounds[1]);
+  expect(geometry).toMatchObject({
     offGame: true,
     withinViewport: true,
     contentFits: true,
@@ -286,7 +312,7 @@ test("UI-only terminal autopsy fixture stays off the game at 720p and renders re
   await page.screenshot({
     path: resolve(stillDir, "overlay-720-autopsy-ui-test.png"),
   });
-  const unsafe = { ...autopsy, explanation: '<img src=x onerror="bad()">' };
+  const unsafe = { ...autopsy, headline: '<img src=x onerror="bad()">' };
   await page.evaluate(
     (record) =>
       window.chatVsCodex.events.publish({
@@ -297,7 +323,7 @@ test("UI-only terminal autopsy fixture stays off the game at 720p and renders re
     unsafe,
   );
   await expect(page.locator("#autopsy-explanation")).toHaveText(
-    unsafe.explanation ?? "",
+    unsafe.headline ?? "",
   );
   await expect(page.locator("#autopsy img, #autopsy script")).toHaveCount(0);
   await expect(page.locator("#autopsy a")).toHaveCount(0);

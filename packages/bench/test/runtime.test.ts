@@ -14,9 +14,11 @@ import { join } from "node:path";
 import { expect, it } from "vitest";
 import { assertCanary } from "../src/canary.js";
 import {
+  ANSWER_SCHEMA,
   createLauncher,
   loadProfile,
   permissionOverrides,
+  REPAIR_ANSWER_SCHEMA,
   RUNTIME_FLAGS,
   runRuntime,
   runtimeEnvironment,
@@ -44,75 +46,86 @@ it("pins the exact permission profile including all temporary-directory denies",
   expect(verifier).toContain("hotfix");
 });
 
-it("uses real SDK streaming, raw config overrides and stripped exec flags with a fake CLI", async () => {
-  const scratch = await mkdtemp(join(tmpdir(), "sdk-contract-"));
-  try {
-    const fake = join(scratch, "fake-cli.mjs");
-    const capture = join(scratch, "capture.json");
-    const home = join(scratch, "empty-home");
-    await mkdir(home);
-    await writeFile(
-      fake,
-      `#!/usr/bin/env node
-      import { writeFileSync } from 'node:fs';
-      writeFileSync(${JSON.stringify(capture)},JSON.stringify({args:process.argv.slice(2),env:process.env}));
+it.each([false, true])(
+  "uses real SDK streaming and stripped config (repair headline: %s)",
+  async (shortHeadline) => {
+    const scratch = await mkdtemp(join(tmpdir(), "sdk-contract-"));
+    try {
+      const fake = join(scratch, "fake-cli.mjs");
+      const capture = join(scratch, "capture.json");
+      const home = join(scratch, "empty-home");
+      await mkdir(home);
+      await writeFile(
+        fake,
+        `#!/usr/bin/env node
+      import { writeFileSync, readFileSync } from 'node:fs';
+      writeFileSync(${JSON.stringify(capture)},JSON.stringify({args:process.argv.slice(2),env:process.env,schema:JSON.parse(readFileSync(process.argv[process.argv.indexOf('--output-schema')+1],'utf8'))}));
       process.stdin.resume();process.stdin.on('end',()=>{
         for(const event of [
           {type:'thread.started',thread_id:'contract'},
-          {type:'item.completed',item:{type:'agent_message',id:'answer',text:JSON.stringify({rootCause:'test',file:'src/index.ts',line:1,explanation:'test',confidence:1})}},
+          {type:'item.completed',item:{type:'agent_message',id:'answer',text:JSON.stringify({rootCause:'test',file:'src/index.ts',line:1,explanation:'test',confidence:1${shortHeadline ? ",headline:'Restored grounded gravity'" : ""}})}},
           {type:'turn.completed',usage:{input_tokens:12,cached_input_tokens:4,cache_write_input_tokens:0,output_tokens:2,reasoning_output_tokens:1}}
         ]) console.log(JSON.stringify(event));
       });
     `,
-    );
-    await chmod(fake, 0o700);
-    const launcher = join(scratch, "launch");
-    await createLauncher(launcher, fake);
-    const events: string[] = [];
-    const result = await runRuntime({
-      workspace: scratch,
-      home,
-      launcher,
-      profile: await loadProfile(),
-      codexHome: "/real/auth/home",
-      model: "gpt-6.1-terra",
-      effort: "low",
-      prompt: "test",
-      signal: AbortSignal.timeout(3000),
-      event: async (event) => {
-        events.push(event.type);
-      },
-    });
-    expect(result.usage).toEqual({
-      input_tokens: 12,
-      cached_input_tokens: 4,
-      output_tokens: 2,
-    });
-    expect(events).toContain("turn.completed");
-    const actual = JSON.parse(await readFile(capture, "utf8")) as {
-      args: string[];
-      env: Record<string, string>;
-    };
-    expect(actual.args.slice(0, RUNTIME_FLAGS.length + 1)).toEqual([
-      "exec",
-      ...RUNTIME_FLAGS,
-    ]);
-    expect(actual.args).not.toContain("--sandbox");
-    expect(actual.args).toContain("--output-schema");
-    expect(actual.args).toContain('default_permissions = "hotfix"');
-    expect(actual.args).toEqual(
-      expect.arrayContaining(permissionOverrides(await loadProfile())),
-    );
-    expect(actual.env.HOME).toBe(home);
-    expect(actual.env.CODEX_HOME).toBe("/real/auth/home");
-    for (const key of ["TMPDIR", "TMP", "TEMP"])
-      expect(actual.env[key]).toBe(join(await realpath(scratch), ".tmp"));
-    expect((await stat(join(scratch, ".tmp"))).isDirectory()).toBe(true);
-    expect(actual.env.OPENAI_API_KEY).toBeUndefined();
-  } finally {
-    await rm(scratch, { recursive: true, force: true });
-  }
-});
+      );
+      await chmod(fake, 0o700);
+      const launcher = join(scratch, "launch");
+      await createLauncher(launcher, fake);
+      const events: string[] = [];
+      const result = await runRuntime({
+        workspace: scratch,
+        home,
+        launcher,
+        profile: await loadProfile(),
+        codexHome: "/real/auth/home",
+        model: "gpt-6.1-terra",
+        effort: "low",
+        prompt: "test",
+        shortHeadline,
+        signal: AbortSignal.timeout(3000),
+        event: async (event) => {
+          events.push(event.type);
+        },
+      });
+      expect(result.usage).toEqual({
+        input_tokens: 12,
+        cached_input_tokens: 4,
+        output_tokens: 2,
+      });
+      expect(events).toContain("turn.completed");
+      const actual = JSON.parse(await readFile(capture, "utf8")) as {
+        args: string[];
+        env: Record<string, string>;
+        schema: unknown;
+      };
+      expect(actual.schema).toEqual(
+        shortHeadline ? REPAIR_ANSWER_SCHEMA : ANSWER_SCHEMA,
+      );
+      expect(result.answer?.headline).toBe(
+        shortHeadline ? "Restored grounded gravity" : undefined,
+      );
+      expect(actual.args.slice(0, RUNTIME_FLAGS.length + 1)).toEqual([
+        "exec",
+        ...RUNTIME_FLAGS,
+      ]);
+      expect(actual.args).not.toContain("--sandbox");
+      expect(actual.args).toContain("--output-schema");
+      expect(actual.args).toContain('default_permissions = "hotfix"');
+      expect(actual.args).toEqual(
+        expect.arrayContaining(permissionOverrides(await loadProfile())),
+      );
+      expect(actual.env.HOME).toBe(home);
+      expect(actual.env.CODEX_HOME).toBe("/real/auth/home");
+      for (const key of ["TMPDIR", "TMP", "TEMP"])
+        expect(actual.env[key]).toBe(join(await realpath(scratch), ".tmp"));
+      expect((await stat(join(scratch, ".tmp"))).isDirectory()).toBe(true);
+      expect(actual.env.OPENAI_API_KEY).toBeUndefined();
+    } finally {
+      await rm(scratch, { recursive: true, force: true });
+    }
+  },
+);
 
 it("uses the physical workspace temp path when the workspace has an alias", async () => {
   const scratch = await mkdtemp(join(tmpdir(), "temp-alias-"));

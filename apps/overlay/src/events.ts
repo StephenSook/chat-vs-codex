@@ -42,6 +42,7 @@ export type OverlayEvent =
       type: "codex.step";
       roundId: string;
       id: string;
+      startedAtMs?: number;
       step: CodexStep;
       status: "running" | "done" | "failed";
       attempt: number;
@@ -72,6 +73,7 @@ export function createEventBus(): OverlayEventBus {
 }
 
 export interface DisplayStep {
+  startedAtMs?: number;
   id: string;
   label: string;
   status: "running" | "done" | "failed";
@@ -89,6 +91,7 @@ export interface BroadcastState {
   bugName: string | null;
   intensity: number;
   steps: readonly DisplayStep[];
+  stepStarts: Readonly<Record<string, number>>;
   attempt: number | null;
   total: number | null;
   autopsy: RoundAutopsy | null;
@@ -108,6 +111,7 @@ export function initialBroadcast(): BroadcastState {
     bugName: null,
     intensity: 0,
     steps: [],
+    stepStarts: {},
     attempt: null,
     total: null,
     autopsy: null,
@@ -211,6 +215,13 @@ export function reduceBroadcast(
     case "codex.step": {
       // A late completion from an earlier SDK retry cannot replace the current attempt.
       if (state.attempt !== null && event.attempt < state.attempt) return state;
+      const startKey = `id:${event.id}`;
+      const starts = state.attempt === event.attempt ? state.stepStarts : {};
+      const startedAtMs = starts[startKey] ?? event.startedAtMs;
+      const stepStarts =
+        startedAtMs === undefined
+          ? starts
+          : { ...starts, [startKey]: startedAtMs };
       const rows =
         state.attempt === event.attempt
           ? state.steps.filter((row) => row.id !== event.id)
@@ -225,9 +236,18 @@ export function reduceBroadcast(
             : stepLabel(event.step);
       return {
         ...state,
-        steps: [...rows, { id: event.id, label, status: event.status }].slice(
-          -4,
-        ),
+        stepStarts,
+        steps: [
+          ...rows,
+          {
+            id: event.id,
+            label,
+            status: event.status,
+            ...(startedAtMs === undefined ? {} : { startedAtMs }),
+          },
+        ]
+          .sort((a, b) => (a.startedAtMs ?? 0) - (b.startedAtMs ?? 0))
+          .slice(-4),
         attempt: event.attempt,
         total: event.total,
       };

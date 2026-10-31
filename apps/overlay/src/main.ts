@@ -11,9 +11,14 @@ import {
   type OverlayEventBus,
   reduceBroadcast,
 } from "./events.js";
-import { RecordedGhost } from "./ghost.js";
+import { type GhostView, RecordedGhost } from "./ghost.js";
 import { element, renderBroadcast, renderClock, resizeStage } from "./hud.js";
-import { type CameraMode, cameraFor, corruptionFor } from "./presentation.js";
+import {
+  type CameraMode,
+  type cameraFor,
+  corruptionFor,
+  playfieldCamera,
+} from "./presentation.js";
 import { createScene } from "./scene.js";
 import { SimulationPlayer } from "./simulation.js";
 
@@ -49,6 +54,8 @@ async function start(): Promise<void> {
   let lastCountdown: number | null = null;
   let lastRunStatus = "";
   let bridgeError: string | null = null;
+  let validating = false;
+  let renderedGhost: GhostView | null = null;
   resizeStage();
   window.addEventListener("resize", resizeStage);
   renderBroadcast(broadcast);
@@ -77,7 +84,12 @@ async function start(): Promise<void> {
       hash: simulation.hash(),
       mode,
       filtersEnabled: !motion.matches,
-      camera: cameraFor(simulation.state.x, simulation.state.y, cameraMode),
+      camera: playfieldCamera(
+        simulation.state,
+        cameraMode,
+        renderedGhost,
+        validating,
+      ),
       corruption: corruptionFor(broadcast, performance.now(), motion.matches),
       ghost: ghost.snapshot(),
     }),
@@ -99,6 +111,7 @@ async function start(): Promise<void> {
             bridgeError = null;
         },
         onState(state) {
+          validating = state.phase === "validating";
           if (state.phase === "preparing") bridgeError = null;
           if (state.phase === "rolled-back") ghost.clear();
         },
@@ -144,11 +157,8 @@ async function start(): Promise<void> {
     const nowMs = performance.now();
     const corruption = corruptionFor(broadcast, nowMs, motion.matches);
     element("game").dataset.corruption = corruption.treatment;
-    scene.draw(
-      simulation.state,
-      corruption,
-      ghost.advance(ticker.elapsedMS, motion.matches),
-    );
+    renderedGhost = ghost.advance(ticker.elapsedMS, motion.matches);
+    scene.draw(simulation.state, corruption, renderedGhost, validating);
     const countdown = headStartSeconds(broadcast, nowMs);
     if (countdown !== lastCountdown) {
       lastCountdown = countdown;

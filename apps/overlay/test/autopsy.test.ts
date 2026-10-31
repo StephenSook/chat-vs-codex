@@ -8,7 +8,7 @@ import {
   reduceBroadcast,
 } from "../src/events.js";
 import { renderBroadcast, renderClock } from "../src/hud.js";
-import { autopsyView, splitTime } from "../src/presentation.js";
+import { autopsyView, diffExcerpts, splitTime } from "../src/presentation.js";
 import { SimulationPlayer } from "../src/simulation.js";
 
 export function autopsyFixture(
@@ -28,6 +28,7 @@ export function autopsyFixture(
       preview: ["- return vy - GRAVITY;", "+ return vy + GRAVITY;"],
     },
     explanation: "Grounded gravity used the wrong sign.",
+    headline: "Restored grounded gravity.",
     durations: {
       headStartMs: 15000,
       repairMs: 10000,
@@ -62,6 +63,40 @@ const wire = (autopsy: RoundAutopsy) => ({
 afterEach(() => vi.unstubAllGlobals());
 
 describe("observed round autopsy", () => {
+  it("keeps the actual changed operator visible in short source excerpts", () => {
+    const removed = "-  if (vy < 0) return vy - RISE_GRAVITY;";
+    const added = "+  if (vy < 0) return vy + RISE_GRAVITY;";
+    const lines = diffExcerpts([
+      removed,
+      "- another removed line",
+      added,
+      "+ another added line",
+    ]);
+    expect(lines.map((line) => line.source)).toEqual([removed, added]);
+    expect(lines[0]?.text).toContain("vy -");
+    expect(lines[1]?.text).toContain("vy +");
+    for (const line of lines) {
+      expect(line.text.length).toBeLessThanOrEqual(19);
+      expect(line.text).toContain("…");
+      expect(line.source).toContain(line.text.slice(1).replaceAll("…", ""));
+    }
+  });
+  it("uses only the SDK headline and shows at most two actual diff lines", () => {
+    const record = autopsyFixture({
+      patch: {
+        added: 2,
+        removed: 2,
+        preview: ["- old", "+ new", "- other", "+ other"],
+      },
+    });
+    expect(autopsyView(record).diff).toBe("- old\n+ new");
+    const { headline: _headline, ...legacy } = record;
+    expect(autopsyView(legacy).explanation).toBe("Headline unavailable");
+    for (const headline of ["x".repeat(61), "two\nlines", " "])
+      expect(() => parseRoundEnvelope(wire({ ...record, headline }))).toThrow(
+        "Invalid round event",
+      );
+  });
   it("credits exactly one persisted test on the current record and never increments from a guess or storage failure", () => {
     const regressionTest = {
       path: "chat-found/00000000-0000-4000-8000-000000000001.json",
@@ -189,8 +224,10 @@ describe("observed round autopsy", () => {
     expect(onError).not.toHaveBeenCalled();
     expect(state.autopsy?.explanation).toBe(explanation);
     expect(state.autopsy?.patch?.preview).toEqual(record.patch?.preview);
-    expect(autopsyView(record).diff).toBe(record.patch?.preview.join("\n"));
-    expect(autopsyView(record).explanation).toBe(explanation.trim());
+    expect(autopsyView(record).diffLines.map((line) => line.source)).toEqual(
+      record.patch?.preview,
+    );
+    expect(autopsyView(record).explanation).toBe(record.headline);
   });
   it("delivers an actual preparing-state failure through the ordered bridge without a made-up start", async () => {
     let state = initialBroadcast();
@@ -300,7 +337,9 @@ describe("observed round autopsy", () => {
       "TESTS 2.00s",
       "SWAP 0.01s",
     ]);
-    expect(view.diff).toBe(record.patch?.preview.join("\n"));
+    expect(view.diffLines.map((line) => line.source)).toEqual(
+      record.patch?.preview,
+    );
     expect(view.delta).toBe("-0:01.20 vs previous");
     expect(view.trend).toBe("faster");
     expect(autopsyView(autopsyFixture({ deltaMs: 1200 })).delta).toBe(
@@ -401,6 +440,7 @@ describe("observed round autopsy", () => {
     const payload = '<img src=x onerror="bad()">';
     const record = autopsyFixture({
       explanation: payload,
+      headline: payload,
       patch: { added: 1, removed: 1, preview: [`- ${payload}`, "+ safe"] },
     });
     const state = reduceBroadcast(started(), {
@@ -411,7 +451,13 @@ describe("observed round autopsy", () => {
     renderBroadcast(state);
     renderClock(state, 1000);
     expect(elements.get("autopsy-explanation")?.textContent).toBe(payload);
-    expect(elements.get("autopsy-diff")?.textContent).toContain(payload);
+    expect(elements.get("autopsy-diff")?.children[0]?.title).toContain(payload);
+    expect(
+      elements.get("autopsy-diff")?.children[0]?.textContent?.length,
+    ).toBeLessThanOrEqual(19);
+    expect(
+      elements.get("autopsy-diff")?.children.map((line) => line.dataset.change),
+    ).toEqual(["removed", "added"]);
     expect(elements.get("autopsy")?.hidden).toBe(false);
     expect(elements.get("ticker")?.hidden).toBe(true);
     expect(elements.get("countdown")?.hidden).toBe(true);

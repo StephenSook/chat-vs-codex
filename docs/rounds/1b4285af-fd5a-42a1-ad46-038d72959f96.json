@@ -1,0 +1,284 @@
+{
+  "schemaVersion": 1,
+  "roundId": "1b4285af-fd5a-42a1-ad46-038d72959f96",
+  "mode": "local-fixture",
+  "fixture": "bare-break-then-wrong-enum-hint",
+  "model": "gpt-6.1-terra",
+  "effort": "low",
+  "breaker": "viewer-d998bed2f212aad2",
+  "firstCorrectGuesser": null,
+  "validationReplay": {
+    "sourceDigest": "403c76c51327cb44d95d16b9ea2a6e7cefb331df83b775158f83fe2a9e63c28e",
+    "trackDigest": "bcca810f6178004b27e9befc22021e596ec847697710987ae493af1626d8d0ce",
+    "buildDigest": "4715351bcb89d1a766bac1607c4579201fd2d5c28e2a42227ead259d47d1b6ed",
+    "frameCount": 600,
+    "framesDigest": "bb3cc82edf8131ee1bb65c3bc0f8de96ab9dd34fe1c547a52f0dfecc7ba5ffd3"
+  },
+  "autopsy": {
+    "roundId": "1b4285af-fd5a-42a1-ad46-038d72959f96",
+    "status": "verified",
+    "reason": null,
+    "breaker": "viewer-d998bed2f212aad2",
+    "firstCorrectGuesser": null,
+    "family": "gravity-sign",
+    "winner": "codex",
+    "patch": {
+      "added": 1,
+      "removed": 1,
+      "preview": [
+        "-  if (vy < 0) return vy - RISE_GRAVITY;",
+        "+  if (vy < 0) return vy + RISE_GRAVITY;"
+      ]
+    },
+    "explanation": "Changed the rising branch to add RISE_GRAVITY. The requested Vitest run passed all 22 tests, including all seven replay tests.",
+    "durations": {
+      "headStartMs": 15001.568417072296,
+      "repairMs": 15331.393332958221,
+      "validationMs": 2326.8298330307007,
+      "swapMs": 2.2742919921875,
+      "timeToGreenMs": 17669.19029211998
+    },
+    "previousRoundId": "65e06ea8-d2bd-4e40-9ec7-79f4318c2b02",
+    "deltaMs": null,
+    "regressionTest": {
+      "path": "chat-found/1b4285af-fd5a-42a1-ad46-038d72959f96.json",
+      "digest": "1052ed1b317dd0a280e5a66926c2bf1beee49be38ccd9c343216d2e13604f2d1"
+    },
+    "regressionError": null
+  },
+  "family": "gravity-sign",
+  "winner": "codex",
+  "reason": null,
+  "scores": {
+    "chat": 0,
+    "codex": 1
+  },
+  "clock": "host-monotonic-ms",
+  "timingVersion": 1,
+  "durations": {
+    "headStartMs": 15001.568417072296,
+    "repairMs": 15331.393332958221,
+    "validationMs": 2326.8298330307007,
+    "swapMs": 2.2742919921875,
+    "timeToGreenMs": 17669.19029211998
+  },
+  "timingDefinition": "Time to green starts immediately before the SDK call and ends after verified build installation; head start is separate. Repair ends at submitted patch verification after the SDK turn.",
+  "completedAt": "2026-10-31T07:44:30.813Z",
+  "events": [
+    {
+      "sequence": 1,
+      "type": "round.state",
+      "phase": "preparing",
+      "atMs": 1404743459.303208,
+      "wallTime": "2026-10-31T07:43:56.818Z"
+    },
+    {
+      "sequence": 2,
+      "type": "game.build",
+      "phase": "broken",
+      "atMs": 1404744340.101666,
+      "wallTime": "2026-10-31T07:43:57.698Z"
+    },
+    {
+      "sequence": 3,
+      "type": "round.started",
+      "atMs": 1404744340.237083,
+      "wallTime": "2026-10-31T07:43:57.699Z"
+    },
+    {
+      "sequence": 4,
+      "type": "bug.active",
+      "atMs": 1404744340.272,
+      "wallTime": "2026-10-31T07:43:57.699Z"
+    },
+    {
+      "sequence": 5,
+      "type": "round.state",
+      "phase": "head-start",
+      "atMs": 1404744340.341708,
+      "wallTime": "2026-10-31T07:43:57.699Z"
+    },
+    {
+      "sequence": 6,
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1404759341.899416,
+      "wallTime": "2026-10-31T07:44:12.700Z"
+    },
+    {
+      "sequence": 7,
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1404759742.783125,
+      "wallTime": "2026-10-31T07:44:13.101Z"
+    },
+    {
+      "sequence": 8,
+      "type": "codex.step",
+      "atMs": 1404764293.267333,
+      "wallTime": "2026-10-31T07:44:17.652Z"
+    },
+    {
+      "sequence": 9,
+      "type": "codex.step",
+      "atMs": 1404764841.284458,
+      "wallTime": "2026-10-31T07:44:18.200Z"
+    },
+    {
+      "sequence": 10,
+      "type": "codex.step",
+      "atMs": 1404765147.902416,
+      "wallTime": "2026-10-31T07:44:18.506Z"
+    },
+    {
+      "sequence": 11,
+      "type": "codex.step",
+      "atMs": 1404766046.351375,
+      "wallTime": "2026-10-31T07:44:19.405Z"
+    },
+    {
+      "sequence": 12,
+      "type": "codex.step",
+      "atMs": 1404766249.738125,
+      "wallTime": "2026-10-31T07:44:19.608Z"
+    },
+    {
+      "sequence": 13,
+      "type": "codex.step",
+      "atMs": 1404767491.638208,
+      "wallTime": "2026-10-31T07:44:20.850Z"
+    },
+    {
+      "sequence": 14,
+      "type": "codex.step",
+      "atMs": 1404767687.284208,
+      "wallTime": "2026-10-31T07:44:21.046Z"
+    },
+    {
+      "sequence": 15,
+      "type": "codex.step",
+      "atMs": 1404769400.056791,
+      "wallTime": "2026-10-31T07:44:22.759Z"
+    },
+    {
+      "sequence": 16,
+      "type": "codex.step",
+      "atMs": 1404769647.351583,
+      "wallTime": "2026-10-31T07:44:23.006Z"
+    },
+    {
+      "sequence": 17,
+      "type": "codex.step",
+      "atMs": 1404769647.48525,
+      "wallTime": "2026-10-31T07:44:23.006Z"
+    },
+    {
+      "sequence": 18,
+      "type": "codex.step",
+      "atMs": 1404770845.909583,
+      "wallTime": "2026-10-31T07:44:24.204Z"
+    },
+    {
+      "sequence": 19,
+      "type": "codex.step",
+      "atMs": 1404772150.521375,
+      "wallTime": "2026-10-31T07:44:25.509Z"
+    },
+    {
+      "sequence": 20,
+      "type": "codex.step",
+      "atMs": 1404773542.425083,
+      "wallTime": "2026-10-31T07:44:26.901Z"
+    },
+    {
+      "sequence": 21,
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1404775073.408541,
+      "wallTime": "2026-10-31T07:44:28.432Z"
+    },
+    {
+      "sequence": 22,
+      "type": "round.state",
+      "phase": "validating",
+      "atMs": 1404775073.849,
+      "wallTime": "2026-10-31T07:44:28.432Z"
+    },
+    {
+      "sequence": 23,
+      "type": "round.ghost",
+      "atMs": 1404776745.177083,
+      "wallTime": "2026-10-31T07:44:30.104Z"
+    },
+    {
+      "sequence": 24,
+      "type": "round.state",
+      "phase": "validating",
+      "atMs": 1404777400.258041,
+      "wallTime": "2026-10-31T07:44:30.759Z"
+    },
+    {
+      "sequence": 25,
+      "type": "round.state",
+      "phase": "swapping",
+      "atMs": 1404777408.679958,
+      "wallTime": "2026-10-31T07:44:30.767Z"
+    },
+    {
+      "sequence": 26,
+      "type": "game.build",
+      "phase": "repaired",
+      "atMs": 1404777410.810916,
+      "wallTime": "2026-10-31T07:44:30.769Z"
+    },
+    {
+      "sequence": 27,
+      "type": "score.changed",
+      "atMs": 1404777454.041291,
+      "wallTime": "2026-10-31T07:44:30.813Z"
+    },
+    {
+      "sequence": 28,
+      "type": "bug.named",
+      "atMs": 1404777454.144166,
+      "wallTime": "2026-10-31T07:44:30.813Z"
+    },
+    {
+      "sequence": 29,
+      "type": "tests.green",
+      "atMs": 1404777454.172291,
+      "wallTime": "2026-10-31T07:44:30.813Z"
+    },
+    {
+      "sequence": 30,
+      "type": "round.state",
+      "phase": "resolved",
+      "atMs": 1404777454.200708,
+      "wallTime": "2026-10-31T07:44:30.813Z"
+    },
+    {
+      "sequence": 31,
+      "type": "round.autopsy",
+      "atMs": 1404777468.849625,
+      "wallTime": "2026-10-31T07:44:30.827Z"
+    }
+  ],
+  "verification": {
+    "fullReplaySuite": true,
+    "heldOutReplay": true,
+    "statePreserved": true,
+    "finalStateHash": "f34ae40c",
+    "builds": [
+      {
+        "digest": "ff38fb74ea3590b5c83ab983ec3a91208fb64c50fb7e5e1b735cdda302fc2829",
+        "frame": 53,
+        "statePreserved": true
+      },
+      {
+        "digest": "4715351bcb89d1a766bac1607c4579201fd2d5c28e2a42227ead259d47d1b6ed",
+        "frame": 2037,
+        "statePreserved": true
+      }
+    ]
+  }
+}

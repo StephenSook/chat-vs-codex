@@ -15,8 +15,8 @@ import type { GhostView } from "./ghost.js";
 import {
   actorPositions,
   type CameraMode,
-  cameraFor,
   type corruptionFor,
+  playfieldCamera,
   VIEWPORT,
 } from "./presentation.js";
 
@@ -210,8 +210,9 @@ export async function createScene(host: HTMLElement, cameraMode: CameraMode) {
       state: State,
       effect: ReturnType<typeof corruptionFor>,
       ghost: GhostView | null = null,
+      validating = false,
     ) {
-      const camera = cameraFor(state.x, state.y, cameraMode);
+      const camera = playfieldCamera(state, cameraMode, ghost, validating);
       world.scale.set(camera.zoom);
       world.position.set(camera.left, camera.top);
       const actors = actorPositions(state);

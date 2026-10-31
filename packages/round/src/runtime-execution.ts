@@ -192,6 +192,7 @@ export async function executeRepair(
   try {
     combined.throwIfAborted();
     const runtimeOptions: RuntimeOptions = {
+      shortHeadline: true,
       workspace: options.workspace.game,
       home: options.workspace.home,
       launcher: options.launcher,
@@ -208,13 +209,13 @@ export async function executeRepair(
           elapsedMs: monotonicMs() - started,
           event: value,
         });
-        if (
+        const completedChange =
           value.type === "item.completed" &&
           (value.item.type === "command_execution" ||
-            value.item.type === "file_change")
-        )
-          await sourcePatch();
+            value.item.type === "file_change");
+        if (completedChange) await check(true);
         if (!combined.aborted) event(value);
+        if (completedChange) await sourcePatch();
       },
     };
     const threadStartedAtMs = phase("thread-started");

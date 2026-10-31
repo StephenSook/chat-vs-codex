@@ -100,6 +100,7 @@ function validateOverlay(event: unknown): event is OverlayEvent {
         typeof e.roundId === "string" &&
         typeof e.id === "string" &&
         ["running", "done", "failed"].includes(String(e.status)) &&
+        (e.startedAtMs === undefined || Number.isFinite(e.startedAtMs)) &&
         integer("attempt") &&
         integer("total") &&
         !!step &&
@@ -161,6 +162,12 @@ function validAutopsy(value: unknown): value is RoundAutopsy {
         patch.preview.length <= 4 &&
         patch.preview.every((line) => typeof line === "string"))) &&
     nullableText(record.explanation) &&
+    (record.headline === undefined ||
+      record.headline === null ||
+      (typeof record.headline === "string" &&
+        record.headline.trim().length > 0 &&
+        record.headline.length <= 60 &&
+        !/[\r\n]/.test(record.headline))) &&
     !!record.durations &&
     [
       "headStartMs",

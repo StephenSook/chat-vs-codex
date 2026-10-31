@@ -72,7 +72,6 @@ export function renderBroadcast(state: BroadcastState): void {
       "breaker",
       "guesser",
       "patch",
-      "diff",
       "explanation",
       "green",
       "delta",
@@ -80,6 +79,19 @@ export function renderBroadcast(state: BroadcastState): void {
       const item = element(`autopsy-${key}`);
       item.textContent = view[key];
       item.title = view[key];
+    }
+    const diff = element("autopsy-diff");
+    diff.replaceChildren();
+    for (const { text, source } of view.diffLines) {
+      const line = document.createElement("span");
+      line.textContent = text;
+      line.title = source;
+      line.dataset.change = text.startsWith("-")
+        ? "removed"
+        : text.startsWith("+")
+          ? "added"
+          : "context";
+      diff.append(line);
     }
     const splits = element("autopsy-splits");
     splits.replaceChildren();

@@ -19,6 +19,7 @@ export interface RoundValidationReplay extends ValidatedReplay {
 }
 
 export interface RuntimeDiagnosis {
+  headline?: string;
   rootCause: string;
   file: string;
   line: number;
@@ -90,6 +91,8 @@ export interface RoundAutopsy {
   winner: "chat" | "codex" | null;
   patch: RuntimePatch | null;
   explanation: string | null;
+  /** SDK-authored concise summary; unavailable on legacy rounds. */
+  headline?: string | null;
   durations: RoundDurations;
   previousRoundId: string | null;
   /** Current minus previous compatible time to green; negative means faster. */

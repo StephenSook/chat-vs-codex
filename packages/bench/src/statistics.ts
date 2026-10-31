@@ -25,6 +25,7 @@ export interface TrialResult extends ModelSpec {
   sourceDigest: string;
   startedAt: string;
   answer: {
+    headline?: string;
     rootCause: string;
     file: string;
     line: number;

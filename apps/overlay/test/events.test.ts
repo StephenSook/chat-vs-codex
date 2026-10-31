@@ -16,6 +16,39 @@ const started = () =>
   });
 
 describe("broadcast event contract", () => {
+  it("orders SDK rows by original start rather than completion or patch observation", () => {
+    let state = started();
+    const event = (
+      id: string,
+      startedAtMs: number,
+      status: "running" | "done",
+    ) => ({
+      type: "codex.step" as const,
+      roundId: "r1",
+      id,
+      startedAtMs,
+      step: { kind: "activity" as const, action: "edit" as const },
+      status,
+      attempt: 1,
+      total: 1,
+    });
+    state = reduceBroadcast(state, event("edit", 10, "running"));
+    state = reduceBroadcast(state, event("patch", 20, "done"));
+    state = reduceBroadcast(state, event("edit", 30, "done"));
+    state = reduceBroadcast(state, event("read", 5, "done"));
+    expect(state.steps.map((row) => row.id)).toEqual(["read", "edit", "patch"]);
+    expect(state.steps.find((row) => row.id === "edit")?.startedAtMs).toBe(10);
+    for (let n = 0; n < 4; n++)
+      state = reduceBroadcast(state, event(`later-${n}`, 40 + n, "done"));
+    state = reduceBroadcast(state, event("edit", 99, "done"));
+    expect(state.steps.map((row) => row.id)).toEqual([
+      "later-0",
+      "later-1",
+      "later-2",
+      "later-3",
+    ]);
+    expect(state.stepStarts["id:edit"]).toBe(10);
+  });
   it("keeps SDK test-command success separate from the trusted full-suite green", () => {
     let state = reduceBroadcast(started(), {
       type: "codex.step",

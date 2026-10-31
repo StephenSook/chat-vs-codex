@@ -141,6 +141,7 @@ function commandStep(raw: string): CodexStep {
 export function sdkOverlayEvent(
   roundId: string,
   event: ThreadEvent,
+  observedAtMs?: number,
 ): OverlayEvent | null {
   if (
     event.type !== "item.started" &&
@@ -193,6 +194,7 @@ export function sdkOverlayEvent(
     type: "codex.step",
     roundId,
     id: item.id,
+    ...(observedAtMs === undefined ? {} : { startedAtMs: observedAtMs }),
     attempt: 1,
     total: 1,
     step,

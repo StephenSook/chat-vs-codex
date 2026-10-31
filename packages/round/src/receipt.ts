@@ -214,6 +214,9 @@ export function publicReceipt(input: {
                     preview: [...autopsy.patch.preview],
                   },
             explanation: autopsy.explanation,
+            ...(autopsy.headline === undefined
+              ? {}
+              : { headline: autopsy.headline }),
             durations: { ...autopsy.durations },
             previousRoundId: autopsy.previousRoundId,
             deltaMs: autopsy.deltaMs,

@@ -33,6 +33,22 @@ export const ANSWER_SCHEMA = {
   },
 };
 
+/** Live repairs ask Codex for its own concise viewer-facing summary. */
+export const REPAIR_ANSWER_SCHEMA = {
+  ...ANSWER_SCHEMA,
+  required: [...ANSWER_SCHEMA.required, "headline"],
+  properties: {
+    ...ANSWER_SCHEMA.properties,
+    headline: {
+      type: "string",
+      minLength: 1,
+      maxLength: 60,
+      description:
+        "One-line viewer-facing summary of the repaired behavior, at most 60 characters.",
+    },
+  },
+};
+
 /** Keep quoted path keys inside TOML values, outside the CLI's dotted-key parser. */
 export function permissionOverrides(profile: string): string[] {
   let table = "";
@@ -97,6 +113,7 @@ export interface RuntimeOptions extends ModelSpec {
   prompt: string;
   event: (event: ThreadEvent) => Promise<void>;
   codexHome?: string;
+  shortHeadline?: boolean;
 }
 
 /** Runtime tools and host validation must use the same workspace-local temp path. */
@@ -137,7 +154,7 @@ export async function runRuntime(options: RuntimeOptions): Promise<{
   });
   const { events } = await thread.runStreamed(options.prompt, {
     signal: options.signal,
-    outputSchema: ANSWER_SCHEMA,
+    outputSchema: options.shortHeadline ? REPAIR_ANSWER_SCHEMA : ANSWER_SCHEMA,
   });
   let usage: TrialResult["usage"] = null;
   let text = "";
@@ -165,7 +182,14 @@ export async function runRuntime(options: RuntimeOptions): Promise<{
   const value = answer as Record<string, unknown>;
   if (
     Object.keys(value).sort().join() !==
-      "confidence,explanation,file,line,rootCause" ||
+      (options.shortHeadline
+        ? "confidence,explanation,file,headline,line,rootCause"
+        : "confidence,explanation,file,line,rootCause") ||
+    (options.shortHeadline &&
+      (typeof value.headline !== "string" ||
+        value.headline.trim().length === 0 ||
+        value.headline.length > 60 ||
+        /[\r\n]/.test(value.headline))) ||
     !["rootCause", "file", "explanation"].every(
       (k) => typeof value[k] === "string" && String(value[k]).trim().length > 0,
     ) ||
