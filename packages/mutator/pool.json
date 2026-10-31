@@ -1,0 +1,1023 @@
+{
+  "schemaVersion": 1,
+  "instrumenterVersion": "9.3.0",
+  "sourceDigest": "7c2cf6dcfbd720e3a1924d927c86939c3d99c56ad175a20bcc16c19a23344a5f",
+  "candidateCount": 107,
+  "rejectedByStage": {
+    "invisible": 1,
+    "replay-budget": 5,
+    "survived": 33,
+    "typecheck": 19,
+    "unsurvivable": 31
+  },
+  "mutants": [
+    {
+      "id": "de7a4f6fc4035978",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 4,
+          "line": 50
+        },
+        "end": {
+          "column": 24,
+          "line": 50
+        }
+      },
+      "original": "a.y + a.height > b.y",
+      "replacement": "true",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 79,
+          "visibleFrame": 79,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 79,
+          "visibleFrame": 79,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 79,
+          "visibleFrame": 79,
+          "symptom": "The player dies before reaching the flag."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "93de29271c997887",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "EqualityOperator",
+      "location": {
+        "start": {
+          "column": 4,
+          "line": 50
+        },
+        "end": {
+          "column": 24,
+          "line": 50
+        }
+      },
+      "original": "a.y + a.height > b.y",
+      "replacement": "a.y + a.height >= b.y",
+      "family": "collision-off-by-one",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 81,
+          "visibleFrame": 81,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 81,
+          "visibleFrame": 81,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 81,
+          "visibleFrame": 81,
+          "symptom": "The player dies before reaching the flag."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "e19c7baf91c301dc",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 4,
+          "line": 50
+        },
+        "end": {
+          "column": 18,
+          "line": 50
+        }
+      },
+      "original": "a.y + a.height",
+      "replacement": "a.y - a.height",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls below the expected landing."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "b7a2a3359d746a7c",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 48,
+          "line": 58
+        },
+        "end": {
+          "column": 65,
+          "line": 58
+        }
+      },
+      "original": "y + PLAYER_HEIGHT",
+      "replacement": "y - PLAYER_HEIGHT",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls below the expected landing."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "db4b607a66c51f96",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "EqualityOperator",
+      "location": {
+        "start": {
+          "column": 23,
+          "line": 59
+        },
+        "end": {
+          "column": 34,
+          "line": 59
+        }
+      },
+      "original": "row <= maxY",
+      "replacement": "row < maxY",
+      "family": "collision-off-by-one",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 42,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 42,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 42,
+          "symptom": "The player falls below the expected landing."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "e04b27ff2c2abe01",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "EqualityOperator",
+      "location": {
+        "start": {
+          "column": 28,
+          "line": 60
+        },
+        "end": {
+          "column": 42,
+          "line": 60
+        }
+      },
+      "original": "column <= maxX",
+      "replacement": "column < maxX",
+      "family": "collision-off-by-one",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 5,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 5,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 5,
+          "symptom": "The player falls behind the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "964a5b8302ea1243",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 15,
+          "line": 74
+        },
+        "end": {
+          "column": 21,
+          "line": 74
+        }
+      },
+      "original": "x + vx",
+      "replacement": "x - vx",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "2c4efa412be476b7",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 15,
+          "line": 92
+        },
+        "end": {
+          "column": 21,
+          "line": 92
+        }
+      },
+      "original": "y + vy",
+      "replacement": "y - vy",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 47,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 47,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 47,
+          "symptom": "The player falls below the expected landing."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "f36b1854c741624e",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "BooleanLiteral",
+      "location": {
+        "start": {
+          "column": 17,
+          "line": 93
+        },
+        "end": {
+          "column": 22,
+          "line": 93
+        }
+      },
+      "original": "false",
+      "replacement": "true",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 41,
+          "visibleFrame": 45,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 41,
+          "visibleFrame": 45,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 41,
+          "visibleFrame": 45,
+          "symptom": "The player falls below the expected landing."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "1f9a5b03bb4e5508",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "BooleanLiteral",
+      "location": {
+        "start": {
+          "column": 19,
+          "line": 103
+        },
+        "end": {
+          "column": 23,
+          "line": 103
+        }
+      },
+      "original": "true",
+      "replacement": "false",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 44,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 44,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 44,
+          "symptom": "The player falls below the expected landing."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "d24985be96faa3dc",
+      "file": "packages/sim/src/index.ts",
+      "site": "input",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 15,
+          "line": 113
+        },
+        "end": {
+          "column": 41,
+          "line": 113
+        }
+      },
+      "original": "(input & INPUT.LEFT) !== 0",
+      "replacement": "true",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "05279a7d4da420e3",
+      "file": "packages/sim/src/index.ts",
+      "site": "input",
+      "mutator": "EqualityOperator",
+      "location": {
+        "start": {
+          "column": 15,
+          "line": 113
+        },
+        "end": {
+          "column": 41,
+          "line": 113
+        }
+      },
+      "original": "(input & INPUT.LEFT) !== 0",
+      "replacement": "(input & INPUT.LEFT) === 0",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "31b8707a7e65479d",
+      "file": "packages/sim/src/index.ts",
+      "site": "input",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 16,
+          "line": 114
+        },
+        "end": {
+          "column": 43,
+          "line": 114
+        }
+      },
+      "original": "(input & INPUT.RIGHT) !== 0",
+      "replacement": "false",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "1914336c4f42aa32",
+      "file": "packages/sim/src/index.ts",
+      "site": "input",
+      "mutator": "EqualityOperator",
+      "location": {
+        "start": {
+          "column": 16,
+          "line": 114
+        },
+        "end": {
+          "column": 43,
+          "line": 114
+        }
+      },
+      "original": "(input & INPUT.RIGHT) !== 0",
+      "replacement": "(input & INPUT.RIGHT) === 0",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "0a1b378d2e836555",
+      "file": "packages/sim/src/index.ts",
+      "site": "input",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 20,
+          "line": 115
+        },
+        "end": {
+          "column": 32,
+          "line": 115
+        }
+      },
+      "original": "left - right",
+      "replacement": "left + right",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "c857b1572ff845d3",
+      "file": "packages/sim/src/index.ts",
+      "site": "input",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 9,
+          "line": 116
+        },
+        "end": {
+          "column": 30,
+          "line": 116
+        }
+      },
+      "original": "0 - direction * SPEED",
+      "replacement": "0 + direction * SPEED",
+      "family": "swapped-controls",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "3cd2d0ca23494a0e",
+      "file": "packages/sim/src/index.ts",
+      "site": "physics",
+      "mutator": "MethodExpression",
+      "location": {
+        "start": {
+          "column": 9,
+          "line": 122
+        },
+        "end": {
+          "column": 42,
+          "line": 122
+        }
+      },
+      "original": "Math.min(vy + GRAVITY, 12 * UNIT)",
+      "replacement": "Math.max(vy + GRAVITY, 12 * UNIT)",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 44,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 44,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 44,
+          "symptom": "The player falls below the expected landing."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "3ea2023f768196c3",
+      "file": "packages/sim/src/index.ts",
+      "site": "physics",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 18,
+          "line": 122
+        },
+        "end": {
+          "column": 30,
+          "line": 122
+        }
+      },
+      "original": "vy + GRAVITY",
+      "replacement": "vy - GRAVITY",
+      "family": "gravity-sign",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player drifts upward while airborne."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    }
+  ]
+}

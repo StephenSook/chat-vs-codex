@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { step } from "@chat-vs-codex/sim";
 import { describe, expect, it } from "vitest";
 import {
   CANARY,
@@ -14,6 +15,18 @@ const goldens: Record<string, ReturnType<typeof goldenResult>> = JSON.parse(
   readFileSync(new URL("../fixtures/goldens.json", import.meta.url), "utf8"),
 );
 describe("recorded deterministic replays", () => {
+  it("records full-state divergence even before a position changes", () => {
+    const track = { name: "counter-only", seed: 13, inputs: [0] };
+    const normal = runTrack(track);
+    const changed = runTrack(track, (state, input) => ({
+      ...step(state, input),
+      buffer: 1,
+    }));
+    expect(changed.outcome).toEqual(normal.outcome);
+    expect(changed.samples[0]?.stateHash).not.toBe(
+      normal.samples[0]?.stateHash,
+    );
+  });
   for (const track of TRACKS) {
     it(`${track.name} matches each 60-frame hash and final outcome`, () => {
       expect(goldenResult(track)).toEqual(goldens[track.name]);

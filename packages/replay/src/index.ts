@@ -21,7 +21,7 @@ export interface Sample {
 export interface ReplayResult {
   hashes: { frame: number; hash: string }[];
   outcome: Sample;
-  samples: Sample[];
+  samples: (Sample & { stateHash: string })[];
   final: State;
 }
 
@@ -83,7 +83,7 @@ export function runTrack(
   }
   let state = createState(track.seed);
   const hashes: ReplayResult["hashes"] = [];
-  const samples: Sample[] = [];
+  const samples: ReplayResult["samples"] = [];
   for (const input of track.inputs) {
     if (!Number.isSafeInteger(input) || input < 0 || input > 7)
       throw new Error("Invalid input mask");
@@ -91,18 +91,27 @@ export function runTrack(
     if (![state.x, state.y, state.vx, state.vy].every(Number.isSafeInteger)) {
       throw new Error(`Non-integer state at frame ${state.frame}`);
     }
+    const stateHash = hashState(state);
     samples.push({
       frame: state.frame,
       x: state.x,
       y: state.y,
       alive: state.alive,
       won: state.won,
+      stateHash,
     });
     if (state.frame % 60 === 0)
-      hashes.push({ frame: state.frame, hash: hashState(state) });
+      hashes.push({ frame: state.frame, hash: stateHash });
   }
-  const outcome = samples.at(-1);
-  if (!outcome) throw new Error("Replay produced no samples");
+  const last = samples.at(-1);
+  if (!last) throw new Error("Replay produced no samples");
+  const outcome = {
+    frame: last.frame,
+    x: last.x,
+    y: last.y,
+    alive: last.alive,
+    won: last.won,
+  };
   return { hashes, outcome, samples, final: state };
 }
 export function goldenResult(
