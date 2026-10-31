@@ -272,13 +272,32 @@ td {
 th {
   color: var(--muted);
 }
+.race-rule {
+  max-width: 48rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.round-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.2rem;
+  margin: 1rem 0;
+}
+.race-summary {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+}
 .round-time {
   display: block;
   color: var(--codex);
   font:
     700 1.8rem "Courier New",
     monospace;
-  margin: 1rem 0;
+  margin: 0;
 }
 .patch {
   margin: 1rem 0;

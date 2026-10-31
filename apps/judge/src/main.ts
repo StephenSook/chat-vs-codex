@@ -22,6 +22,7 @@ import {
 } from "./proof.js";
 import "./style.css";
 import { RULE } from "./framing.js";
+import { RACE_RULE, raceSummary } from "./race-summary.js";
 import { summarizeSecondGameTrials } from "./second-game.js";
 
 const REPO = "https://github.com/StephenSook/chat-vs-codex";
@@ -549,6 +550,7 @@ async function start(): Promise<void> {
     "02 / RECORDED ROUNDS",
     "Every receipt. Every label.",
   );
+  rounds.append(element("p", RACE_RULE, "race-rule"));
   const roundGrid = element("div", undefined, "round-grid");
   const earlierGrid = element("div", undefined, "round-grid earlier-rounds");
   for (const round of [...evidence.rounds].reverse()) {
@@ -559,12 +561,25 @@ async function start(): Promise<void> {
       element("p", roundLabel(receipt), "eyebrow"),
       element("p", roundInputLabel(receipt), "eyebrow"),
       element("h3", receipt.family ?? "Unrecorded family"),
+    );
+    const result = element("div", undefined, "round-result");
+    const race = element("div", undefined, "race-summary");
+    race.dataset.testid = "race-summary";
+    const recordedRace = raceSummary(receipt);
+    race.append(
+      element("strong", `Winner ${recordedRace.winner}`),
+      element("span", `First correct ${recordedRace.firstCorrect}`),
+      element("span", `Head start ${recordedRace.headStart}`),
+    );
+    result.append(
       element(
         "strong",
         greenSplit(receipt.durations?.timeToGreenMs),
         "round-time",
       ),
+      race,
     );
+    card.append(result);
     if (round.regression) card.append(element("span", "+1 test", "badge"));
     if (receipt.autopsy?.headline || receipt.autopsy?.explanation)
       card.append(
@@ -591,10 +606,7 @@ async function start(): Promise<void> {
       splitGrid.append(stat(label, seconds(value)));
     const detail = element("div");
     detail.append(
-      element(
-        "p",
-        `Saboteur ${receipt.breaker}. First correct guesser ${receipt.firstCorrectGuesser ?? "none"}. Winner ${receipt.winner}.`,
-      ),
+      element("p", `Saboteur ${receipt.breaker}.`),
       splitGrid,
       element(
         "p",

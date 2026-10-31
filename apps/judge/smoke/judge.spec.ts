@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { deriveSeason } from "../../../packages/round/src/season.js";
+import { isEarlierTestRound, type JudgeEvidence } from "../src/evidence.js";
 import { RULE } from "../src/framing.js";
+import { RACE_RULE, raceSummary } from "../src/race-summary.js";
 import { summarizeSecondGameTrials } from "../src/second-game.js";
 
 test("committed evidence recomputes in a static preview at desktop and phone widths", async ({
@@ -64,9 +66,22 @@ test("committed evidence recomputes in a static preview at desktop and phone wid
   await earlier.locator(":scope > summary").click();
   await expect(earlier.locator(".round-card")).toBeVisible();
   await earlier.locator(":scope > summary").click();
-  const evidence = await (
+  const evidence: JudgeEvidence = await (
     await page.request.get("/evidence/index.json")
   ).json();
+  await expect(page.locator("#rounds .race-rule")).toHaveText(RACE_RULE);
+  await expect(page.locator("#rounds .race-rule")).toBeVisible();
+  for (const { receipt } of evidence.rounds) {
+    const card = page.locator(`[data-round-id="${receipt.roundId}"]`);
+    const race = card.getByTestId("race-summary");
+    const recorded = raceSummary(receipt);
+    await expect(race).toContainText(`Winner ${recorded.winner}`);
+    await expect(race).toContainText(`First correct ${recorded.firstCorrect}`);
+    await expect(race).toContainText(`Head start ${recorded.headStart}`);
+    await expect(card.locator(".round-result > .round-time")).toHaveCount(1);
+    await expect(card.locator(".round-result > .race-summary")).toHaveCount(1);
+    if (!isEarlierTestRound(receipt)) await expect(race).toBeVisible();
+  }
   const season = deriveSeason(
     evidence.rounds.map(
       (round: { receipt: Parameters<typeof deriveSeason>[0][number] }) =>
