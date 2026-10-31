@@ -11,8 +11,9 @@
   other AI attribution lines to commits or PRs.
 - Never commit secrets. Keep dependencies, dist, .env files, bench/tmp, film
   and logs ignored. Benchmark event JSONL and results JSONL are evidence to retain.
-- Run every CI command before committing: pnpm typecheck, pnpm lint, pnpm test.
-- Keep the GitHub repository private. Do not add collaborators or change visibility.
+- Run pnpm ci:local before committing: frozen install, typecheck, lint, test.
+- The repository is public by Stephen's decision. Never change visibility or
+  collaborators. Never run gh repo edit. Never commit secrets.
 - Read files before editing. Stage named paths and verify committed content.
 - Runtime trials must use neutral isolated directories with logs outside them,
   immutable tests and fixtures, and no access outside the runtime workspace.
