@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type {
   RoundEnvelope,
   RoundEvent,
+  RoundValidationReplay,
 } from "../../../packages/round/src/contracts.js";
 import {
   bridgeOrigin,
@@ -40,6 +41,15 @@ const build = (
   phase: "broken",
 });
 const module = { createState, hashState, step };
+// Wire fixture only. The bench parser separately verifies the full held-out gate.
+const replay: RoundValidationReplay = {
+  fps: 60,
+  sourceDigest: "c".repeat(64),
+  trackDigest: "d".repeat(64),
+  frames: [
+    { frame: 1, x: 1, y: 2, alive: true, won: false, stateHash: "00000000" },
+  ],
+};
 
 function fixture(
   loadBuild: (
@@ -62,6 +72,109 @@ function fixture(
 }
 
 describe("ordered round bridge", () => {
+  it("installs only repaired source matching the observed validated replay, with no delay for playback", async () => {
+    const f = fixture();
+    await f.bridge.receive(envelope(1, started("r")));
+    await f.bridge.receive(
+      envelope(2, {
+        type: "overlay",
+        event: { type: "round.ghost", roundId: "r", replay },
+      }),
+    );
+    const before = f.simulation.state;
+    await f.bridge.receive(
+      envelope(3, {
+        ...build("r"),
+        phase: "repaired",
+        sourceDigest: replay.sourceDigest,
+      }),
+    );
+    expect(f.loadBuild).toHaveBeenCalledOnce();
+    expect(f.simulation.state).toBe(before);
+    expect(f.received.at(-1)).toEqual({
+      type: "round.ghost",
+      roundId: "r",
+      replay,
+    });
+  });
+
+  it.each([undefined, "e".repeat(64)])(
+    "rejects a missing or different repaired source digest before download/import: %s",
+    async (sourceDigest) => {
+      const f = fixture();
+      await f.bridge.receive(envelope(1, started("r")));
+      await f.bridge.receive(
+        envelope(2, {
+          type: "overlay",
+          event: { type: "round.ghost", roundId: "r", replay },
+        }),
+      );
+      await expect(
+        f.bridge.receive(
+          envelope(3, {
+            ...build("r"),
+            phase: "repaired",
+            ...(sourceDigest === undefined ? {} : { sourceDigest }),
+          }),
+        ),
+      ).rejects.toThrow("source does not match");
+      expect(f.loadBuild).not.toHaveBeenCalled();
+      await f.bridge.receive(
+        envelope(4, {
+          type: "overlay",
+          event: { type: "tests.green", roundId: "r" },
+        }),
+      );
+      expect(f.received.some((event) => event.type === "tests.green")).toBe(
+        false,
+      );
+    },
+  );
+
+  it("refuses an unpaired repaired digest and never reuses a prior round's replay binding", async () => {
+    const f = fixture();
+    await f.bridge.receive(envelope(1, started("old")));
+    await f.bridge.receive(
+      envelope(2, {
+        type: "overlay",
+        event: { type: "round.ghost", roundId: "old", replay },
+      }),
+    );
+    await f.bridge.receive(envelope(3, preparing("r")));
+    await expect(
+      f.bridge.receive(
+        envelope(4, {
+          ...build("r"),
+          phase: "repaired",
+          sourceDigest: replay.sourceDigest,
+        }),
+      ),
+    ).rejects.toThrow("source does not match");
+    expect(f.loadBuild).not.toHaveBeenCalled();
+  });
+
+  it("refuses corrupt replay wire shapes instead of forwarding ghost or green activity", () => {
+    const ghost = {
+      type: "overlay",
+      event: { type: "round.ghost", roundId: "r", replay },
+    };
+    expect(parseRoundEnvelope(envelope(1, ghost as RoundEvent)).event).toEqual(
+      ghost,
+    );
+    for (const invalid of [
+      { ...replay, sourceDigest: "bad" },
+      { ...replay, frames: [] },
+      { ...replay, frames: [{ ...replay.frames[0], stateHash: "bad" }] },
+    ])
+      expect(() =>
+        parseRoundEnvelope({
+          sequence: 1,
+          serverTimeMs: 1,
+          event: { ...ghost, event: { ...ghost.event, replay: invalid } },
+        }),
+      ).toThrow("Invalid round event");
+  });
+
   it("installs the broken module before later overlay activity, preserving the live frame", async () => {
     let resolve!: (value: typeof module) => void;
     const loading = new Promise<typeof module>((done) => {

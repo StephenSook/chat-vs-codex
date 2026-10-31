@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { chmod, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -6,16 +7,19 @@ import { loadProfile } from "../../bench/src/runtime.js";
 import { validateWorkspace } from "../../bench/src/trial.js";
 import {
   prepareWorkspace,
+  snapshot as sourceSnapshot,
   type TrialWorkspace,
 } from "../../bench/src/workspace.js";
 import { type PooledMutant, ROOT } from "../../mutator/src/gate.js";
 import { type BugFamily, TwitchHandler } from "../../twitch/src/events.js";
 import { parseFixture, replayFixtures } from "../../twitch/src/fixtures.js";
 import { type ClientSnapshot, startGameClient } from "../src/client.js";
+import { eventStamp } from "../src/clocks.js";
 import type {
   GameArtifact,
   PreparedGame,
   RoundEnvelope,
+  RoundValidationReplay,
 } from "../src/contracts.js";
 import { RoundEngine } from "../src/engine.js";
 import { bundleGame } from "../src/runtime-execution.js";
@@ -111,6 +115,22 @@ child.on('exit',code=>process.exit(code ?? 1));
         options.signal.throwIfAborted();
         for (const [path, source] of Object.entries(game.cleanSources))
           await writeFile(join(game.game, path), source);
+        for (const phase of [
+          "thread-started",
+          "patch-ready",
+          "validation-started",
+        ] as const)
+          options.observe?.({ type: "runtime.phase", phase, ...eventStamp() });
+        const sourceDigest = createHash("sha256")
+          .update(
+            JSON.stringify(
+              Object.entries(await sourceSnapshot(game.game)).filter(([path]) =>
+                path.startsWith("src/"),
+              ),
+            ),
+          )
+          .digest("hex");
+        let replay: RoundValidationReplay | undefined;
         await validateWorkspace(
           game,
           await loadProfile(),
@@ -124,9 +144,27 @@ child.on('exit',code=>process.exit(code ?? 1));
             };
             if (row.kind === "validation") validation.push(row);
           },
+          (recorded) => {
+            replay = { ...recorded, sourceDigest };
+            options.observe?.({
+              type: "runtime.replay",
+              replay,
+              ...eventStamp(),
+            });
+            stages.push("published-real-held-out-ghost");
+          },
         );
         stages.push("full-suite-and-held-out-passed");
-        return bundleGame(join(game.game, "src/index.ts"), game.game);
+        const artifact = await bundleGame(
+          join(game.game, "src/index.ts"),
+          game.game,
+        );
+        options.observe?.({
+          type: "runtime.phase",
+          phase: "validation-passed",
+          ...eventStamp(),
+        });
+        return { ...artifact, ...(replay ? { replay } : {}) };
       },
       close: async () => {},
     };
@@ -192,6 +230,7 @@ child.on('exit',code=>process.exit(code ?? 1));
     expect(stages).toEqual([
       "installed-broken",
       "sdk-repair-test-double",
+      "published-real-held-out-ghost",
       "full-suite-and-held-out-passed",
       "installed-repaired",
       "published-tests-green",
@@ -200,6 +239,7 @@ child.on('exit',code=>process.exit(code ?? 1));
       event.type === "game.build" ? [event] : [],
     );
     expect(builds.map((build) => build.buildId)).toEqual([broken.id, clean.id]);
+    expect(builds[1]?.sourceDigest).toMatch(/^[a-f0-9]{64}$/);
     for (const artifact of [broken, clean] satisfies GameArtifact[]) {
       const response = await fetch(
         `${server.origin}/api/builds/${artifact.id}.js`,
@@ -226,6 +266,10 @@ child.on('exit',code=>process.exit(code ?? 1));
       codex: 1,
     });
     expect(snapshot.sdkSteps).toBe(0);
+    expect(snapshot.broadcast.ghost?.frames).toHaveLength(600);
+    expect(snapshot.broadcast.ghost?.sourceDigest).toBe(
+      builds[1]?.sourceDigest,
+    );
     expect(
       envelopes.filter(
         ({ event }) =>

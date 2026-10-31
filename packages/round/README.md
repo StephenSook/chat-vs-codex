@@ -64,6 +64,12 @@ explanation, phase durations and a signed time-to-green delta. Prior verified
 receipts supply the comparison across runner invocations. A legacy or incompatible
 prior measurement leaves the delta unavailable. Rollback cards carry no green
 split; failed cleanup rolls back before publishing a success or Codex point.
+During validation, the held-out validator records the patched build's actual
+per-frame positions and state hashes. After that run passes, its bounded trace
+drives a translucent ghost and overview trail before the swap; playback may
+continue afterward. Source fingerprints bind the trace to the installed repair,
+and the public receipt retains trace hashes. Playback does not step the live game
+or delay Codex, validation or activation. Failed held-out runs publish no trace.
 Replayed events use the delivery clock so reconnection does not restart the head
 start. Build-load failure blocks that round's later green and score messages.
 

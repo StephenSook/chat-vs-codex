@@ -315,6 +315,15 @@ export class RoundEngine {
       !Number.isFinite(observation.atMs)
     )
       return;
+    if (observation.type === "runtime.replay") {
+      if (this.state.phase === "validating")
+        this.overlay({
+          type: "round.ghost",
+          roundId: round.id,
+          replay: observation.replay,
+        });
+      return;
+    }
     if (observation.type === "runtime.patch") {
       if (
         !Number.isInteger(observation.patch.added) ||

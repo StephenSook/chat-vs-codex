@@ -8,6 +8,7 @@ import {
   type OverlayEvent,
   type OverlayEventBus,
 } from "./events.js";
+import { validGhostReplay } from "./ghost.js";
 import type { SimulationPlayer } from "./simulation.js";
 
 type BuildEvent = Extract<RoundEvent, { type: "game.build" }>;
@@ -81,6 +82,8 @@ function validateOverlay(event: unknown): event is OverlayEvent {
       return typeof e.roundId === "string" && typeof e.name === "string";
     case "tests.green":
       return typeof e.roundId === "string";
+    case "round.ghost":
+      return typeof e.roundId === "string" && validGhostReplay(e.replay);
     case "round.autopsy":
       return (
         typeof e.roundId === "string" &&
@@ -195,6 +198,9 @@ export function parseRoundEnvelope(value: unknown): RoundEnvelope {
     typeof event.roundId === "string" &&
     typeof event.buildId === "string" &&
     typeof event.digest === "string" &&
+    (event.sourceDigest === undefined ||
+      (typeof event.sourceDigest === "string" &&
+        /^[a-f0-9]{64}$/.test(event.sourceDigest))) &&
     ["broken", "repaired", "rollback"].includes(event.phase)
   )
     return e;
@@ -227,6 +233,7 @@ export interface RoundBridgeOptions {
   now?: () => number;
   onError?: (error: Error) => void;
   onState?: (event: StateEvent) => void;
+  onBuild?: (event: BuildEvent) => void;
   onConnection?: (connected: boolean) => void;
 }
 
@@ -237,6 +244,7 @@ export class OrderedRoundBridge {
   private roundId: string | null = null;
   private readonly seenRounds = new Set<string>();
   private faultRound: string | null = null;
+  private replaySourceDigest: string | null = null;
   private closed = false;
 
   constructor(private readonly options: RoundBridgeOptions) {}
@@ -275,6 +283,7 @@ export class OrderedRoundBridge {
       this.roundId = introduced;
       this.seenRounds.add(introduced);
       this.faultRound = null;
+      this.replaySourceDigest = null;
     }
     const receivedRoundId = this.roundId;
     const task = async () => {
@@ -292,10 +301,23 @@ export class OrderedRoundBridge {
       if (this.faultRound !== null && roundId === this.faultRound) return;
       try {
         if (event.type === "game.build") {
+          if (
+            event.phase === "repaired" &&
+            (event.sourceDigest !== undefined ||
+              this.replaySourceDigest !== null) &&
+            event.sourceDigest !== this.replaySourceDigest
+          )
+            throw new Error(
+              "Repaired build source does not match the observed validated replay",
+            );
           const module = await this.options.loadBuild(event);
           if (this.closed || event.roundId !== this.roundId) return;
           this.options.simulation.install(module);
+          if (event.phase === "rollback") this.replaySourceDigest = null;
+          this.options.onBuild?.(event);
         } else if (event.type === "overlay") {
+          if (event.event.type === "round.ghost")
+            this.replaySourceDigest = event.event.replay.sourceDigest;
           this.options.events.publish(
             event.event.type === "round.started"
               ? {

@@ -15,6 +15,11 @@ import {
 } from "./runtime.js";
 import type { ModelSpec, TrialResult } from "./statistics.js";
 import {
+  REPLAY_TRACE_PREFIX,
+  type ValidatedReplay,
+  validatedReplay,
+} from "./validated-replay.js";
+import {
   changedPaths,
   git,
   inspectChanges,
@@ -61,9 +66,10 @@ export async function validateWorkspace(
   profile: string,
   remaining: () => number,
   log: (value: unknown) => Promise<void>,
+  onReplay?: (replay: ValidatedReplay) => void | Promise<void>,
 ): Promise<void> {
   const codex = execFileSync("which", ["codex"], { encoding: "utf8" }).trim();
-  async function command(program: string, args: string[]): Promise<void> {
+  async function command(program: string, args: string[]): Promise<string> {
     const budget = Math.min(15000, remaining());
     if (budget <= 0) throw new Error("Hard trial budget expired");
     const result = spawnSync(
@@ -92,6 +98,7 @@ export async function validateWorkspace(
       throw new Error(
         `Validation failed: ${result.error?.message ?? result.stderr ?? result.stdout}`,
       );
+    return result.stdout;
   }
   // A clean compile and the entire visible suite precede the held-out replay.
   await command(process.execPath, [
@@ -103,6 +110,7 @@ export async function validateWorkspace(
     "run",
   ]);
   const hidden = join(workspace.game, "test/.held-out-check.mjs");
+  let replay: ValidatedReplay | undefined;
   try {
     // Written only AFTER the runtime process has exited. Codex never sees this input.
     await build({
@@ -110,11 +118,16 @@ export async function validateWorkspace(
         contents: `
         import { createState, step, hashState } from ${JSON.stringify(join(workspace.game, "src/index.ts"))};
         const track = ${JSON.stringify(HELD_OUT)};
-        let state = createState(track.seed); const hashes = [];
-        for (const input of track.inputs) { state = step(state,input); if(state.frame%60===0) hashes.push({frame:state.frame,hash:hashState(state)}); }
+        let state = createState(track.seed); const hashes = []; ${onReplay ? "const frames = [];" : ""}
+        for (const input of track.inputs) {
+          state = step(state,input);
+          if(state.frame%60===0) hashes.push({frame:state.frame,hash:hashState(state)});
+          ${onReplay ? "frames.push({frame:state.frame,x:state.x,y:state.y,alive:state.alive,won:state.won,stateHash:hashState(state)});" : ""}
+        }
         const outcome={frame:state.frame,x:state.x,y:state.y,alive:state.alive,won:state.won};
         if(JSON.stringify({hashes,outcome})!==${JSON.stringify(JSON.stringify(goldenResult(HELD_OUT)))}) throw new Error('Held-out replay failed');
         console.log('Held-out replay passed');
+        ${onReplay ? `console.log(${JSON.stringify(REPLAY_TRACE_PREFIX)} + JSON.stringify(frames));` : ""}
       `,
         loader: "ts",
         resolveDir: workspace.game,
@@ -126,10 +139,12 @@ export async function validateWorkspace(
       plugins: [confinedBundlePlugin(workspace.game)],
       outfile: hidden,
     });
-    await command(process.execPath, [hidden]);
+    const stdout = await command(process.execPath, [hidden]);
+    if (onReplay) replay = validatedReplay(stdout);
   } finally {
     await rm(hidden, { force: true });
   }
+  if (replay && onReplay) await onReplay(replay);
 }
 
 export function isSandboxFailure(message: string): boolean {

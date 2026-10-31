@@ -69,6 +69,13 @@ lines.on("line", (line) => {
         });
       } else if (
         command.kind === "event" &&
+        command.envelope?.event.type === "game.build" &&
+        command.envelope.event.phase === "rollback" &&
+        command.envelope.event.roundId === broadcast.roundId
+      ) {
+        broadcast = { ...broadcast, ghost: null };
+      } else if (
+        command.kind === "event" &&
         command.envelope?.event.type === "round.state" &&
         command.envelope.event.phase === "preparing" &&
         command.envelope.event.roundId !== null

@@ -11,6 +11,7 @@ import {
   type OverlayEventBus,
   reduceBroadcast,
 } from "./events.js";
+import { RecordedGhost } from "./ghost.js";
 import { element, renderBroadcast, renderClock, resizeStage } from "./hud.js";
 import { type CameraMode, cameraFor, corruptionFor } from "./presentation.js";
 import { createScene } from "./scene.js";
@@ -27,6 +28,7 @@ declare global {
         filtersEnabled: boolean;
         camera: ReturnType<typeof cameraFor>;
         corruption: ReturnType<typeof corruptionFor>;
+        ghost: ReturnType<RecordedGhost["snapshot"]>;
       };
     };
   }
@@ -41,6 +43,7 @@ async function start(): Promise<void> {
     params.get("camera") === "overview" ? "overview" : "follow";
   const simulation = new SimulationPlayer(mode);
   const events = createEventBus();
+  const ghost = new RecordedGhost();
   let broadcast = initialBroadcast();
   let input = 0;
   let lastCountdown: number | null = null;
@@ -60,6 +63,7 @@ async function start(): Promise<void> {
 
   const unsubscribe = events.subscribe((event) => {
     broadcast = reduceBroadcast(broadcast, event);
+    ghost.observe(event);
     renderBroadcast(broadcast);
     if (!broadcast.roundId && mode === "play")
       element("round-label").textContent = "FREE PLAY";
@@ -75,6 +79,7 @@ async function start(): Promise<void> {
       filtersEnabled: !motion.matches,
       camera: cameraFor(simulation.state.x, simulation.state.y, cameraMode),
       corruption: corruptionFor(broadcast, performance.now(), motion.matches),
+      ghost: ghost.snapshot(),
     }),
   };
   const disconnectBridge = bridgeUrl
@@ -95,6 +100,10 @@ async function start(): Promise<void> {
         },
         onState(state) {
           if (state.phase === "preparing") bridgeError = null;
+          if (state.phase === "rolled-back") ghost.clear();
+        },
+        onBuild(build) {
+          if (build.phase === "rollback") ghost.clear();
         },
       })
     : () => {};
@@ -135,7 +144,11 @@ async function start(): Promise<void> {
     const nowMs = performance.now();
     const corruption = corruptionFor(broadcast, nowMs, motion.matches);
     element("game").dataset.corruption = corruption.treatment;
-    scene.draw(simulation.state, corruption);
+    scene.draw(
+      simulation.state,
+      corruption,
+      ghost.advance(ticker.elapsedMS, motion.matches),
+    );
     const countdown = headStartSeconds(broadcast, nowMs);
     if (countdown !== lastCountdown) {
       lastCountdown = countdown;

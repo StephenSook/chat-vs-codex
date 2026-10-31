@@ -9,8 +9,9 @@ import {
   UNIT,
   WIDTH,
 } from "@chat-vs-codex/sim";
-import { Application, Container, Graphics } from "pixi.js";
+import { Application, Container, Graphics, Text } from "pixi.js";
 import { RGBSplitFilter } from "pixi-filters/rgb-split";
+import type { GhostView } from "./ghost.js";
 import {
   actorPositions,
   type CameraMode,
@@ -161,12 +162,55 @@ export async function createScene(host: HTMLElement, cameraMode: CameraMode) {
   });
   const scanBands = new Graphics();
   app.stage.addChild(scanBands);
+  // This fixed overview makes the recorded route visible even when the live
+  // player-follow camera is somewhere else. It does not move or reset the player.
+  const replayInset = new Container();
+  replayInset.position.set(704, 16);
+  replayInset.addChild(
+    new Graphics()
+      .roundRect(0, 0, 480, 180, 8)
+      .fill(0xfaf6e9)
+      .stroke({ color: INK, width: 3 }),
+  );
+  const replayLabel = new Text({
+    text: "RECORDED VALIDATED REPLAY",
+    style: { fontFamily: "Plus Jakarta Sans", fontSize: 20, fill: INK },
+  });
+  replayLabel.position.set(12, 8);
+  replayInset.addChild(replayLabel);
+  const replayWorld = new Container();
+  replayWorld.position.set(10, 34);
+  replayWorld.scale.set(460 / (WIDTH * TILE_PX));
+  const replayTrail = new Graphics();
+  const replayPlayer = new Graphics();
+  replayPlayer
+    .roundRect(0, 0, pw, ph, 4)
+    .fill({ color: 0x0477bd, alpha: 0.55 })
+    .stroke({ color: 0xffffff, width: 3 });
+  replayWorld.addChild(
+    background.clone(),
+    terrain.clone(),
+    replayTrail,
+    replayPlayer,
+  );
+  replayInset.addChild(replayWorld);
+  app.stage.addChild(replayInset);
+  replayInset.visible = false;
+  const liveGhost = replayPlayer.clone();
+  world.addChild(liveGhost);
+  liveGhost.visible = false;
+  let lastReplay: GhostView["replay"] | null = null;
+  let lastReplayIndex = -1;
   let lastTreatment = "";
   let lastPlatformX = Number.NaN;
 
   return {
     app,
-    draw(state: State, effect: ReturnType<typeof corruptionFor>) {
+    draw(
+      state: State,
+      effect: ReturnType<typeof corruptionFor>,
+      ghost: GhostView | null = null,
+    ) {
       const camera = cameraFor(state.x, state.y, cameraMode);
       world.scale.set(camera.zoom);
       world.position.set(camera.left, camera.top);
@@ -174,6 +218,32 @@ export async function createScene(host: HTMLElement, cameraMode: CameraMode) {
       player.position.set(actors.player.x, actors.player.y);
       enemy.position.set(actors.enemy.x, actors.enemy.y);
       player.alpha = state.alive ? 1 : 0.35;
+      replayInset.visible = ghost !== null;
+      liveGhost.visible = ghost !== null;
+      if (ghost) {
+        const sample = ghost.replay.frames[ghost.index];
+        if (sample) {
+          replayPlayer.position.set(sample.x / UNIT, sample.y / UNIT);
+          liveGhost.position.copyFrom(replayPlayer.position);
+          liveGhost.alpha = sample.alive ? 0.7 : 0.3;
+          replayLabel.text = ghost.reducedMotion
+            ? "RECORDED VALIDATED ROUTE"
+            : "RECORDED VALIDATED REPLAY";
+          if (lastReplay !== ghost.replay || lastReplayIndex !== ghost.index) {
+            replayTrail.clear();
+            for (const [index, frame] of ghost.replay.frames.entries()) {
+              if (index > ghost.index) break;
+              const x = frame.x / UNIT + pw / 2;
+              const y = frame.y / UNIT + ph / 2;
+              if (index === 0) replayTrail.moveTo(x, y);
+              else replayTrail.lineTo(x, y);
+            }
+            replayTrail.stroke({ color: 0x0477bd, alpha: 0.55, width: 5 });
+            lastReplay = ghost.replay;
+            lastReplayIndex = ghost.index;
+          }
+        }
+      }
       const rect = platformAt(state.frame);
       if (rect.x !== lastPlatformX) {
         platform.clear();

@@ -1,4 +1,4 @@
-import { createHmac, randomBytes } from "node:crypto";
+import { createHash, createHmac, randomBytes } from "node:crypto";
 import {
   chmod,
   mkdir,
@@ -116,6 +116,30 @@ export function publicReceipt(input: {
 }) {
   const { result, client } = input;
   const autopsy = result.autopsy ?? null;
+  const lastGhost = [...input.events]
+    .reverse()
+    .find(
+      ({ event }) =>
+        event.type === "overlay" &&
+        event.event.type === "round.ghost" &&
+        event.event.roundId === result.roundId,
+    )?.event;
+  const replay =
+    lastGhost?.type === "overlay" && lastGhost.event.type === "round.ghost"
+      ? lastGhost.event.replay
+      : null;
+  if (
+    replay &&
+    !input.events.some(
+      ({ event }) =>
+        event.type === "game.build" &&
+        event.phase === "repaired" &&
+        event.roundId === result.roundId &&
+        event.digest === client.buildId &&
+        event.sourceDigest === replay.sourceDigest,
+    )
+  )
+    throw new Error("Validated replay is not bound to the installed repair");
   if (
     !result.roundId ||
     !/^[a-f0-9-]{36}$/.test(result.roundId) ||
@@ -148,6 +172,18 @@ export function publicReceipt(input: {
     effort: "low",
     breaker: input.breaker,
     firstCorrectGuesser: autopsy?.firstCorrectGuesser ?? null,
+    validationReplay:
+      replay === null
+        ? null
+        : {
+            sourceDigest: replay.sourceDigest,
+            trackDigest: replay.trackDigest,
+            buildDigest: client.buildId,
+            frameCount: replay.frames.length,
+            framesDigest: createHash("sha256")
+              .update(JSON.stringify(replay.frames))
+              .digest("hex"),
+          },
     autopsy:
       autopsy === null
         ? null

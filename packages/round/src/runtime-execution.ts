@@ -17,6 +17,7 @@ import { BUG_FAMILIES, type BugFamily } from "../../twitch/src/events.js";
 import { eventStamp, monotonicMs } from "./clocks.js";
 import type {
   GameArtifact,
+  RoundValidationReplay,
   RuntimeObservation,
   RuntimePatch,
   RuntimePhaseObservation,
@@ -227,11 +228,36 @@ export async function executeRepair(
     // It does not claim to measure the first source edit during the turn.
     const patchReadyAtMs = phase("patch-ready");
     const validationStartedAtMs = phase("validation-started");
+    const sourceDigest = createHash("sha256")
+      .update(
+        JSON.stringify(
+          Object.entries(submitted).filter(([path]) => path.startsWith("src/")),
+        ),
+      )
+      .digest("hex");
+    let replay: RoundValidationReplay | undefined;
     await (dependencies.validate ?? validateWorkspace)(
       options.workspace,
       options.profile,
       remaining,
       log,
+      async (validated) => {
+        combined.throwIfAborted();
+        await check();
+        if (
+          changedPaths(submitted, await snapshot(options.workspace.game)).length
+        )
+          throw new Error("Game files changed before replay publication");
+        replay = { ...validated, sourceDigest };
+        const observation: RuntimeObservation = {
+          type: "runtime.replay",
+          replay,
+          ...eventStamp(),
+        };
+        await log({ kind: observation.type, ...observation }, observation);
+        combined.throwIfAborted();
+        observe?.(observation);
+      },
     );
     const changes = await check();
     const verified = await snapshot(options.workspace.game);
@@ -253,10 +279,18 @@ export async function executeRepair(
       elapsedMs: monotonicMs() - started,
       ...changes,
       digest: artifact.digest,
+      ...(replay
+        ? {
+            replaySourceDigest: replay.sourceDigest,
+            replayTrackDigest: replay.trackDigest,
+            replayFrames: replay.frames.length,
+          }
+        : {}),
     });
     return {
       ...artifact,
       patch,
+      ...(replay ? { replay } : {}),
       ...(completed.answer === null ? {} : { diagnosis: completed.answer }),
       timings: {
         threadStartedAtMs,

@@ -16,7 +16,7 @@ Open `http://127.0.0.1:4173/` in a browser or an OBS browser source set to 1920 
 `?mode=play` enables arrows, Space and R for movement, jump and restart.
 The default camera follows the player at twice the original renderer's scale, giving
 the 24 px character about 43 screen pixels of height at 720p. `?camera=overview` keeps
-the whole level visible for inspection and future replay work. This is not a ghost replay.
+the whole level visible for inspection.
 The bug ticket sits above the playfield; the head start and Pit Crew use a right-hand dock.
 
 The renderer reads `LEVEL`, player dimensions and `platformAt` from the sim's public API.
@@ -39,7 +39,8 @@ into this contract. No browser API key is needed or accepted. Until a bridge sen
 - `codex.step`: source item id, step, running/done/failed status and actual attempt/total.
   Reading uses the source basename; patch uses actual added/removed counts. Rows are capped
   at four, older attempts and other rounds are ignored. A completed tests step displays
-  "Tests green"; also publish `tests.green` only after the real gate has passed to clear
+  "Tests passed"; publish `tests.green` only after the real gate has passed to show the
+  distinct "Tests green" row and clear
   the active bug presentation. A command merely starting is never a passing result.
 - `score.changed`: actual CHAT/CODEX scores. The overlay does not decide who won.
 - `simulation.death`: emitted by the local sim on an alive-to-dead transition.
@@ -58,6 +59,16 @@ Load or validation failures retain the previous module and block green/score mes
 that round. The page displays "ROUND DISCONNECTED" with the error in its status tooltip.
 Reconnection replays are deduplicated and ordered; stale round imports cannot replace a
 newer round. Connections close on page exit. This bridge accepts loopback origins only.
+
+An observed `round.ghost` carries the validated held-out route's recorded positions and
+state hashes, tied to the submitted source digest. The blue translucent ghost plays those
+samples at 60 Hz, with its trail in a fixed overview inset so the live follow camera does
+not hide the route. It is labelled "RECORDED VALIDATED REPLAY". The repaired build must
+have the same source digest before the bridge installs it. Playback never steps or resets
+the live game, waits for no minimum animation duration, and can finish after the swap.
+The last recorded frame stays visible until the next round or a rollback. Reduced motion
+shows the full recorded route and its final sample without animation. No route appears
+without an observed replay event. The snapshot includes its digests and displayed frame.
 
 Server wall-clock starts are translated to the receiving page's monotonic clock using
 the envelope's delivery-time `serverTimeMs`. Replayed envelopes therefore need a fresh

@@ -117,6 +117,69 @@ afterEach(async () => {
 });
 
 describe("round race and safe swaps", () => {
+  it("publishes actual replay observations only during validation and before swapping, ignoring stale callbacks", async () => {
+    const { engine, game, events, repair } = setup();
+    breakGame(engine);
+    await vi.advanceTimersByTimeAsync(15000);
+    const observe = vi.mocked(game.repair).mock.calls[0]?.[0].observe;
+    if (!observe) throw new Error("Missing observer");
+    const replay = {
+      fps: 60 as const,
+      sourceDigest: "a".repeat(64),
+      trackDigest: "b".repeat(64),
+      frames: [
+        {
+          frame: 1,
+          x: 1,
+          y: 2,
+          alive: true,
+          won: false,
+          stateHash: "aabbccdd",
+        },
+      ],
+    };
+    const ghost = () =>
+      observe({
+        type: "runtime.replay",
+        replay,
+        atMs: Date.now(),
+        wallTime: new Date().toISOString(),
+      });
+    ghost();
+    expect(
+      events.some(
+        (event) =>
+          event.type === "overlay" && event.event.type === "round.ghost",
+      ),
+    ).toBe(false);
+    for (const phase of [
+      "thread-started",
+      "patch-ready",
+      "validation-started",
+    ] as const)
+      observe({
+        type: "runtime.phase",
+        phase,
+        atMs: Date.now(),
+        wallTime: new Date().toISOString(),
+      });
+    ghost();
+    const index = events.findIndex(
+      (event) => event.type === "overlay" && event.event.type === "round.ghost",
+    );
+    expect(index).toBeGreaterThan(-1);
+    expect(engine.snapshot().phase).toBe("validating");
+    repair.resolve(repaired);
+    await engine.waitForRound();
+    const swapping = events.findIndex(
+      (event) => event.type === "round.state" && event.phase === "swapping",
+    );
+    expect(index).toBeLessThan(swapping);
+    const count = events.length;
+    ghost();
+    expect(events).toHaveLength(count);
+  });
+
   it("publishes actual patch observations as separate counted steps without claiming tests green", async () => {
     const { engine, game, events, repair } = setup();
     breakGame(engine);

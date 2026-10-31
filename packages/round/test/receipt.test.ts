@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { afterEach, expect, it } from "vitest";
 import { initialBroadcast } from "../../../apps/overlay/src/events.js";
 import type { ClientSnapshot } from "../src/client.js";
+import type { RoundEnvelope } from "../src/contracts.js";
 import type { RoundSnapshot } from "../src/engine.js";
 import {
   loadPreviousVerifiedRound,
@@ -107,6 +108,61 @@ it("refuses failed gates, failed swaps and raw viewer identities", () => {
   ).toThrow(/verified/);
   expect(() => publicReceipt({ ...input, breaker: "private-name" })).toThrow(
     /verified/,
+  );
+});
+it("binds public validation trace hashes to the installed repaired source, without publishing frames", () => {
+  const input = verified();
+  const replay = {
+    fps: 60 as const,
+    sourceDigest: "a".repeat(64),
+    trackDigest: "b".repeat(64),
+    frames: [
+      {
+        frame: 1,
+        x: 123,
+        y: 456,
+        alive: true,
+        won: false,
+        stateHash: "aabbccdd",
+      },
+    ],
+  };
+  const events: RoundEnvelope[] = [
+    {
+      sequence: 1,
+      serverTimeMs: 1,
+      event: {
+        type: "overlay",
+        event: {
+          type: "round.ghost",
+          roundId: input.result.roundId ?? "",
+          replay,
+        },
+      },
+    },
+    {
+      sequence: 2,
+      serverTimeMs: 2,
+      event: {
+        type: "game.build",
+        roundId: input.result.roundId ?? "",
+        phase: "repaired",
+        buildId: input.client.buildId ?? "",
+        digest: input.client.buildId ?? "",
+        sourceDigest: replay.sourceDigest,
+      },
+    },
+  ];
+  const receipt = publicReceipt({ ...input, events });
+  expect(receipt.validationReplay).toMatchObject({
+    frameCount: 1,
+    sourceDigest: replay.sourceDigest,
+    buildDigest: input.client.buildId,
+  });
+  expect(receipt.validationReplay?.framesDigest).toMatch(/^[a-f0-9]{64}$/);
+  expect(receipt.validationReplay).not.toHaveProperty("frames");
+  expect(() => publicReceipt({ ...input, events: events.slice(0, 1) })).toThrow(
+    /not bound/,
   );
 });
 it("retains a verified late fix without awarding a race point", () => {

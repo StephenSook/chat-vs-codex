@@ -1,4 +1,7 @@
-import type { RoundAutopsy } from "../../../packages/round/src/contracts.js";
+import type {
+  RoundAutopsy,
+  RoundValidationReplay,
+} from "../../../packages/round/src/contracts.js";
 
 /** Local presentation contract. The operator's SDK bridge publishes observed events only.
  * No timer manufactures agent activity, scores, guesses, or a passing test result.
@@ -46,6 +49,7 @@ export type OverlayEvent =
     }
   | { type: "tests.green"; roundId: string }
   | { type: "round.autopsy"; roundId: string; autopsy: RoundAutopsy }
+  | { type: "round.ghost"; roundId: string; replay: RoundValidationReplay }
   | { type: "score.changed"; chat: number; codex: number }
   | { type: "simulation.death" };
 
@@ -88,6 +92,7 @@ export interface BroadcastState {
   attempt: number | null;
   total: number | null;
   autopsy: RoundAutopsy | null;
+  ghost: RoundValidationReplay | null;
 }
 
 export function initialBroadcast(): BroadcastState {
@@ -106,6 +111,7 @@ export function initialBroadcast(): BroadcastState {
     attempt: null,
     total: null,
     autopsy: null,
+    ghost: null,
   };
 }
 
@@ -194,8 +200,14 @@ export function reduceBroadcast(
       };
     case "round.autopsy":
       return event.autopsy.roundId === state.roundId
-        ? { ...state, autopsy: event.autopsy }
+        ? {
+            ...state,
+            autopsy: event.autopsy,
+            ghost: event.autopsy.status === "rolled-back" ? null : state.ghost,
+          }
         : state;
+    case "round.ghost":
+      return { ...state, ghost: event.replay };
     case "codex.step": {
       // A late completion from an earlier SDK retry cannot replace the current attempt.
       if (state.attempt !== null && event.attempt < state.attempt) return state;

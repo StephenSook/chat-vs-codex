@@ -155,6 +155,54 @@ describe("real headless hot-swap client with a test-only sandbox launcher", () =
     expect(repaired.frame).toBeGreaterThanOrEqual(bad.frame);
     expect(repaired.installs.every((item) => item.statePreserved)).toBe(true);
     expect(repaired.broadcast.bug).not.toBe("fixed");
+    await f.client.event({
+      sequence: 1,
+      serverTimeMs: 1,
+      event: {
+        type: "overlay",
+        event: { type: "round.started", id: "ghost-test", number: 1, atMs: 0 },
+      },
+    });
+    const ghost = await f.client.event({
+      sequence: 2,
+      serverTimeMs: 2,
+      event: {
+        type: "overlay",
+        event: {
+          type: "round.ghost",
+          roundId: "ghost-test",
+          replay: {
+            fps: 60,
+            sourceDigest: "a".repeat(64),
+            trackDigest: "b".repeat(64),
+            frames: [
+              {
+                frame: 1,
+                x: 0,
+                y: 0,
+                alive: true,
+                won: false,
+                stateHash: "aabbccdd",
+              },
+            ],
+          },
+        },
+      },
+    });
+    expect(ghost.broadcast.ghost?.frames).toHaveLength(1);
+    const rollback = await f.client.event({
+      sequence: 3,
+      serverTimeMs: 3,
+      event: {
+        type: "game.build",
+        roundId: "ghost-test",
+        phase: "rollback",
+        buildId: clean.id,
+        digest: clean.digest,
+      },
+    });
+    expect(rollback.broadcast.ghost).toBeNull();
+    expect(rollback.sdkSteps).toBe(0);
     expect(f.launch.args[0]).toBe("sandbox");
     expect(f.launch.args).toContain("hotfix");
     expect(f.launch.args.join(" ")).toContain('"/private/tmp" = "deny"');

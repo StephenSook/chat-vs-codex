@@ -16,6 +16,7 @@ import { loadProfile } from "../../bench/src/runtime.js";
 import { buildTicket } from "../../bench/src/trial.js";
 import { git, prepareWorkspace } from "../../bench/src/workspace.js";
 import { type PooledMutant, ROOT } from "../../mutator/src/gate.js";
+import { HELD_OUT, runTrack } from "../../replay/src/index.js";
 import { monotonicMs } from "../src/clocks.js";
 import type { RuntimeObservation } from "../src/contracts.js";
 import { createRoundRuntime, superviseRepair } from "../src/runtime.js";
@@ -64,6 +65,79 @@ async function setup() {
 }
 
 describe("round runtime verification", () => {
+  it.each([false, true])(
+    "publishes validator frames bound to unchanged patched source (tamper=%s)",
+    async (tamper) => {
+      const context = await setup();
+      const observations: RuntimeObservation[] = [];
+      try {
+        const trace = {
+          fps: 60 as const,
+          trackDigest: createHash("sha256")
+            .update(JSON.stringify(HELD_OUT))
+            .digest("hex"),
+          frames: runTrack(HELD_OUT).samples,
+        };
+        const repair = executeRepair(
+          context.options,
+          new AbortController().signal,
+          () => {},
+          {
+            runtime: async () => {
+              await context.restore();
+              return { usage: null, answer: null };
+            },
+            validate: async (
+              _workspace,
+              _profile,
+              _remaining,
+              _log,
+              onReplay,
+            ) => {
+              if (tamper)
+                await writeFile(
+                  join(context.workspace.game, "src/index.ts"),
+                  `${await readFile(join(context.workspace.game, "src/index.ts"), "utf8")}\n// validation changed source\n`,
+                );
+              await onReplay?.(trace);
+            },
+          },
+          (observation) => observations.push(observation),
+        );
+        if (tamper) {
+          await expect(repair).rejects.toThrow("before replay publication");
+          expect(
+            observations.some((row) => row.type === "runtime.replay"),
+          ).toBe(false);
+        } else {
+          const artifact = await repair;
+          const observation = observations.find(
+            (row) => row.type === "runtime.replay",
+          );
+          if (observation?.type !== "runtime.replay")
+            throw new Error("Missing validator observation");
+          expect(observation.replay.frames).toEqual(trace.frames);
+          expect(observation.replay.sourceDigest).toMatch(/^[a-f0-9]{64}$/);
+          expect(artifact.replay).toEqual(observation.replay);
+          const before = observations.findIndex(
+            (row) =>
+              row.type === "runtime.phase" &&
+              row.phase === "validation-started",
+          );
+          const after = observations.findIndex(
+            (row) =>
+              row.type === "runtime.phase" && row.phase === "validation-passed",
+          );
+          expect(observations.indexOf(observation)).toBeGreaterThan(before);
+          expect(observations.indexOf(observation)).toBeLessThan(after);
+        }
+      } finally {
+        await context.cleanup();
+      }
+    },
+    30000,
+  );
+
   it("builds browser ESM artifacts with content-derived IDs", async () => {
     const result = await bundleGame(join(ROOT, "packages/sim/src/index.ts"));
     expect(result.id).toBe(result.digest);

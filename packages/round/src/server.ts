@@ -189,6 +189,9 @@ export async function startRoundServer(
         phase,
         buildId: artifact.id,
         digest,
+        ...(artifact.replay
+          ? { sourceDigest: artifact.replay.sourceDigest }
+          : {}),
       });
     },
     async close() {

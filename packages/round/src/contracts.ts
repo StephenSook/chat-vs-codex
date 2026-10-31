@@ -1,5 +1,6 @@
 import type { ThreadEvent } from "@openai/codex-sdk";
 import type { OverlayEvent } from "../../../apps/overlay/src/events.js";
+import type { ValidatedReplay } from "../../bench/src/validated-replay.js";
 import type { BugFamily } from "../../twitch/src/events.js";
 
 export interface GameArtifact {
@@ -9,6 +10,12 @@ export interface GameArtifact {
   timings?: RuntimeTimings;
   diagnosis?: RuntimeDiagnosis;
   patch?: RuntimePatch;
+  replay?: RoundValidationReplay;
+}
+
+export interface RoundValidationReplay extends ValidatedReplay {
+  /** SHA-256 over the submitted source snapshot that produced these frames. */
+  sourceDigest: string;
 }
 
 export interface RuntimeDiagnosis {
@@ -46,6 +53,12 @@ export interface RuntimePhaseObservation {
 
 export type RuntimeObservation =
   | RuntimePhaseObservation
+  | {
+      type: "runtime.replay";
+      replay: RoundValidationReplay;
+      atMs: number;
+      wallTime: string;
+    }
   | {
       type: "runtime.patch";
       patch: RuntimePatch;
@@ -110,6 +123,7 @@ type RoundEventPayload =
       roundId: string;
       buildId: string;
       digest: string;
+      sourceDigest?: string;
       phase: "broken" | "repaired" | "rollback";
     }
   | {

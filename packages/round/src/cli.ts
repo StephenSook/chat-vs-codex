@@ -147,12 +147,35 @@ async function main() {
       join(directory, "result.json"),
       `${JSON.stringify(receipt, null, 2)}\n`,
     );
-    console.log(JSON.stringify(receipt, null, 2));
+    const { ghost, ...broadcast } = snapshot.broadcast;
+    console.log(
+      JSON.stringify(
+        {
+          ...receipt,
+          client: {
+            ...snapshot,
+            broadcast: {
+              ...broadcast,
+              ghost: ghost
+                ? {
+                    frameCount: ghost.frames.length,
+                    sourceDigest: ghost.sourceDigest,
+                    trackDigest: ghost.trackDigest,
+                  }
+                : null,
+            },
+          },
+        },
+        null,
+        2,
+      ),
+    );
     if (
       result.phase !== "resolved" ||
       snapshot.broadcast.bug !== "fixed" ||
       snapshot.installs.length < 2 ||
-      snapshot.installs.some((item) => !item.statePreserved)
+      snapshot.installs.some((item) => !item.statePreserved) ||
+      ghost === null
     )
       throw new Error(
         "Local fixture round did not complete a verified hot swap",
