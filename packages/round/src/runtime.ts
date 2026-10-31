@@ -19,6 +19,7 @@ import {
 } from "../../mutator/src/gate.js";
 import { selectRoundMutation } from "../../mutator/src/live.js";
 import { BUG_FAMILIES, type BugFamily } from "../../twitch/src/events.js";
+import { raceBoss } from "./boss.js";
 import { eventStamp } from "./clocks.js";
 import type {
   GameArtifact,
@@ -26,7 +27,6 @@ import type {
   RuntimeObservation,
 } from "./contracts.js";
 import { bundleGame, type RepairExecution } from "./runtime-execution.js";
-
 import { captureSymptom } from "./symptom.js";
 
 export interface RoundRuntimeOptions {
@@ -162,7 +162,7 @@ export function createRoundRuntime(
   const regressionsDirectory =
     options.regressionsDirectory ?? REGRESSIONS_DIRECTORY;
   return {
-    async prepare(roundId, signal, family) {
+    async prepare(roundId, signal, family, boss) {
       signal.throwIfAborted();
       if (family !== undefined && !BUG_FAMILIES.includes(family))
         throw new Error("Invalid private family selection");
@@ -193,6 +193,10 @@ export function createRoundRuntime(
         regressionsDirectory,
         true,
       );
+      let secondWorkspace:
+        | Awaited<ReturnType<typeof prepareWorkspace>>
+        | undefined;
+      let bossSettled: Promise<void> | undefined;
       let closed = false;
       let repairStarted = false;
       const closing = new AbortController();
@@ -219,6 +223,19 @@ export function createRoundRuntime(
           broken.digest,
           proof.brokenSourceDigest,
         );
+        if (boss) {
+          secondWorkspace = await prepareWorkspace(
+            mutant,
+            regressionsDirectory,
+            true,
+          );
+          const duplicate = await bundleGame(
+            join(secondWorkspace.game, "src/index.ts"),
+            secondWorkspace.game,
+          );
+          if (duplicate.digest !== broken.digest)
+            throw new Error("Boss workspaces do not contain the same bug");
+        }
         const profile = await loadProfile();
         const launcher = join(runs, `${randomUUID()}.launcher`);
         await createLauncher(launcher);
@@ -235,6 +252,69 @@ export function createRoundRuntime(
           mutation: provenance,
           clean,
           broken,
+          ...(boss
+            ? {
+                boss,
+                async settleBoss() {
+                  await bossSettled;
+                },
+                repairBoss(
+                  repair: Parameters<
+                    NonNullable<
+                      import("./contracts.js").PreparedGame["repairBoss"]
+                    >
+                  >[0],
+                ) {
+                  if (closed || repairStarted || !secondWorkspace)
+                    return Promise.reject(
+                      new Error("Boss repair is unavailable"),
+                    );
+                  repairStarted = true;
+                  const combined = AbortSignal.any([
+                    signal,
+                    repair.signal,
+                    closing.signal,
+                  ]);
+                  const second = secondWorkspace;
+                  const race = raceBoss({
+                    receipt: boss,
+                    start: (model, observe) => {
+                      const selected = model === "terra" ? workspace : second;
+                      return (dependencies.repair ?? superviseRepair)(
+                        {
+                          workspace: selected,
+                          launcher,
+                          profile,
+                          ticket: buildTicket(mutant),
+                          hint: repair.hint,
+                          model:
+                            model === "terra" ? "gpt-6.1-terra" : "gpt-6.1-sol",
+                          effort: model === "terra" ? "low" : "high",
+                          logFile:
+                            model === "terra"
+                              ? logFile
+                              : join(runs, `${randomUUID()}.jsonl`),
+                          budgetMs: HARD_BUDGET_MS,
+                        },
+                        combined,
+                        (event) => repair.event(event, model),
+                        undefined,
+                        (observation) => {
+                          observe(observation);
+                          repair.observe?.(observation, model);
+                        },
+                      );
+                    },
+                  });
+                  bossSettled = race.settled;
+                  active = race.winner.then((artifact) => {
+                    verified = true;
+                    return artifact;
+                  });
+                  return active;
+                },
+              }
+            : {}),
           repair(repair) {
             if (closed || repairStarted)
               return Promise.reject(new Error("Game repair is unavailable"));
@@ -280,11 +360,14 @@ export function createRoundRuntime(
             closed = true;
             closing.abort();
             await active?.catch(() => {});
+            await bossSettled?.catch(() => {});
             await workspace.cleanup();
+            await secondWorkspace?.cleanup();
           },
         };
       } catch (error) {
         await workspace.cleanup();
+        await secondWorkspace?.cleanup();
         throw error;
       }
     },

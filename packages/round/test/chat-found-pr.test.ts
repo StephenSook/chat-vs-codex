@@ -385,3 +385,44 @@ it("refuses a CI change to the regenerated season and includes it in exact retry
     f.calls.some((call) => call.includes("commit") || call.includes("push")),
   ).toBe(false);
 });
+
+it("publishes two validated boss results but refuses malformed or identity metadata", async () => {
+  const f = await fixture();
+  await f.addEvidence();
+  const file = join(f.root, receiptPath);
+  const row = JSON.parse(await readFile(file, "utf8"));
+  row.autopsy.boss = {
+    winner: "terra",
+    memory: {
+      freeBytes: 2 * 1024 ** 3,
+      rssBytes: 128 * 1024 ** 2,
+      minimumFreeBytes: 1536 * 1024 ** 2,
+      measuredAtMs: 0,
+    },
+    threads: ["terra", "sol"].map((model) => ({
+      model,
+      status: "validated",
+      failure: null,
+      patch: null,
+      timings: {
+        threadStartedAtMs: 1,
+        patchReadyAtMs: 2,
+        validationStartedAtMs: 3,
+        validationFinishedAtMs: 4,
+      },
+    })),
+  };
+  await writeFile(file, JSON.stringify(row));
+  expect(await collectNewRegressions(f.root, f.run)).toHaveLength(1);
+  row.autopsy.boss.threads[0].model = "unrecognized";
+  await writeFile(file, JSON.stringify(row));
+  await expect(collectNewRegressions(f.root, f.run)).rejects.toThrow(
+    "Invalid boss",
+  );
+  row.autopsy.boss.threads[0].model = "terra";
+  row.autopsy.boss.memory.username = "must-not-publish";
+  await writeFile(file, JSON.stringify(row));
+  await expect(collectNewRegressions(f.root, f.run)).rejects.toThrow(
+    "Unexpected public",
+  );
+});

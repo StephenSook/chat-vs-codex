@@ -12,7 +12,10 @@ import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { parseRegression } from "../packages/bench/src/regressions.js";
-import { isRoundInput } from "../packages/round/src/contracts.js";
+import {
+  isRoundInput,
+  validBossReceipt,
+} from "../packages/round/src/contracts.js";
 import type { publicReceipt } from "../packages/round/src/receipt.js";
 import {
   deriveSeason,
@@ -73,6 +76,20 @@ async function confinedFile(root: string, path: string): Promise<Buffer> {
 
 /** Public receipt keys only. Unknown identity fields cannot hitchhike into a PR. */
 const RECEIPT_KEYS = new Set([
+  "boss",
+  "memory",
+  "threads",
+  "freeBytes",
+  "availableBytes",
+  "rssBytes",
+  "minimumFreeBytes",
+  "measuredAtMs",
+  "timings",
+  "threadStartedAtMs",
+  "patchReadyAtMs",
+  "validationStartedAtMs",
+  "validationFinishedAtMs",
+  "failure",
   "schemaVersion",
   "mutation",
   "roundId",
@@ -165,6 +182,8 @@ function publicFields(value: unknown): void {
       throw new Error("Public receipt credits must be hashed viewer labels");
     if (key === "input" && !isRoundInput(child))
       throw new Error("Public receipt input must be a recognized enum");
+    if (key === "boss" && !validBossReceipt(child))
+      throw new Error("Invalid boss receipt metadata");
     publicFields(child);
   }
 }

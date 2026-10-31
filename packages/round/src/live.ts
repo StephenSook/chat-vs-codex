@@ -31,6 +31,9 @@ export interface LiveEngine {
   snapshot(): { active: boolean };
   handlePublic(intent: PublicIntent): void;
   handlePrivate(intent: PrivateIntent): unknown;
+  requestBoss?(actor: string): void;
+  predictBoss?(actor: string, model: "sol" | "terra"): void;
+  armBoss?(): void;
 }
 
 /** One entry point for both live EventSub callbacks and the fixture replayer. */
@@ -45,6 +48,7 @@ export class LiveRoundController {
   private readonly sentMessageIds = new Set<string>();
   private raidArmed = false;
   private raidSequence = 0;
+  private hypeLevels = new Map<string, number>();
   private outgoing = Promise.resolve();
   private stopped = false;
   private redemption: {
@@ -97,6 +101,22 @@ export class LiveRoundController {
           )
         )
           return;
+        const bossGuess = /^!boss\s+(sol|terra)$/i.exec(text);
+        if (bossGuess) {
+          this.engine?.predictBoss?.(
+            data.chatter_user_id,
+            bossGuess[1]?.toLowerCase() as "sol" | "terra",
+          );
+          return;
+        }
+        if (
+          /^!boss$/i.test(text) &&
+          data.chatter_user_id === options.broadcasterId
+        ) {
+          this.remember(data.chatter_user_id, data.chatter_user_name);
+          this.engine?.requestBoss?.(data.chatter_user_id);
+          return;
+        }
         const broadcasterTest =
           options.allowBroadcasterTest === true &&
           data.chatter_user_id === options.broadcasterId;
@@ -197,6 +217,32 @@ export class LiveRoundController {
             severity: 1,
           });
         });
+        return;
+      } else if (
+        message.type === "channel.hype_train.begin" ||
+        message.type === "channel.hype_train.progress"
+      ) {
+        const data = message.event;
+        if (
+          data.broadcaster_user_id !== options.broadcasterId ||
+          !Number.isSafeInteger(data.level) ||
+          data.level < 1
+        )
+          return;
+        const previous = this.hypeLevels.get(data.id) ?? 0;
+        if (data.level > previous) {
+          this.hypeLevels.set(data.id, data.level);
+          if (this.hypeLevels.size > 1000)
+            this.hypeLevels.delete(
+              this.hypeLevels.keys().next().value as string,
+            );
+          if (data.level > 1) this.engine?.armBoss?.();
+          this.log({
+            type: "twitch.hype-level",
+            level: data.level,
+            bossArmed: data.level > 1,
+          });
+        }
         return;
       } else return;
       accept(message);
@@ -461,6 +507,14 @@ export class LiveRoundController {
         );
       });
     }
+    if (event.type === "round.boss-winner") {
+      this.announceFix({
+        roundId: event.roundId,
+        family: event.family,
+        timeToGreenMs: event.timeToGreenMs,
+        regression: false,
+      });
+    }
     if (event.type === "overlay" && event.event.type === "round.autopsy") {
       this.autopsy(event.event.autopsy);
     }
@@ -479,12 +533,25 @@ export class LiveRoundController {
       });
       return;
     }
-    const total = Math.round((card.durations.timeToGreenMs as number) / 10);
+    this.announceFix({
+      roundId: card.roundId,
+      family: card.family,
+      timeToGreenMs: card.durations.timeToGreenMs as number,
+      regression: card.regressionTest !== null,
+    });
+  }
+  private announceFix(card: {
+    roundId: string;
+    family: RoundAutopsy["family"];
+    timeToGreenMs: number;
+    regression: boolean;
+  }): void {
+    const total = Math.round(card.timeToGreenMs / 10);
     const split = `${Math.floor(total / 6000)}:${String(Math.floor(total / 100) % 60).padStart(2, "0")}.${String(total % 100).padStart(2, "0")}`;
-    const line = `Codex fixed ${card.family}. GREEN ${split}${card.regressionTest ? " | +1 test" : ""}`;
+    const line = `Codex fixed ${card.family}. GREEN ${split}${card.regression ? " | +1 test" : ""}`;
     this.schedule(`${card.roundId}:clip`, () =>
       this.liveOnly("fix-landed clip", async () => {
-        const title = `Codex fixed ${card.family} in ${((card.durations.timeToGreenMs as number) / 1000).toFixed(1)} s`;
+        const title = `Codex fixed ${card.family} in ${(card.timeToGreenMs / 1000).toFixed(1)} s`;
         const clip = await this.options.helix.clip(title);
         if (!clip) return;
         this.log({

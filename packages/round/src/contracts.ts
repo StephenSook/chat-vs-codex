@@ -49,6 +49,120 @@ export interface SymptomReplay {
   }[];
 }
 
+export type BossModel = "sol" | "terra";
+export interface BossThreadResult {
+  model: BossModel;
+  status: "validated" | "failed";
+  timings: Partial<RuntimeTimings>;
+  patch: RuntimePatch | null;
+  failure: "repair-failed" | null;
+}
+export interface BossReceipt {
+  winner: BossModel | null;
+  memory: {
+    freeBytes: number;
+    /** Darwin free + inactive + speculative pages; raw freeBytes is retained. */
+    availableBytes?: number;
+    measurementError?: "vm-stat-unavailable";
+    rssBytes: number;
+    minimumFreeBytes: number;
+    measuredAtMs: number;
+  };
+  threads: BossThreadResult[];
+}
+
+/** Shared wire guard: receipts and browser presentation accept only measured results. */
+export function validBossReceipt(
+  value: unknown,
+  incomplete = false,
+): value is BossReceipt {
+  if (!value || typeof value !== "object") return false;
+  const record = value as BossReceipt;
+  const measured = (n: unknown) =>
+    typeof n === "number" && Number.isFinite(n) && n >= 0;
+  if (
+    !record.memory ||
+    record.memory.measurementError !== undefined ||
+    ![
+      record.memory.freeBytes,
+      record.memory.rssBytes,
+      record.memory.minimumFreeBytes,
+      record.memory.measuredAtMs,
+    ].every(measured) ||
+    (record.memory.availableBytes !== undefined &&
+      !measured(record.memory.availableBytes)) ||
+    !Array.isArray(record.threads) ||
+    record.threads.length > 2 ||
+    (!incomplete && record.threads.length !== 2) ||
+    new Set(record.threads.map((thread) => thread?.model)).size !==
+      record.threads.length ||
+    (record.winner !== null && !["sol", "terra"].includes(record.winner))
+  )
+    return false;
+  for (const thread of record.threads) {
+    if (
+      !thread ||
+      !["sol", "terra"].includes(thread.model) ||
+      !["validated", "failed"].includes(thread.status) ||
+      !thread.timings ||
+      Array.isArray(thread.timings) ||
+      typeof thread.timings !== "object" ||
+      Object.values(thread.timings).some((n) => !measured(n)) ||
+      thread.failure !==
+        (thread.status === "validated" ? null : "repair-failed")
+    )
+      return false;
+    if (
+      thread.patch !== null &&
+      (!thread.patch ||
+        !Number.isSafeInteger(thread.patch.added) ||
+        thread.patch.added < 0 ||
+        !Number.isSafeInteger(thread.patch.removed) ||
+        thread.patch.removed < 0 ||
+        !Array.isArray(thread.patch.preview) ||
+        thread.patch.preview.length > 4 ||
+        thread.patch.preview.some(
+          (line) => typeof line !== "string" || line.includes("\n"),
+        ))
+    )
+      return false;
+    if (thread.status === "validated") {
+      const times = [
+        thread.timings.threadStartedAtMs,
+        thread.timings.patchReadyAtMs,
+        thread.timings.validationStartedAtMs,
+        thread.timings.validationFinishedAtMs,
+      ];
+      if (
+        !times.every(measured) ||
+        times.some(
+          (time, index) => index > 0 && Number(time) < Number(times[index - 1]),
+        )
+      )
+        return false;
+    }
+  }
+  if (!incomplete || record.winner !== null) {
+    const starts = record.threads.map(
+      (thread) => thread.timings.threadStartedAtMs,
+    );
+    if (
+      record.winner === null ||
+      starts.length !== 2 ||
+      !starts.every(measured) ||
+      Math.max(...starts.map(Number)) - Math.min(...starts.map(Number)) > 1000
+    )
+      return false;
+  }
+  return (
+    record.winner === null ||
+    record.threads.some(
+      (thread) =>
+        thread.model === record.winner && thread.status === "validated",
+    )
+  );
+}
+
 export interface GameArtifact {
   id: string;
   code: string;
@@ -131,6 +245,7 @@ export interface RoundAutopsy {
   roundId: string;
   /** Absent only on receipts recorded before input provenance. */
   input?: RoundInput;
+  boss?: BossReceipt;
   trigger?: "broadcaster-test";
   status: "verified" | "rolled-back";
   reason: string | null;
@@ -172,6 +287,14 @@ export interface PreparedGame {
     event: (event: ThreadEvent) => void;
     observe?: (observation: RuntimeObservation) => void;
   }): Promise<GameArtifact>;
+  boss?: BossReceipt;
+  settleBoss?(): Promise<void>;
+  repairBoss?(options: {
+    hint: BugFamily | null;
+    signal: AbortSignal;
+    event: (event: ThreadEvent, model: BossModel) => void;
+    observe?: (observation: RuntimeObservation, model: BossModel) => void;
+  }): Promise<GameArtifact>;
   close(): Promise<void>;
   /** Host-owned persistence after verified install and cleanup. Never runs in Codex. */
   recordRegression?(credit: {
@@ -185,10 +308,24 @@ export interface RoundRuntime {
     roundId: string,
     signal: AbortSignal,
     family?: BugFamily,
+    boss?: BossReceipt,
   ): Promise<PreparedGame>;
 }
 
 type RoundEventPayload =
+  | {
+      type: "round.boss-winner";
+      roundId: string;
+      model: BossModel;
+      family: BugFamily;
+      timeToGreenMs: number;
+    }
+  | {
+      type: "round.boss-memory";
+      roundId: null;
+      memory: BossReceipt["memory"];
+      accepted: boolean;
+    }
   | { type: "round.mutation"; roundId: string; mutation: MutationProvenance }
   | { type: "overlay"; event: OverlayEvent }
   | {

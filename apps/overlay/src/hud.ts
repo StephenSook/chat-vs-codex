@@ -1,5 +1,10 @@
 import { type BroadcastState, headStartSeconds } from "./events.js";
-import { autopsyView, IDLE_CTA, idleCtaVisible } from "./presentation.js";
+import {
+  autopsyView,
+  diffExcerpts,
+  IDLE_CTA,
+  idleCtaVisible,
+} from "./presentation.js";
 
 export function element<T extends HTMLElement = HTMLElement>(id: string): T {
   const found = document.getElementById(id);
@@ -16,6 +21,45 @@ export function resizeStage(): void {
 export function renderBroadcast(state: BroadcastState): void {
   element("idle-cta").textContent = IDLE_CTA;
   element("idle-cta").hidden = !idleCtaVisible(state);
+  element("boss-note").hidden = !state.bossNote;
+  element("boss-note").textContent = state.bossNote ?? "";
+  const crews = element("boss-crews");
+  crews.hidden = state.boss === null;
+  element("steps").hidden = state.boss !== null;
+  if (state.boss)
+    for (const model of ["sol", "terra"] as const) {
+      element(`boss-${model}-predictions`).textContent =
+        `${state.boss.predictions[model]} picks`;
+      const rows = element(`boss-${model}-steps`);
+      rows.replaceChildren();
+      for (const step of state.boss[model].slice(-2)) {
+        const row = document.createElement("li");
+        row.dataset.status = step.status;
+        row.title = step.label;
+        row.textContent = `${step.status === "done" ? "✓" : step.status === "failed" ? "ϟ" : "◌"} ${step.label}`;
+        rows.append(row);
+      }
+    }
+  element("boss-winner").hidden = !state.autopsy?.boss?.winner;
+  element("boss-winner").textContent = state.autopsy?.boss?.winner
+    ? `${state.autopsy.boss.winner.toUpperCase()} WINS`
+    : "";
+  const loser = state.autopsy?.boss?.threads.find(
+    (thread) => thread.model !== state.autopsy?.boss?.winner,
+  );
+  element("boss-loser").hidden = !loser;
+  element("boss-loser-label").textContent = loser
+    ? `${loser.model.toUpperCase()} · ${loser.status === "validated" ? "GREEN" : "FAILED"}`
+    : "";
+  const loserDiff = element("boss-loser-diff");
+  loserDiff.replaceChildren();
+  for (const line of diffExcerpts(loser?.patch?.preview ?? [])) {
+    const row = document.createElement("span");
+    row.textContent = line.text;
+    row.title = line.source;
+    row.dataset.change = line.text.startsWith("-") ? "removed" : "added";
+    loserDiff.append(row);
+  }
   element("raid-banner").hidden = state.raidViewers === null;
   element("raid-banner").textContent =
     state.raidViewers === null ? "" : `RAID · ${state.raidViewers}`;
@@ -66,6 +110,8 @@ export function renderBroadcast(state: BroadcastState): void {
   attempt.textContent =
     state.attempt === null ? "" : `Attempt ${state.attempt}/${state.total}`;
   const card = element("autopsy");
+  card.dataset.boss = state.autopsy?.boss ? "true" : "false";
+  element("ticker").dataset.boss = state.boss ? "true" : "false";
   card.hidden = state.autopsy === null;
   element("ticker").hidden = state.autopsy !== null;
   if (state.autopsy) {

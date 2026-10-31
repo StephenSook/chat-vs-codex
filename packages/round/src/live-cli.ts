@@ -120,7 +120,8 @@ export function createLiveRoundGate(
   engine: Pick<
     RoundEngine,
     "snapshot" | "handlePublic" | "handlePrivate" | "waitForRound"
-  >,
+  > &
+    Partial<Pick<RoundEngine, "requestBoss" | "predictBoss" | "armBoss">>,
   complete: (result: RoundSnapshot) => Promise<void>,
   failed: (error: unknown) => void,
 ): { adapter: LiveEngine; drain(): Promise<void> } {
@@ -151,6 +152,9 @@ export function createLiveRoundGate(
   return {
     adapter: {
       snapshot: () => ({ active: settling || engine.snapshot().active }),
+      requestBoss: (actor) => begin(() => engine.requestBoss?.(actor)),
+      predictBoss: (actor, model) => engine.predictBoss?.(actor, model),
+      armBoss: () => engine.armBoss?.(),
       handlePublic: (intent) => {
         if (intent.kind === "break-requested")
           begin(() => engine.handlePublic(intent));
@@ -383,9 +387,27 @@ export async function runLiveCli(
           })
           .catch(fatal);
         live.observe(envelope.event);
+        if (
+          envelope.event.type === "round.state" &&
+          envelope.event.phase === "resolved" &&
+          envelope.event.roundId &&
+          engine
+        )
+          void scorebug
+            ?.resolved(envelope.event.roundId, engine.snapshot().scores)
+            .catch(() => {
+              console.error(
+                "Twitch title update failed; private recovery evidence retained.",
+              );
+            });
       },
     });
+    const bossEvery =
+      process.env.BOSS_EVERY === undefined ? 0 : Number(process.env.BOSS_EVERY);
+    if (!Number.isSafeInteger(bossEvery) || bossEvery < 0)
+      throw new Error("BOSS_EVERY must be a nonnegative integer");
     engine = new RoundEngine({
+      boss: { every: bossEvery },
       ...(flags.allowBroadcasterTest
         ? { trigger: "broadcaster-test" as const }
         : {}),
@@ -425,13 +447,6 @@ export async function runLiveCli(
           server?.updateSeason(
             (await loadSeason(join(ROOT, "docs/rounds"))).viewers,
           );
-          try {
-            await scorebug?.show(result.scores);
-          } catch {
-            console.error(
-              "Twitch title update failed; private recovery evidence retained.",
-            );
-          }
           console.log(
             `Verified round ${result.roundId}; public receipt: ${path}`,
           );

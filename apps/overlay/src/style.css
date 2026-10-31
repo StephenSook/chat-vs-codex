@@ -590,3 +590,144 @@ canvas:focus-visible {
   font-weight: 800;
   letter-spacing: 0.02em;
 }
+.boss-note {
+  position: absolute;
+  top: 227px;
+  left: 620px;
+  width: 680px;
+  line-height: 40px;
+  padding: 4px 12px;
+  background: var(--cream);
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  z-index: 9;
+  font-size: 33px;
+  color: #9b321f;
+}
+#boss-crews {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+#boss-crews section {
+  min-width: 0;
+  border: 2px solid var(--codex);
+  border-radius: 8px;
+  padding: 6px;
+}
+#boss-crews h3 {
+  font-size: 33px;
+  line-height: 37px;
+  margin: 0;
+  color: var(--codex);
+}
+#boss-crews p {
+  font-size: 24px;
+  margin: 6px 0;
+}
+#boss-crews ol {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+#boss-crews li {
+  font-size: 33px;
+  line-height: 38px;
+  overflow-wrap: anywhere;
+  margin-bottom: 10px;
+}
+#boss-crews li[data-status="failed"] {
+  color: #9b321f;
+}
+#boss-loser-label {
+  font-size: 23px;
+  line-height: 29px;
+  color: var(--codex);
+}
+#boss-loser-diff {
+  font: 700 34px / 42px monospace;
+  margin: 0;
+  overflow: hidden;
+}
+#boss-loser-diff span {
+  display: block;
+  white-space: pre;
+  overflow: hidden;
+}
+#boss-loser-diff [data-change="removed"] {
+  background: #f8c8c0;
+  color: #7d231b;
+}
+#boss-loser-diff [data-change="added"] {
+  background: #c9ead4;
+  color: #174e30;
+}
+
+#boss-winner {
+  font-size: 27px;
+  line-height: 33px;
+  color: var(--codex);
+}
+
+.ticker[data-boss="true"] {
+  max-height: 510px;
+  overflow: hidden;
+}
+#boss-crews li {
+  max-height: 114px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+.autopsy[data-boss="true"] {
+  padding: 12px 16px;
+}
+.autopsy[data-boss="true"] p {
+  margin: 2px 0;
+}
+.autopsy[data-boss="true"] h2 {
+  font-size: 27px;
+  line-height: 32px;
+  margin: 0;
+}
+.autopsy[data-boss="true"] #autopsy-regression {
+  font-size: 33px;
+  line-height: 37px;
+}
+.autopsy[data-boss="true"] #autopsy-verdict,
+.autopsy[data-boss="true"] #autopsy-family {
+  font-size: 33px;
+  line-height: 37px;
+  white-space: nowrap;
+}
+.autopsy[data-boss="true"] #autopsy-diff {
+  padding: 4px;
+  margin: 4px 0;
+  line-height: 38px;
+}
+.autopsy[data-boss="true"] #boss-loser-diff {
+  line-height: 38px;
+}
+.autopsy[data-boss="true"] #boss-winner,
+.autopsy[data-boss="true"] #boss-loser-label {
+  font-size: 24px;
+  line-height: 28px;
+}
+.autopsy[data-boss="true"] #autopsy-explanation {
+  font-size: 24px;
+  line-height: 28px;
+  min-height: 56px;
+  max-height: 56px;
+  overflow: hidden;
+}
+.autopsy[data-boss="true"] #autopsy-delta {
+  font-size: 20px;
+  line-height: 24px;
+}
+.autopsy[data-boss="true"] .autopsy-detail .autopsy-actor,
+.autopsy[data-boss="true"] .autopsy-detail #autopsy-patch,
+.autopsy[data-boss="true"] .autopsy-detail #autopsy-splits {
+  font-size: 17px;
+  line-height: 20px;
+}

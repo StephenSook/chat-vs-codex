@@ -102,6 +102,19 @@ async function setup(overrides: { enabled?: boolean; dryChat?: boolean } = {}) {
   };
 }
 describe("reversible opt-in live title", () => {
+  it("shows a verdict immediately and deduplicates later completion for the same round", async () => {
+    const test = await setup();
+    try {
+      await test.scorebug.resolved("boss-round", { chat: 1, codex: 2 });
+      expect(test.helix.setChannelTitle).toHaveBeenCalledExactlyOnceWith(
+        "[CHAT 1 : CODEX 2] Original title: exact  spaces!",
+      );
+      await test.scorebug.resolved("boss-round", { chat: 1, codex: 2 });
+      expect(test.helix.setChannelTitle).toHaveBeenCalledTimes(1);
+    } finally {
+      await test.scorebug.close();
+    }
+  });
   it("does nothing by default, in dry-chat or offline", async () => {
     for (const flags of [{ enabled: false }, { dryChat: true }]) {
       const test = await setup(flags);

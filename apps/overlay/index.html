@@ -26,6 +26,7 @@
         <div class="fuse" id="fuse" hidden><span id="fuse-fill"></span></div>
       </section>
       <div class="raid-banner card" id="raid-banner" hidden role="status" aria-label="Incoming raid"></div>
+      <div id="boss-note" class="boss-note" hidden role="status"></div>
       <div class="round-meta" id="round-label">SIM REPLAY</div>
       <p class="season-line" id="season-line" hidden role="status" aria-label="Viewer season scoreboard"></p>
       <section class="bug-ticket card" id="bug-ticket" aria-label="Bug status">
@@ -36,13 +37,16 @@
       <section class="ticker card" id="ticker" aria-label="Codex activity">
         <h2><span class="crew-mark" aria-hidden="true">&gt;_</span> PIT CREW</h2>
         <p id="attempt" hidden></p>
+        <div id="boss-crews" hidden><section><h3>CODEX SOL</h3><p id="boss-sol-predictions"></p><ol id="boss-sol-steps"></ol></section><section><h3>CODEX TERRA</h3><p id="boss-terra-predictions"></p><ol id="boss-terra-steps"></ol></section></div>
         <ol id="steps"><li class="waiting"><span aria-hidden="true">○</span> Waiting for Codex</li></ol>
       </section>
       <section class="autopsy card" id="autopsy" aria-label="Round autopsy" hidden>
         <div class="autopsy-heading"><h2>AUTOPSY</h2><p id="autopsy-regression" hidden></p></div>
         <p id="autopsy-verdict"></p>
         <p id="autopsy-family"></p>
+        <p id="boss-winner" hidden></p>
         <pre id="autopsy-diff"></pre>
+        <div id="boss-loser" hidden><p id="boss-loser-label"></p><pre id="boss-loser-diff"></pre></div>
         <p id="autopsy-explanation"></p>
         <strong id="autopsy-green"></strong>
         <div class="autopsy-detail"><p class="autopsy-actor" id="autopsy-trigger" hidden></p><p class="autopsy-actor" id="autopsy-input"></p><p class="autopsy-actor" id="autopsy-breaker"></p><p class="autopsy-actor" id="autopsy-guesser"></p><p id="autopsy-patch"></p><ul id="autopsy-splits"></ul></div>

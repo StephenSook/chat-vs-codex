@@ -9,6 +9,7 @@ it("discovers the complete overlay browser suite without launching a browser", (
     timeout: 10000,
     env: { ...process.env, CI: "true" },
   });
+  expect(output).toContain("boss.spec.ts");
   expect(output).toContain("audio.spec.ts");
   expect(output).toContain("audio-obs.spec.ts");
   expect(output).toContain("symptom-autopilot.spec.ts");

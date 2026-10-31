@@ -5,11 +5,15 @@ import type {
   RoundEvent,
   RoundSession,
 } from "../../../packages/round/src/contracts.js";
-import { isRoundInput } from "../../../packages/round/src/contracts.js";
+import {
+  isRoundInput,
+  validBossReceipt,
+} from "../../../packages/round/src/contracts.js";
 import {
   parseViewerSeason,
   type SeasonTotals,
 } from "../../../packages/round/src/season.js";
+import { BUG_FAMILIES } from "../../../packages/twitch/src/events.js";
 import {
   CODEX_ACTIONS,
   type OverlayEvent,
@@ -74,6 +78,14 @@ function validateOverlay(event: unknown): event is OverlayEvent {
   const integer = (key: string) =>
     Number.isSafeInteger(e[key]) && Number(e[key]) >= 0;
   switch (e.type) {
+    case "boss.note":
+      return e.text === "BOSS PAUSED · LOW MEMORY";
+    case "boss.started":
+      return typeof e.roundId === "string";
+    case "boss.predictions":
+      return (
+        typeof e.roundId === "string" && integer("sol") && integer("terra")
+      );
     case "twitch.raid":
       return integer("viewers");
     case "round.preparing":
@@ -109,6 +121,7 @@ function validateOverlay(event: unknown): event is OverlayEvent {
     case "codex.step": {
       const step = e.step as Record<string, unknown> | undefined;
       return (
+        (e.model === undefined || e.model === "sol" || e.model === "terra") &&
         typeof e.roundId === "string" &&
         typeof e.id === "string" &&
         ["running", "done", "failed"].includes(String(e.status)) &&
@@ -136,6 +149,11 @@ function validateOverlay(event: unknown): event is OverlayEvent {
 function validAutopsy(value: unknown): value is RoundAutopsy {
   if (!value || typeof value !== "object") return false;
   const record = value as RoundAutopsy;
+  if (
+    record.boss !== undefined &&
+    !validBossReceipt(record.boss, record.status === "rolled-back")
+  )
+    return false;
   const alias = (actor: unknown) =>
     actor === null ||
     (typeof actor === "string" && /^viewer-[a-f0-9]{16}$/.test(actor));
@@ -254,6 +272,34 @@ export function parseRoundEnvelope(value: unknown): RoundEnvelope {
       e.input !== event.input)
   )
     throw new Error("Invalid round input provenance");
+  if (event.type === "round.boss-winner") {
+    if (
+      typeof event.roundId !== "string" ||
+      (event.model !== "sol" && event.model !== "terra") ||
+      !BUG_FAMILIES.includes(event.family) ||
+      typeof event.timeToGreenMs !== "number" ||
+      !Number.isFinite(event.timeToGreenMs) ||
+      event.timeToGreenMs < 0
+    )
+      throw new Error("Invalid boss winner installation");
+    return value as RoundEnvelope;
+  }
+  if (event.type === "round.boss-memory") {
+    const memory = event.memory;
+    if (
+      !memory ||
+      typeof memory !== "object" ||
+      typeof event.accepted !== "boolean" ||
+      ![
+        memory.freeBytes,
+        memory.rssBytes,
+        memory.minimumFreeBytes,
+        memory.measuredAtMs,
+      ].every((n) => typeof n === "number" && Number.isFinite(n) && n >= 0)
+    )
+      throw new Error("Invalid boss memory measurement");
+    return value as RoundEnvelope;
+  }
   if (event.type === "round.mutation") {
     const mutation = event.mutation;
     const gates = mutation?.gates;
@@ -495,7 +541,7 @@ export function connectRoundBridge(
   source.addEventListener("session", (message) => {
     try {
       options.onSession?.(
-        parseRoundSession(JSON.parse((message as MessageEvent<string>).data)),
+        parseRoundSession(JSON.parse((message as MessageEvent).data)),
       );
     } catch {
       options.onError?.(new Error("Invalid round session identity"));
@@ -504,7 +550,7 @@ export function connectRoundBridge(
   source.addEventListener("season", (message) => {
     try {
       options.onSeason?.(
-        parseViewerSeason(JSON.parse((message as MessageEvent<string>).data)),
+        parseViewerSeason(JSON.parse((message as MessageEvent).data)),
       );
     } catch {
       options.onError?.(new Error("Invalid viewer season"));
@@ -513,9 +559,7 @@ export function connectRoundBridge(
   source.addEventListener("open", () => options.onConnection?.(true));
   source.addEventListener("commentary", (message) => {
     try {
-      const event = parseCommentary(
-        JSON.parse((message as MessageEvent<string>).data),
-      );
+      const event = parseCommentary(JSON.parse((message as MessageEvent).data));
       options.onCommentary?.({
         ...event,
         audioUrl: `${origin}${event.audioUrl}`,
@@ -527,7 +571,7 @@ export function connectRoundBridge(
   source.addEventListener("round", (message) => {
     try {
       void bridge
-        .receive(JSON.parse((message as MessageEvent<string>).data))
+        .receive(JSON.parse((message as MessageEvent).data))
         .catch(() => {});
     } catch (error) {
       options.onError?.(

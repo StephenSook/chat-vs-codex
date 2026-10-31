@@ -6,8 +6,11 @@ import {
   type PrivateIntent,
   type PublicIntent,
 } from "../../twitch/src/events.js";
+import { bossAllowed, bossMemory, newBossReceipt } from "./boss.js";
 import { eventStamp, monotonicMs } from "./clocks.js";
 import type {
+  BossModel,
+  BossReceipt,
   GameArtifact,
   PreparedGame,
   PreviousVerifiedRound,
@@ -32,6 +35,8 @@ export interface RoundSnapshot extends PublicState {
   autopsy?: RoundAutopsy | null;
 }
 interface ActiveRound {
+  boss?: BossReceipt;
+  predictions: Map<string, BossModel>;
   id: string;
   input: RoundInput;
   selectedFamily?: BugFamily;
@@ -52,6 +57,8 @@ interface ActiveRound {
   firstCorrectGuesser: string | null;
   correctGuessRecorded: boolean;
   completed: boolean;
+  greenPublished: boolean;
+  codexPointAwarded: boolean;
 }
 
 function abortable<T>(
@@ -87,6 +94,8 @@ export class RoundEngine {
   private activation = Promise.resolve();
   private stopped = false;
   private number = 0;
+  private bossArmed = false;
+  private requestedRounds = 0;
   private scores = { chat: 0, codex: 0 };
   private state: PublicState = {
     type: "round.state",
@@ -123,6 +132,7 @@ export class RoundEngine {
       /** An explicitly opted-in session must never produce viewer-round evidence. */
       trigger?: "broadcaster-test";
       previousRound?: PreviousVerifiedRound | null;
+      boss?: { every?: number; inspectMemory?: typeof bossMemory };
     },
   ) {
     this.now = options.now ?? monotonicMs;
@@ -199,12 +209,60 @@ export class RoundEngine {
     }
   }
 
+  armBoss(): void {
+    this.bossArmed = true;
+  }
+  requestBoss(actor: string): void {
+    if (this.current || this.stopped) return;
+    this.bossArmed = true;
+    this.startRound(actor, "chat");
+  }
+  predictBoss(actor: string, model: BossModel): void {
+    const round = this.current;
+    if (
+      !round?.boss ||
+      round.startedAt === null ||
+      this.now() >= round.startedAt + this.headStartMs ||
+      !["sol", "terra"].includes(model)
+    )
+      return;
+    round.predictions.set(actor, model);
+    const counts = { sol: 0, terra: 0 };
+    for (const choice of round.predictions.values()) counts[choice]++;
+    this.overlay({ type: "boss.predictions", roundId: round.id, ...counts });
+  }
+
   private startRound(
     actor: string,
     input: RoundInput,
     selectedFamily?: BugFamily,
   ): void {
+    const every = this.options.boss?.every ?? 0;
+    const requested =
+      this.bossArmed ||
+      (Number.isSafeInteger(every) &&
+        every > 0 &&
+        (this.requestedRounds + 1) % every === 0);
+    let boss: BossReceipt | undefined;
+    if (requested) {
+      const memory = (this.options.boss?.inspectMemory ?? bossMemory)();
+      this.publish({
+        type: "round.boss-memory",
+        roundId: null,
+        memory,
+        accepted: bossAllowed(memory),
+      });
+      this.bossArmed = false;
+      if (!bossAllowed(memory)) {
+        this.overlay({ type: "boss.note", text: "BOSS PAUSED · LOW MEMORY" });
+        return;
+      }
+      boss = newBossReceipt(memory);
+    }
+    this.requestedRounds++;
     const round: ActiveRound = {
+      ...(boss ? { boss } : {}),
+      predictions: new Map(),
       id: randomUUID(),
       input,
       ...(selectedFamily ? { selectedFamily } : {}),
@@ -225,6 +283,8 @@ export class RoundEngine {
       firstCorrectGuesser: null,
       correctGuessRecorded: false,
       completed: false,
+      greenPublished: false,
+      codexPointAwarded: false,
     };
     this.current = round;
     this.autopsy = null;
@@ -285,6 +345,7 @@ export class RoundEngine {
     this.autopsy = {
       roundId: round.id,
       input: round.input,
+      ...(round.boss ? { boss: round.boss } : {}),
       ...(this.options.trigger ? { trigger: this.options.trigger } : {}),
       status: verified ? "verified" : "rolled-back",
       reason: round.reason,
@@ -562,6 +623,29 @@ export class RoundEngine {
     }
     return result;
   }
+  private winnerGreen(round: ActiveRound): void {
+    if (round.greenPublished) return;
+    round.greenPublished = true;
+    if (
+      round.winner === null &&
+      (round.swapFinishedAt ?? Infinity) <
+        (round.startedAt ?? 0) + this.roundLimitMs
+    ) {
+      round.winner = "codex";
+      this.scores.codex++;
+      round.codexPointAwarded = true;
+      this.overlay({ type: "score.changed", ...this.scores });
+    }
+    if (round.winner === null) round.reason = "round-limit";
+    if (round.prepared)
+      this.overlay({
+        type: "bug.named",
+        roundId: round.id,
+        name: round.prepared.family,
+      });
+    this.overlay({ type: "tests.green", roundId: round.id });
+    this.phase(round, "resolved");
+  }
   private async run(round: ActiveRound): Promise<RoundSnapshot> {
     let stage: "prepare" | "activation" | "repair" = "prepare";
     let installed: GameArtifact | null = null;
@@ -576,6 +660,7 @@ export class RoundEngine {
           round.id,
           round.abort.signal,
           round.selectedFamily,
+          ...(round.boss ? [round.boss] : []),
         ),
         round.abort.signal,
         (late) => {
@@ -613,38 +698,117 @@ export class RoundEngine {
           roundId: round.id,
           replay: prepared.symptom,
         });
+      if (round.boss) this.overlay({ type: "boss.started", roundId: round.id });
       this.phase(round, "head-start");
       await this.headStart(round);
       round.headStartFinishedAt = this.now();
       stage = "repair";
       this.phase(round, "repairing");
       const repaired = await abortable(
-        prepared.repair({
-          hint: this.hint(round),
-          signal: round.abort.signal,
-          observe: (observation) => this.observe(round, observation),
-          event: (event) => {
-            if (
-              this.current !== round ||
-              round.abort.signal.aborted ||
-              this.state.phase !== "repairing"
-            )
-              return;
-            const observed = sdkOverlayEvent(round.id, event, this.now());
-            if (observed) this.overlay(observed);
-          },
-        }),
+        round.boss
+          ? prepared.repairBoss
+            ? prepared.repairBoss({
+                hint: this.hint(round),
+                signal: round.abort.signal,
+                event: (event, model) => {
+                  if (round.abort.signal.aborted || this.current !== round)
+                    return;
+                  const observed = sdkOverlayEvent(round.id, event, this.now());
+                  if (observed?.type === "codex.step")
+                    this.overlay({ ...observed, model });
+                },
+                observe: (observation, model) => {
+                  if (round.abort.signal.aborted || this.current !== round)
+                    return;
+                  if (observation.type === "runtime.patch")
+                    this.overlay({
+                      type: "codex.step",
+                      model,
+                      roundId: round.id,
+                      id: `${model}-patch-${++round.patchSequence}`,
+                      startedAtMs: observation.atMs,
+                      attempt: 1,
+                      total: 1,
+                      step: {
+                        kind: "patch",
+                        added: observation.patch.added,
+                        removed: observation.patch.removed,
+                      },
+                      status: "done",
+                    });
+                  if (
+                    observation.type === "runtime.phase" &&
+                    observation.phase === "validation-passed"
+                  )
+                    this.overlay({
+                      type: "codex.step",
+                      model,
+                      roundId: round.id,
+                      id: `${model}-validated`,
+                      startedAtMs: observation.atMs,
+                      attempt: 1,
+                      total: 1,
+                      step: { kind: "tests" },
+                      status: "done",
+                    });
+                },
+              })
+            : Promise.reject(new Error("Boss runtime unavailable"))
+          : prepared.repair({
+              hint: this.hint(round),
+              signal: round.abort.signal,
+              observe: (observation) => this.observe(round, observation),
+              event: (event) => {
+                if (
+                  this.current !== round ||
+                  round.abort.signal.aborted ||
+                  this.state.phase !== "repairing"
+                )
+                  return;
+                const observed = sdkOverlayEvent(round.id, event, this.now());
+                if (observed) this.overlay(observed);
+              },
+            }),
         round.abort.signal,
       );
       round.abort.signal.throwIfAborted();
       // Runtime resolution guarantees full immutable visible + held-out validation.
       if (repaired.timings) round.timings = { ...repaired.timings };
+      if (round.boss && repaired.replay) {
+        this.phase(round, "validating");
+        this.overlay({
+          type: "round.ghost",
+          roundId: round.id,
+          replay: repaired.replay,
+        });
+      }
       round.swapStartedAt = this.now();
       this.phase(round, "swapping");
       stage = "activation";
       await this.activate(round, repaired, "repaired");
       round.swapFinishedAt = this.now();
       installed = repaired;
+      if (round.boss) {
+        this.winnerGreen(round);
+        const timeToGreenMs = this.durations(round).timeToGreenMs;
+        if (round.boss.winner && timeToGreenMs !== null)
+          this.publish({
+            type: "round.boss-winner",
+            roundId: round.id,
+            model: round.boss.winner,
+            family: prepared.family,
+            timeToGreenMs,
+          });
+      }
+      if (round.boss && prepared.settleBoss) {
+        // The winning installation fixes the split immediately. The other worker
+        // keeps its own hard deadline; its failure never rolls back a valid winner.
+        if (round.timer) {
+          clearTimeout(round.timer);
+          round.timer = null;
+        }
+        await abortable(prepared.settleBoss(), round.abort.signal);
+      }
     } catch {
       round.reason ??=
         stage === "prepare"
@@ -675,24 +839,7 @@ export class RoundEngine {
         installed = null;
       }
       if (installed) {
-        if (
-          round.winner === null &&
-          (round.swapFinishedAt ?? Infinity) <
-            (round.startedAt ?? 0) + this.roundLimitMs
-        ) {
-          round.winner = "codex";
-          this.scores.codex++;
-          this.overlay({ type: "score.changed", ...this.scores });
-        }
-        if (round.winner === null) round.reason = "round-limit";
-        if (round.prepared)
-          this.overlay({
-            type: "bug.named",
-            roundId: round.id,
-            name: round.prepared.family,
-          });
-        this.overlay({ type: "tests.green", roundId: round.id });
-        this.phase(round, "resolved");
+        this.winnerGreen(round);
         round.completed = true;
         regression = await this.recordRegression(round);
       }
@@ -702,6 +849,12 @@ export class RoundEngine {
     return this.snapshot();
   }
   private async rollback(round: ActiveRound): Promise<void> {
+    if (round.codexPointAwarded) {
+      round.codexPointAwarded = false;
+      this.scores.codex--;
+      if (round.winner === "codex") round.winner = null;
+      this.overlay({ type: "score.changed", ...this.scores });
+    }
     if (round.prepared && round.visible) {
       try {
         await this.activate(round, round.prepared.clean, "rollback");

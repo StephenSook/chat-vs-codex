@@ -22,6 +22,7 @@ export class TitleScorebug {
   private generation = 0;
   private closed = false;
   private watchdog: TitleWatchdog | undefined;
+  private readonly resolvedRounds = new Set<string>();
   constructor(
     private readonly options: {
       enabled?: boolean;
@@ -81,6 +82,15 @@ export class TitleScorebug {
       this.original = journal.original;
       await this.restore("startup");
     });
+  }
+
+  resolved(
+    roundId: string,
+    score: { chat: number; codex: number },
+  ): Promise<void> {
+    if (this.resolvedRounds.has(roundId)) return Promise.resolve();
+    this.resolvedRounds.add(roundId);
+    return this.show(score);
   }
 
   show(score: { chat: number; codex: number }): Promise<void> {

@@ -1,4 +1,5 @@
 import type {
+  BossModel,
   RoundAutopsy,
   RoundValidationReplay,
   SymptomReplay,
@@ -29,6 +30,9 @@ export type CodexStep =
   | { kind: "activity"; action: CodexAction };
 
 export type OverlayEvent =
+  | { type: "boss.note"; text: "BOSS PAUSED · LOW MEMORY" }
+  | { type: "boss.started"; roundId: string }
+  | { type: "boss.predictions"; roundId: string; sol: number; terra: number }
   | { type: "twitch.raid"; viewers: number }
   | { type: "round.preparing"; id: string }
   | {
@@ -42,6 +46,7 @@ export type OverlayEvent =
   | { type: "bug.named"; roundId: string; name: string }
   | {
       type: "codex.step";
+      model?: BossModel;
       roundId: string;
       id: string;
       startedAtMs?: number;
@@ -83,6 +88,12 @@ export interface DisplayStep {
 }
 
 export interface BroadcastState {
+  boss: {
+    sol: readonly DisplayStep[];
+    terra: readonly DisplayStep[];
+    predictions: { sol: number; terra: number };
+  } | null;
+  bossNote: string | null;
   roundId: string | null;
   round: number;
   startedAtMs: number | null;
@@ -104,6 +115,8 @@ export interface BroadcastState {
 
 export function initialBroadcast(): BroadcastState {
   return {
+    boss: null,
+    bossNote: null,
     roundId: null,
     round: 0,
     startedAtMs: null,
@@ -156,6 +169,23 @@ export function reduceBroadcast(
 ): BroadcastState {
   if ("roundId" in event && event.roundId !== state.roundId) return state;
   switch (event.type) {
+    case "boss.note":
+      return { ...state, bossNote: event.text };
+    case "boss.started":
+      return {
+        ...state,
+        boss: { sol: [], terra: [], predictions: { sol: 0, terra: 0 } },
+      };
+    case "boss.predictions":
+      return state.boss
+        ? {
+            ...state,
+            boss: {
+              ...state.boss,
+              predictions: { sol: event.sol, terra: event.terra },
+            },
+          }
+        : state;
     case "twitch.raid":
       return { ...state, raidViewers: event.viewers };
     case "round.preparing":
@@ -225,6 +255,27 @@ export function reduceBroadcast(
     case "round.ghost":
       return { ...state, ghost: event.replay };
     case "codex.step": {
+      if (event.model && state.boss) {
+        const model = event.model;
+        const { model: _model, ...ordinary } = event;
+        const reduced = reduceBroadcast(
+          {
+            ...state,
+            boss: null,
+            steps: state.boss[model],
+            attempt: event.attempt,
+            stepStarts: Object.fromEntries(
+              state.boss[model].flatMap((row) =>
+                row.startedAtMs === undefined
+                  ? []
+                  : [[`id:${row.id}`, row.startedAtMs]],
+              ),
+            ),
+          },
+          ordinary,
+        );
+        return { ...state, boss: { ...state.boss, [model]: reduced.steps } };
+      }
       // A late completion from an earlier SDK retry cannot replace the current attempt.
       if (state.attempt !== null && event.attempt < state.attempt) return state;
       const startKey = `id:${event.id}`;

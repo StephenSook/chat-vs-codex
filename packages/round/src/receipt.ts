@@ -10,7 +10,7 @@ import {
 import { join } from "node:path";
 import type { ClientSnapshot } from "./client.js";
 import type { PreviousVerifiedRound, RoundEnvelope } from "./contracts.js";
-import { isRoundInput } from "./contracts.js";
+import { isRoundInput, validBossReceipt } from "./contracts.js";
 import type { RoundSnapshot } from "./engine.js";
 
 export const ROUND_TIMING_DEFINITION =
@@ -128,6 +128,8 @@ export function publicReceipt(input: {
 }) {
   const { result, client } = input;
   const autopsy = result.autopsy ?? null;
+  if (autopsy?.boss && !validBossReceipt(autopsy.boss))
+    throw new Error("Invalid boss evidence");
   const recordedInputs = [
     result.input,
     autopsy?.input,
@@ -251,8 +253,8 @@ export function publicReceipt(input: {
     ...(input.mode === "live-twitch"
       ? {}
       : { fixture: "bare-break-then-wrong-enum-hint" }),
-    model: "gpt-6.1-terra",
-    effort: "low",
+    model: autopsy?.boss?.winner === "sol" ? "gpt-6.1-sol" : "gpt-6.1-terra",
+    effort: autopsy?.boss?.winner === "sol" ? "high" : "low",
     breaker: input.breaker,
     firstCorrectGuesser: autopsy?.firstCorrectGuesser ?? null,
     validationReplay:
@@ -274,6 +276,59 @@ export function publicReceipt(input: {
             roundId: autopsy.roundId,
             ...inputProvenance,
             ...provenance,
+            ...(autopsy.boss
+              ? {
+                  boss: {
+                    winner: autopsy.boss.winner,
+                    memory: {
+                      freeBytes: autopsy.boss.memory.freeBytes,
+                      ...(autopsy.boss.memory.availableBytes === undefined
+                        ? {}
+                        : {
+                            availableBytes: autopsy.boss.memory.availableBytes,
+                          }),
+                      rssBytes: autopsy.boss.memory.rssBytes,
+                      minimumFreeBytes: autopsy.boss.memory.minimumFreeBytes,
+                      measuredAtMs: autopsy.boss.memory.measuredAtMs,
+                    },
+                    threads: autopsy.boss.threads.map((thread) => ({
+                      model: thread.model,
+                      status: thread.status,
+                      timings: {
+                        ...(thread.timings.threadStartedAtMs === undefined
+                          ? {}
+                          : {
+                              threadStartedAtMs:
+                                thread.timings.threadStartedAtMs,
+                            }),
+                        ...(thread.timings.patchReadyAtMs === undefined
+                          ? {}
+                          : { patchReadyAtMs: thread.timings.patchReadyAtMs }),
+                        ...(thread.timings.validationStartedAtMs === undefined
+                          ? {}
+                          : {
+                              validationStartedAtMs:
+                                thread.timings.validationStartedAtMs,
+                            }),
+                        ...(thread.timings.validationFinishedAtMs === undefined
+                          ? {}
+                          : {
+                              validationFinishedAtMs:
+                                thread.timings.validationFinishedAtMs,
+                            }),
+                      },
+                      failure: thread.failure,
+                      patch: thread.patch
+                        ? {
+                            added: thread.patch.added,
+                            removed: thread.patch.removed,
+                            preview: [...thread.patch.preview],
+                          }
+                        : null,
+                    })),
+                  },
+                }
+              : {}),
             status: autopsy.status,
             reason: autopsy.reason,
             breaker: autopsy.breaker,
