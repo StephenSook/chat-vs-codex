@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Pit Wall",
+    "slug": "chat-vs-codex-pit-wall",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "pit-wall",
+    "ios": {
+      "bundleIdentifier": "com.stephensookra.chatvscodex.pitwall",
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocalNetworkUsageDescription": "Connect to the round runner on your Mac.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSAppTransportSecurity": { "NSAllowsLocalNetworking": true }
+      }
+    },
+    "android": {
+      "package": "com.stephensookra.chatvscodex.pitwall",
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.VIBRATE"
+      ]
+    },
+    "plugins": [
+      "expo-secure-store",
+      ["expo-notifications", { "enableRemoteNotifications": false }],
+      "./plugins/withPitWallLive.cjs"
+    ]
+  }
+}

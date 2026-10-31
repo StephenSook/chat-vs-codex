@@ -1,0 +1,5 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": { "modules": ["PitWallLiveModule"] },
+  "android": { "modules": ["expo.modules.pitwalllive.PitWallLiveModule"] }
+}
