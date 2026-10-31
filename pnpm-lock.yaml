@@ -73,6 +73,8 @@ importers:
         specifier: workspace:*
         version: link:../sim
 
+  packages/round: {}
+
   packages/sim:
     dependencies:
       pure-rand:

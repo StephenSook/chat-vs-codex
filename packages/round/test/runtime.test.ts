@@ -1,0 +1,411 @@
+import { createHash } from "node:crypto";
+import {
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  stat,
+  writeFile,
+} from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+import { describe, expect, it, vi } from "vitest";
+import { loadProfile } from "../../bench/src/runtime.js";
+import { buildTicket } from "../../bench/src/trial.js";
+import { git, prepareWorkspace } from "../../bench/src/workspace.js";
+import { type PooledMutant, ROOT } from "../../mutator/src/gate.js";
+import { createRoundRuntime, superviseRepair } from "../src/runtime.js";
+import {
+  bundleGame,
+  executeRepair,
+  type RepairExecution,
+} from "../src/runtime-execution.js";
+
+async function setup() {
+  const pool = JSON.parse(
+    await readFile(join(ROOT, "packages/mutator/pool.json"), "utf8"),
+  ) as { mutants: PooledMutant[] };
+  const mutant = pool.mutants.find((item) => item.family === "gravity-sign");
+  if (!mutant) throw new Error("Missing gravity fixture");
+  const workspace = await prepareWorkspace(mutant);
+  const logs = await mkdtemp(join(tmpdir(), "round-log-"));
+  const options: RepairExecution = {
+    workspace,
+    profile: await loadProfile(),
+    launcher: join(logs, "launcher"),
+    ticket: buildTicket(mutant),
+    hint: null,
+    model: "gpt-6.1-terra",
+    effort: "low",
+    logFile: join(logs, "events.jsonl"),
+    budgetMs: 10000,
+  };
+  const restore = async () => {
+    for (const [path, source] of Object.entries(workspace.cleanSources)) {
+      await readFile(join(workspace.game, path), "utf8");
+      await writeFile(join(workspace.game, path), source);
+    }
+  };
+  return {
+    mutant,
+    workspace,
+    logs,
+    options,
+    restore,
+    cleanup: async () => {
+      await workspace.cleanup();
+      await rm(logs, { recursive: true, force: true });
+    },
+  };
+}
+
+describe("round runtime verification", () => {
+  it("builds browser ESM artifacts with content-derived IDs", async () => {
+    const result = await bundleGame(join(ROOT, "packages/sim/src/index.ts"));
+    expect(result.id).toBe(result.digest);
+    expect(result.digest).toBe(
+      createHash("sha256").update(result.code).digest("hex"),
+    );
+    expect(result.code).toContain("export{");
+    expect(result.code).not.toContain("node:");
+    expect(result.code).not.toContain("sourceMappingURL");
+  });
+
+  it("validates a repaired isolated source before building and logs SDK events only outside the workspace", async () => {
+    const context = await setup();
+    try {
+      const events: string[] = [];
+      const order: string[] = [];
+      const runtime = vi.fn(async (options) => {
+        order.push("runtime");
+        expect(options.prompt).toContain("First divergent frame:");
+        expect(options.prompt).not.toContain(context.mutant.id);
+        expect(options.prompt).not.toContain(context.mutant.family);
+        expect(options.workspace).toBe(context.workspace.game);
+        expect(await readdir(context.workspace.parent)).toEqual(["game"]);
+        expect(await readdir(context.workspace.home)).toEqual([]);
+        expect(
+          git(context.workspace.game, ["rev-list", "--count", "HEAD"]),
+        ).toBe("1");
+        expect(git(context.workspace.game, ["status", "--porcelain"])).toBe("");
+        await context.restore();
+        await options.event({
+          type: "turn.completed",
+          usage: {
+            input_tokens: 20,
+            cached_input_tokens: 10,
+            output_tokens: 4,
+          },
+        });
+        return { usage: null, answer: null };
+      });
+      const validate = vi.fn(async (workspace, profile, remaining) => {
+        order.push("validate");
+        expect(workspace.game).toBe(context.workspace.game);
+        expect(profile).toBe(await loadProfile());
+        expect(remaining()).toBeGreaterThan(0);
+      });
+      const build = vi.fn(async (entry) => {
+        order.push("build");
+        return bundleGame(entry);
+      });
+      const result = await executeRepair(
+        context.options,
+        new AbortController().signal,
+        (event) => events.push(event.type),
+        { runtime, validate, build },
+      );
+      expect(order).toEqual(["runtime", "validate", "build"]);
+      expect(events).toEqual(["turn.completed"]);
+      expect(result).toEqual(
+        await bundleGame(join(ROOT, "packages/sim/src/index.ts")),
+      );
+      const log = await readFile(context.options.logFile, "utf8");
+      expect(log).toContain("runtime.event");
+      expect(log).toContain("repair.verified");
+      expect(context.options.logFile.startsWith(context.workspace.parent)).toBe(
+        false,
+      );
+    } finally {
+      await context.cleanup();
+    }
+  }, 30000);
+
+  it.each([
+    "tests",
+    "history",
+    "unchanged",
+    "validation",
+    "post-validation",
+    "source-during-validation",
+  ])(
+    "refuses %s violations without creating a repaired artifact",
+    async (kind) => {
+      const context = await setup();
+      const build = vi.fn(async () => ({
+        id: "invalid",
+        digest: "invalid",
+        code: "invalid",
+      }));
+      try {
+        const runtime = vi.fn(async () => {
+          if (kind !== "unchanged") await context.restore();
+          if (kind === "tests") {
+            const path = join(context.workspace.game, "fixtures/goldens.json");
+            await readFile(path, "utf8");
+            await writeFile(path, "{}");
+          }
+          if (kind === "history")
+            git(context.workspace.game, [
+              "-c",
+              "user.name=Stephen Sookra",
+              "-c",
+              "user.email=test@example.invalid",
+              "commit",
+              "--allow-empty",
+              "-m",
+              "Changed history",
+            ]);
+          return { usage: null, answer: null };
+        });
+        const validate = vi.fn(async () => {
+          if (kind === "validation") throw new Error("Held-out replay failed");
+          if (kind === "post-validation") {
+            const path = join(context.workspace.game, "test/replay.test.ts");
+            await readFile(path, "utf8");
+            await writeFile(path, "tampered");
+          }
+          if (kind === "source-during-validation") {
+            const path = join(context.workspace.game, "src/index.ts");
+            const source = await readFile(path, "utf8");
+            await writeFile(path, `${source}\n// changed after replay\n`);
+          }
+        });
+        await expect(
+          executeRepair(
+            context.options,
+            new AbortController().signal,
+            () => {},
+            { runtime, validate, build },
+          ),
+        ).rejects.toThrow();
+        expect(build).not.toHaveBeenCalled();
+      } finally {
+        await context.cleanup();
+      }
+    },
+    30000,
+  );
+
+  it("accepts only one enum hint and does not start when already aborted", async () => {
+    const context = await setup();
+    try {
+      const prompts: string[] = [];
+      const runtime = vi.fn(async (options) => {
+        prompts.push(options.prompt);
+        await context.restore();
+        return { usage: null, answer: null };
+      });
+      const validate = vi.fn(async () => {});
+      await executeRepair(
+        { ...context.options, hint: "jump-buffer" },
+        new AbortController().signal,
+        () => {},
+        { runtime, validate },
+      );
+      expect(prompts[0]).toBe(`${context.options.ticket}\n\nHint: jump-buffer`);
+      await expect(
+        executeRepair(
+          { ...context.options, hint: "anything else" as never },
+          new AbortController().signal,
+          () => {},
+          { runtime, validate },
+        ),
+      ).rejects.toThrow("Invalid round hint");
+      await expect(
+        executeRepair(context.options, AbortSignal.abort(), () => {}, {
+          runtime,
+          validate,
+        }),
+      ).rejects.toThrow();
+      expect(runtime).toHaveBeenCalledTimes(1);
+    } finally {
+      await context.cleanup();
+    }
+  }, 30000);
+
+  it("kills a hanging detached worker on a hard deadline without invoking Codex", async () => {
+    const context = await setup();
+    try {
+      const fake = join(context.logs, "hanging.mjs");
+      await writeFile(
+        fake,
+        "process.on('message',()=>{setInterval(()=>{},1000)});",
+      );
+      await expect(
+        superviseRepair(
+          { ...context.options, budgetMs: 100 },
+          new AbortController().signal,
+          () => {},
+          pathToFileURL(fake),
+        ),
+      ).rejects.toThrow("deadline expired");
+    } finally {
+      await context.cleanup();
+    }
+  }, 30000);
+
+  it.each([0, 1])(
+    "requires a completed worker exit after its result (exit=%s)",
+    async (exit) => {
+      const context = await setup();
+      try {
+        const fake = join(context.logs, "result-worker.mjs");
+        const artifact = { id: "fixture", digest: "fixture", code: "fixture" };
+        await writeFile(
+          fake,
+          `process.once('message',()=>process.send({type:'result',artifact:${JSON.stringify(artifact)}},()=>process.exit(${exit})));`,
+        );
+        const task = superviseRepair(
+          context.options,
+          new AbortController().signal,
+          () => {},
+          pathToFileURL(fake),
+        );
+        if (exit === 0) await expect(task).resolves.toEqual(artifact);
+        else await expect(task).rejects.toThrow("without a verified build");
+      } finally {
+        await context.cleanup();
+      }
+    },
+    30000,
+  );
+
+  it("terminates an active worker when the caller cancels the round", async () => {
+    const context = await setup();
+    try {
+      const fake = join(context.logs, "cancellable.mjs");
+      await writeFile(
+        fake,
+        "process.once('message',()=>{process.send({type:'event',event:{type:'thread.started',thread_id:'fixture'}});setInterval(()=>{},1000)});",
+      );
+      const controller = new AbortController();
+      const event = vi.fn(() => controller.abort());
+      await expect(
+        superviseRepair(
+          context.options,
+          controller.signal,
+          event,
+          pathToFileURL(fake),
+        ),
+      ).rejects.toThrow("aborted");
+      expect(event).toHaveBeenCalledTimes(1);
+    } finally {
+      await context.cleanup();
+    }
+  }, 30000);
+
+  it.each([0, 1])(
+    "reaps lingering worker descendants after a normal worker exit (exit=%s)",
+    async (exit) => {
+      const context = await setup();
+      let descendant: number | undefined;
+      try {
+        const fake = join(context.logs, "descendant.mjs");
+        const artifact = { id: "fixture", digest: "fixture", code: "fixture" };
+        await writeFile(
+          fake,
+          `import{spawn}from'node:child_process';process.once('message',()=>{const child=spawn(process.execPath,['-e','setInterval(()=>{},1000)'],{stdio:'ignore'});child.unref();process.send({type:'event',event:{type:'thread.started',thread_id:String(child.pid)}},()=>process.send({type:'result',artifact:${JSON.stringify(artifact)}},()=>process.exit(${exit})));});`,
+        );
+        const task = superviseRepair(
+          context.options,
+          new AbortController().signal,
+          (event) => {
+            if (event.type === "thread.started")
+              descendant = Number(event.thread_id);
+          },
+          pathToFileURL(fake),
+        );
+        if (exit === 0) await expect(task).resolves.toEqual(artifact);
+        else await expect(task).rejects.toThrow();
+        expect(descendant).toBeGreaterThan(0);
+        await vi.waitFor(
+          () => expect(() => process.kill(descendant ?? 0, 0)).toThrow(),
+          { timeout: 2000, interval: 10 },
+        );
+      } finally {
+        if (descendant) {
+          try {
+            process.kill(descendant, "SIGKILL");
+          } catch {}
+        }
+        await context.cleanup();
+      }
+    },
+    30000,
+  );
+
+  it("refuses a source changed while building the verified artifact", async () => {
+    const context = await setup();
+    try {
+      await expect(
+        executeRepair(context.options, new AbortController().signal, () => {}, {
+          runtime: async () => {
+            await context.restore();
+            return { usage: null, answer: null };
+          },
+          validate: async () => {},
+          build: async (entry) => {
+            const artifact = await bundleGame(entry);
+            const source = await readFile(entry, "utf8");
+            await writeFile(entry, `${source}\n// changed during bundle\n`);
+            return artifact;
+          },
+        }),
+      ).rejects.toThrow("while bundling");
+    } finally {
+      await context.cleanup();
+    }
+  }, 30000);
+
+  it("prepares clean/broken artifacts, hides mutant metadata, and cleans its isolated game", async () => {
+    const pool = JSON.parse(
+      await readFile(join(ROOT, "packages/mutator/pool.json"), "utf8"),
+    ) as { mutants: PooledMutant[] };
+    const mutant = pool.mutants.find(
+      (item) => item.family === "swapped-controls",
+    );
+    if (!mutant) throw new Error("Missing controls fixture");
+    const logs = await mkdtemp(join(tmpdir(), "round-factory-"));
+    try {
+      const runtime = createRoundRuntime({
+        runsDirectory: logs,
+        fixtureMutantId: mutant.id,
+      });
+      const prepared = await runtime.prepare(
+        "round-fixture",
+        new AbortController().signal,
+      );
+      expect(prepared.family).toBe("swapped-controls");
+      expect(prepared.clean.id).not.toBe(prepared.broken.id);
+      expect(prepared.broken.code).not.toContain(mutant.id);
+      expect(prepared.broken.code).not.toContain("hotfix-site");
+      expect(
+        (await readdir(logs)).some((name) => name.endsWith(".launcher")),
+      ).toBe(true);
+      await prepared.close();
+      await prepared.close();
+      await expect(
+        prepared.repair({
+          hint: null,
+          signal: new AbortController().signal,
+          event: () => {},
+        }),
+      ).rejects.toThrow("unavailable");
+      expect((await stat(logs)).isDirectory()).toBe(true);
+    } finally {
+      await rm(logs, { recursive: true, force: true });
+    }
+  }, 30000);
+});

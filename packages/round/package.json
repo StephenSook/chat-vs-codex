@@ -1,0 +1,10 @@
+{
+  "name": "@chat-vs-codex/round",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./runtime": "./src/runtime.ts",
+    "./contracts": "./src/contracts.ts"
+  }
+}

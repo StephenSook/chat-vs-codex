@@ -5,6 +5,7 @@ import { performance } from "node:perf_hooks";
 import { build } from "esbuild";
 import type { PooledMutant } from "../../mutator/src/gate.js";
 import { goldenResult, HELD_OUT } from "../../replay/src/index.js";
+import { confinedBundlePlugin } from "./confined-bundle.js";
 import {
   createLauncher,
   loadProfile,
@@ -122,6 +123,7 @@ export async function validateWorkspace(
       platform: "node",
       format: "esm",
       target: "node22",
+      plugins: [confinedBundlePlugin(workspace.game)],
       outfile: hidden,
     });
     await command(process.execPath, [hidden]);
