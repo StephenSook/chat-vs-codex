@@ -5,6 +5,8 @@ real handler, installs a gated mutant, waits the real 15-second chat head start,
 then runs one `gpt-6.1-terra` low SDK repair. A fixture sends the wrong enum guess
 `!guess swapped-controls` during a gravity round to exercise hint-war input.
 This is a fixture round, not evidence of live Twitch event delivery.
+The [verification status](../../docs/LOCAL-ROUND-CHECK.md) records the first real
+attempt's nested-sandbox refusal. A full round with the real SDK is not yet verified.
 
 ```sh
 CI=true pnpm ci:local
