@@ -27,6 +27,7 @@ export type CodexStep =
   | { kind: "replay" }
   | { kind: "patch"; added: number; removed: number }
   | { kind: "tests" }
+  | { kind: "tool"; name: string; summary?: string }
   | { kind: "activity"; action: CodexAction };
 
 export type OverlayEvent =
@@ -147,6 +148,10 @@ export function stepLabel(step: CodexStep): string {
       return `Patch +${step.added} / -${step.removed}`;
     case "tests":
       return "Running tests";
+    case "tool":
+      return step.summary
+        ? `${step.name}: ${step.summary}`
+        : `Tool: ${step.name}`;
     case "activity":
       return {
         discover: "Inspecting files",

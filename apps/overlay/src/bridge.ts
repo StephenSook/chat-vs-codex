@@ -131,6 +131,12 @@ function validateOverlay(event: unknown): event is OverlayEvent {
         !!step &&
         (step.kind === "replay" ||
           step.kind === "tests" ||
+          (step.kind === "tool" &&
+            typeof step.name === "string" &&
+            /^[A-Za-z0-9_.:-]{1,48}$/.test(step.name) &&
+            (step.summary === undefined ||
+              (typeof step.summary === "string" &&
+                /^[A-Za-z0-9 -]{1,48}$/.test(step.summary)))) ||
           (step.kind === "activity" &&
             CODEX_ACTIONS.some((action) => action === step.action)) ||
           (step.kind === "reading" && typeof step.path === "string") ||

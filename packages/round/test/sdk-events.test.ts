@@ -1,5 +1,7 @@
 import type { ThreadEvent, ThreadItem } from "@openai/codex-sdk";
 import { describe, expect, it } from "vitest";
+import { parseRoundEnvelope } from "../../../apps/overlay/src/bridge.js";
+import { stepLabel } from "../../../apps/overlay/src/events.js";
 import { sdkOverlayEvent } from "../src/sdk-events.js";
 
 it("accepts the observed SDK null exit code as running, reserving green for the trusted validator", () => {
@@ -126,17 +128,6 @@ describe("all observed SDK item types", () => {
       action: "edit",
     },
     {
-      item: {
-        id: "tool",
-        type: "mcp_tool_call",
-        status: "completed",
-        server: "private-server",
-        tool: "private-tool",
-        arguments: { secret: "private-argument" },
-      },
-      action: "tool",
-    },
-    {
       item: { id: "response", type: "agent_message", text: "private response" },
       action: "respond",
     },
@@ -198,4 +189,105 @@ describe("all observed SDK item types", () => {
     ).toMatchObject({ status: "failed" });
     expect(sdkOverlayEvent("round", { type: "turn.started" })).toBeNull();
   });
+});
+
+it("names real Inspector requests and bounded argument summaries without exposing other arguments or results", () => {
+  const item: ThreadItem = {
+    id: "inspector",
+    type: "mcp_tool_call",
+    server: "game_inspector",
+    tool: "diff_telemetry",
+    arguments: { track: "replay-00", frame: 212, secret: "must-stay-private" },
+    status: "in_progress",
+  };
+  const observed = sdkOverlayEvent("round", { type: "item.started", item });
+  expect(observed).toMatchObject({
+    status: "running",
+    step: { kind: "tool", name: "Inspector", summary: "replay frame 212" },
+  });
+  expect(JSON.stringify(observed)).not.toContain("must-stay-private");
+  const range = {
+    ...item,
+    tool: "replay_frames",
+    arguments: { from: 200, to: 212 },
+  };
+  expect(
+    sdkOverlayEvent("round", { type: "item.completed", item: range }),
+  ).toMatchObject({ step: { summary: "replay 200-212" } });
+  expect(
+    sdkOverlayEvent("round", {
+      type: "item.completed",
+      item: { ...item, tool: "first_divergence" },
+    }),
+  ).toMatchObject({ step: { summary: "first divergence" } });
+});
+it("names SDK file tools with basenames and refuses to echo arbitrary tool arguments", () => {
+  const item: ThreadItem = {
+    id: "read",
+    type: "mcp_tool_call",
+    server: "tools",
+    tool: "read_file",
+    arguments: { file_path: "/secret/path/physics.ts" },
+    status: "completed",
+  };
+  expect(sdkOverlayEvent("r", { type: "item.completed", item })).toMatchObject({
+    step: { kind: "reading", path: "physics.ts" },
+  });
+  const unknown = sdkOverlayEvent("r", {
+    type: "item.completed",
+    item: {
+      ...item,
+      tool: "inspect",
+      arguments: { token: "private-token", text: "private-text" },
+    },
+  });
+  expect(unknown).toMatchObject({ step: { kind: "tool", name: "inspect" } });
+  expect(JSON.stringify(unknown)).not.toContain("private");
+  expect(
+    sdkOverlayEvent("r", {
+      type: "item.completed",
+      item: {
+        ...item,
+        tool: "unsafe\nidentifier",
+        error: { message: "private-error" },
+      },
+    }),
+  ).toMatchObject({ status: "failed", step: { name: "MCP" } });
+});
+
+it("carries the observed tool step through the real wire guard and ticker formatter", () => {
+  const event = sdkOverlayEvent("r", {
+    type: "item.started",
+    item: {
+      id: "frame",
+      type: "mcp_tool_call",
+      server: "game_inspector",
+      tool: "diff_telemetry",
+      arguments: { frame: 212 },
+      status: "in_progress",
+    },
+  });
+  if (!event || event.type !== "codex.step")
+    throw new Error("Missing observed tool event");
+  expect(stepLabel(event.step)).toBe("Inspector: replay frame 212");
+  expect(
+    parseRoundEnvelope({
+      sequence: 1,
+      serverTimeMs: 1,
+      event: { type: "overlay", event },
+    }),
+  ).toMatchObject({ event: { event } });
+  expect(() =>
+    parseRoundEnvelope({
+      sequence: 1,
+      serverTimeMs: 1,
+      event: {
+        type: "overlay",
+        event: {
+          ...event,
+          step: { kind: "tool", name: "MCP", summary: "unsafe\nargument" },
+        },
+      },
+    }),
+  ).toThrow();
 });

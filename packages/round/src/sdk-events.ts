@@ -1,4 +1,4 @@
-import type { ThreadEvent } from "@openai/codex-sdk";
+import type { McpToolCallItem, ThreadEvent } from "@openai/codex-sdk";
 import type {
   CodexStep,
   OverlayEvent,
@@ -137,6 +137,57 @@ function commandStep(raw: string): CodexStep {
   return { kind: "activity", action: discover ? "discover" : "command" };
 }
 
+/** Expose tool identifiers and allowlisted argument shapes, never raw text or results. */
+function toolStep(item: McpToolCallItem): CodexStep {
+  const args =
+    item.arguments &&
+    typeof item.arguments === "object" &&
+    !Array.isArray(item.arguments)
+      ? (item.arguments as Record<string, unknown>)
+      : {};
+  const path = args.path ?? args.file_path;
+  if (/^(?:read|read_file|Read)$/.test(item.tool) && typeof path === "string") {
+    const file = basename(path);
+    if (/^[\w.-]{1,64}\.(?:[cm]?[jt]sx?|json|md)$/.test(file))
+      return { kind: "reading", path: file };
+  }
+  if (
+    item.tool === "exec_command" &&
+    typeof (args.cmd ?? args.command) === "string"
+  )
+    return commandStep((args.cmd ?? args.command) as string);
+  const frame = (value: unknown): value is number =>
+    Number.isSafeInteger(value) && Number(value) >= 0 && Number(value) <= 3600;
+  if (["game_inspector", "game-inspector"].includes(item.server)) {
+    if (item.tool === "diff_telemetry" && frame(args.frame))
+      return {
+        kind: "tool",
+        name: "Inspector",
+        summary: `replay frame ${args.frame}`,
+      };
+    if (
+      item.tool === "replay_frames" &&
+      frame(args.from) &&
+      frame(args.to) &&
+      args.to >= args.from
+    )
+      return {
+        kind: "tool",
+        name: "Inspector",
+        summary:
+          args.from === args.to
+            ? `replay frame ${args.from}`
+            : `replay ${args.from}-${args.to}`,
+      };
+    if (item.tool === "first_divergence")
+      return { kind: "tool", name: "Inspector", summary: "first divergence" };
+  }
+  return {
+    kind: "tool",
+    name: /^[A-Za-z0-9_.:-]{1,48}$/.test(item.tool) ? item.tool : "MCP",
+  };
+}
+
 /** Every observed SDK item gets a category; free text, arguments and output stay private. */
 export function sdkOverlayEvent(
   roundId: string,
@@ -170,7 +221,7 @@ export function sdkOverlayEvent(
       step = { kind: "activity", action: "edit" };
       break;
     case "mcp_tool_call":
-      step = { kind: "activity", action: "tool" };
+      step = toolStep(item);
       if (item.error) status = "failed";
       break;
     case "agent_message":
