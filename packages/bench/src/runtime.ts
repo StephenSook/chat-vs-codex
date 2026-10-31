@@ -32,22 +32,38 @@ export const ANSWER_SCHEMA = {
   },
 };
 
-/** Preserve quoted TOML keys, including :workspace_roots and the literal dot. */
+/** Keep quoted path keys inside TOML values, outside the CLI's dotted-key parser. */
 export function permissionOverrides(profile: string): string[] {
   let table = "";
-  const overrides: string[] = [];
+  const sections = new Map<string, string[]>([
+    ["", []],
+    ["permissions.hotfix.filesystem", []],
+    ['permissions.hotfix.filesystem.":workspace_roots"', []],
+    ["permissions.hotfix.network", []],
+  ]);
   for (const raw of profile.split("\n")) {
     const line = raw.trim();
     if (!line) continue;
     if (line.startsWith("[") && line.endsWith("]")) {
       table = line.slice(1, -1);
+      if (!sections.has(table)) throw new Error("Unexpected permission table");
       continue;
     }
     if (!/^(("[^"]+")|[a-z_]+)\s*=\s*("[^"]+"|false)$/.test(line))
       throw new Error("Unexpected permission profile syntax");
-    overrides.push(`${table ? `${table}.` : ""}${line}`);
+    sections.get(table)?.push(line);
   }
-  return overrides;
+  const filesystem = sections.get("permissions.hotfix.filesystem") ?? [];
+  const workspace =
+    sections.get('permissions.hotfix.filesystem.":workspace_roots"') ?? [];
+  const network = sections.get("permissions.hotfix.network") ?? [];
+  if (!filesystem.length || !workspace.length || !network.length)
+    throw new Error("Incomplete permission profile");
+  return [
+    ...(sections.get("") ?? []),
+    `permissions.hotfix.filesystem = { ${filesystem.join(", ")}, ":workspace_roots" = { ${workspace.join(", ")} } }`,
+    `permissions.hotfix.network = { ${network.join(", ")} }`,
+  ];
 }
 
 function shellQuote(text: string): string {

@@ -135,8 +135,10 @@ async function validate(
 }
 
 export function isSandboxFailure(message: string): boolean {
+  // The PATH-alias warning can precede an unrelated fatal configuration error.
+  const fatal = message.replace(/WARNING: proceeding,[^\n]*\n/g, "");
   return /operation not permitted|permission denied|EPERM|sandbox_apply|read-only file system|os error (?:1|13|30)\b/i.test(
-    message,
+    fatal,
   );
 }
 

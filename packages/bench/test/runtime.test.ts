@@ -17,32 +17,26 @@ import {
   RUNTIME_FLAGS,
   runRuntime,
 } from "../src/runtime.js";
-import { sandboxCommand } from "../src/trial.js";
+import { isSandboxFailure, sandboxCommand } from "../src/trial.js";
 
 it("pins the exact permission profile including all temporary-directory denies", async () => {
   const overrides = permissionOverrides(await loadProfile());
   expect(overrides).toEqual([
     'default_permissions = "hotfix"',
-    'permissions.hotfix.filesystem.":root" = "deny"',
-    'permissions.hotfix.filesystem.":minimal" = "read"',
-    'permissions.hotfix.filesystem."/opt/homebrew" = "read"',
-    'permissions.hotfix.filesystem."/private/tmp" = "deny"',
-    'permissions.hotfix.filesystem."/tmp" = "deny"',
-    'permissions.hotfix.filesystem."/private/var/folders" = "deny"',
-    'permissions.hotfix.filesystem.":workspace_roots"."." = "write"',
-    'permissions.hotfix.filesystem.":workspace_roots"."test" = "read"',
-    'permissions.hotfix.filesystem.":workspace_roots"."fixtures" = "read"',
-    "permissions.hotfix.network.enabled = false",
+    'permissions.hotfix.filesystem = { ":root" = "deny", ":minimal" = "read", "/opt/homebrew" = "read", "/private/tmp" = "deny", "/tmp" = "deny", "/private/var/folders" = "deny", ":workspace_roots" = { "." = "write", "test" = "read", "fixtures" = "read" } }',
+    "permissions.hotfix.network = { enabled = false }",
   ]);
+  // Codex's override path splitter does not interpret quoted TOML dotted keys.
+  for (const override of overrides)
+    expect(override.slice(0, override.indexOf("="))).not.toMatch(/["/:]/);
+  expect(() => permissionOverrides("[unexpected]\nenabled = false")).toThrow();
   const verifier = sandboxCommand(
     await loadProfile(),
     "/private/tmp/random/game",
     "/opt/homebrew/bin/node",
     ["test/check.mjs"],
   );
-  expect(verifier).toContain(
-    'permissions.hotfix.filesystem.":workspace_roots"."test" = "read"',
-  );
+  expect(verifier).toEqual(expect.arrayContaining(overrides));
   expect(verifier).toContain("hotfix");
 });
 
@@ -102,12 +96,26 @@ it("uses real SDK streaming, raw config overrides and stripped exec flags with a
     expect(actual.args).not.toContain("--sandbox");
     expect(actual.args).toContain("--output-schema");
     expect(actual.args).toContain('default_permissions = "hotfix"');
+    expect(actual.args).toEqual(
+      expect.arrayContaining(permissionOverrides(await loadProfile())),
+    );
     expect(actual.env.HOME).toBe(home);
     expect(actual.env.CODEX_HOME).toBe("/real/auth/home");
     expect(actual.env.OPENAI_API_KEY).toBeUndefined();
   } finally {
     await rm(scratch, { recursive: true, force: true });
   }
+});
+
+it("does not mistake the PATH-alias warning for a fatal sandbox denial", () => {
+  expect(
+    isSandboxFailure(
+      "WARNING: proceeding, even though we could not create PATH aliases: Operation not permitted (os error 1)\nError loading config.toml: data did not match any variant of untagged enum FilesystemPermissionToml",
+    ),
+  ).toBe(false);
+  expect(
+    isSandboxFailure("sandbox-exec: sandbox_apply: Operation not permitted"),
+  ).toBe(true);
 });
 
 it("requires positive controls and actual permission denials for every canary", () => {
