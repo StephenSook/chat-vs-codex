@@ -45,6 +45,28 @@ describe("recorded deterministic replays", () => {
     if (!track) throw new Error("Missing edge track");
     expect(runTrack(track).final.edgeLandings).toBeGreaterThan(0);
   });
+  it("waits beyond coyote grace without minting an airborne jump", () => {
+    const track = TRACKS.find((candidate) => candidate.name === "late-coyote");
+    if (!track) throw new Error("Missing late-coyote track");
+    expect(runTrack(track).final.jumps).toBe(2);
+  });
+  it("expires a midair press before landing", () => {
+    const track = TRACKS.find(
+      (candidate) => candidate.name === "expired-buffer",
+    );
+    if (!track) throw new Error("Missing expired-buffer track");
+    expect(runTrack(track).final.jumps).toBe(1);
+    expect(runTrack(track).final.bufferedJumps).toBe(0);
+  });
+  it("waits beside a live ledge patrol and then reaches the flag", () => {
+    const track = TRACKS.find(
+      (candidate) => candidate.name === "enemy-ledge-patrol",
+    );
+    if (!track) throw new Error("Missing patrol track");
+    const result = runTrack(track);
+    expect(result.final.enemy.turns).toBeGreaterThan(0);
+    expect(result.final.won).toBe(true);
+  });
   it("survives 20 seconds without a terminal-state shortcut", () => {
     const result = runTrack(CANARY);
     expect(result.final.alive).toBe(true);

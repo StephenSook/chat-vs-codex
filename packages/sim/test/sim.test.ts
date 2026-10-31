@@ -26,6 +26,7 @@ describe("fixed timestep simulation", () => {
     const state = createState(42);
     const before = structuredClone(state);
     Object.freeze(state.rng);
+    Object.freeze(state.enemy);
     Object.freeze(state);
     step(state, INPUT.RIGHT | INPUT.JUMP);
     expect(state).toEqual(before);
@@ -49,6 +50,17 @@ describe("fixed timestep simulation", () => {
     );
     expect(falling.y).toBe(296 * UNIT);
     expect(falling.vy).toBe(0);
+  });
+  it("does not translate an idle player sideways during vertical depenetration", () => {
+    const state = {
+      ...createState(),
+      x: 79 * UNIT,
+      y: 298 * UNIT,
+      grounded: false,
+    };
+    const next = step(state, 0);
+    expect(next.x).toBe(state.x);
+    expect(next.y).toBe(296 * UNIT);
   });
   it("allows coyote jumps only inside the grace window", () => {
     const inAir = {
@@ -89,5 +101,65 @@ describe("fixed timestep simulation", () => {
     expect(a).toEqual(b);
     expect(hashState(a)).toBe(hashState(b));
     expect([a.x, a.y, a.vx, a.vy].every(Number.isInteger)).toBe(true);
+  });
+  it("uses ground settling, slower rising gravity and faster falling gravity", () => {
+    const state = { ...createState(), y: 180 * UNIT };
+    expect(step(state, 0).vy).toBe(128);
+    expect(step({ ...state, grounded: false, vy: -UNIT }, 0).vy).toBe(-160);
+    expect(step({ ...state, grounded: false, vy: UNIT }, 0).vy).toBe(448);
+  });
+  it("accelerates air control and uses relative footing on moving platforms", () => {
+    const state = {
+      ...createState(),
+      x: 520 * UNIT,
+      y: 180 * UNIT,
+      grounded: false,
+    };
+    expect(step(state, INPUT.RIGHT).vx).toBe(UNIT);
+    expect(step({ ...state, vx: 3 * UNIT }, INPUT.RIGHT).vx).toBe(4 * UNIT);
+    expect(step({ ...state, vx: -3 * UNIT }, INPUT.LEFT).vx).toBe(-4 * UNIT);
+    expect(
+      step({ ...state, grounded: true, platform: true }, INPUT.RIGHT).vx,
+    ).toBe(2 * UNIT);
+    expect(
+      step({ ...state, grounded: true, platform: true }, INPUT.LEFT).vx,
+    ).toBe(-2 * UNIT);
+  });
+  it("expires coyote time and pending presses while airborne", () => {
+    const state = {
+      ...createState(),
+      y: 120 * UNIT,
+      grounded: false,
+      coyote: 1,
+      buffer: 1,
+    };
+    const next = step(state, 0);
+    expect(next.coyote).toBe(0);
+    expect(next.buffer).toBe(0);
+    expect(next.jumps).toBe(0);
+  });
+  it("turns the patrol before a ledge and keeps its immutable state in the hash", () => {
+    let state = createState();
+    for (let frame = 0; frame < 1200; frame++) {
+      state = step(state, 0);
+      expect(state.enemy.y).toBe(232 * UNIT);
+      expect(state.enemy.x).toBeGreaterThanOrEqual(736 * UNIT);
+      expect(state.enemy.x).toBeLessThanOrEqual(844 * UNIT);
+    }
+    expect(state.enemy.turns).toBeGreaterThan(0);
+    expect(
+      hashState({
+        ...state,
+        enemy: { ...state.enemy, direction: -state.enemy.direction },
+      }),
+    ).not.toBe(hashState(state));
+  });
+  it("kills the player on contact with an enemy", () => {
+    const state = createState();
+    const hit = step(
+      { ...state, x: state.enemy.x, y: state.enemy.y, grounded: false },
+      0,
+    );
+    expect(hit.alive).toBe(false);
   });
 });

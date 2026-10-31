@@ -1,59 +1,179 @@
 {
   "schemaVersion": 1,
   "instrumenterVersion": "9.3.0",
-  "sourceDigest": "7c2cf6dcfbd720e3a1924d927c86939c3d99c56ad175a20bcc16c19a23344a5f",
-  "candidateCount": 107,
+  "sourceDigest": "18003dafdbc232283bfcd918431f4aa20772c31414df5af5d28153b5aba0810c",
+  "candidateCount": 160,
   "rejectedByStage": {
-    "invisible": 1,
-    "replay-budget": 5,
-    "survived": 33,
-    "typecheck": 19,
-    "unsurvivable": 31
+    "invisible": 12,
+    "replay-budget": 7,
+    "survived": 31,
+    "typecheck": 27,
+    "unsurvivable": 30
   },
   "mutants": [
     {
-      "id": "de7a4f6fc4035978",
+      "id": "1c1a4616b28c90c5",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 4,
+          "line": 56
+        },
+        "end": {
+          "column": 17,
+          "line": 56
+        }
+      },
+      "original": "a.x + a.width",
+      "replacement": "a.x - a.width",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "06a70da08b26f8e8",
       "file": "packages/sim/src/index.ts",
       "site": "collision",
       "mutator": "ConditionalExpression",
       "location": {
         "start": {
           "column": 4,
-          "line": 50
+          "line": 57
         },
         "end": {
           "column": 24,
-          "line": 50
+          "line": 57
         }
       },
-      "original": "a.y + a.height > b.y",
+      "original": "a.y < b.y + b.height",
       "replacement": "true",
       "family": "other",
       "failedReplays": [
         "clean-flag",
         "buffered-landing",
-        "moving-edge"
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
       ],
       "evidence": [
         {
           "name": "clean-flag",
           "failed": true,
-          "firstDivergence": 79,
-          "visibleFrame": 79,
+          "firstDivergence": 222,
+          "visibleFrame": 222,
           "symptom": "The player dies before reaching the flag."
         },
         {
           "name": "buffered-landing",
           "failed": true,
-          "firstDivergence": 79,
-          "visibleFrame": 79,
+          "firstDivergence": 216,
+          "visibleFrame": 216,
           "symptom": "The player dies before reaching the flag."
         },
         {
           "name": "moving-edge",
           "failed": true,
-          "firstDivergence": 79,
-          "visibleFrame": 79,
+          "firstDivergence": 227,
+          "visibleFrame": 227,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 210,
+          "visibleFrame": 210,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 222,
+          "visibleFrame": 222,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 267,
+          "visibleFrame": 267,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 236,
+          "visibleFrame": 236,
           "symptom": "The player dies before reaching the flag."
         }
       ],
@@ -68,18 +188,106 @@
       }
     },
     {
-      "id": "93de29271c997887",
+      "id": "bafbc6fb23db7a42",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 4,
+          "line": 58
+        },
+        "end": {
+          "column": 24,
+          "line": 58
+        }
+      },
+      "original": "a.y + a.height > b.y",
+      "replacement": "true",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 70,
+          "visibleFrame": 70,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 70,
+          "visibleFrame": 70,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 70,
+          "visibleFrame": 70,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 70,
+          "visibleFrame": 70,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 70,
+          "visibleFrame": 70,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 70,
+          "visibleFrame": 70,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 89,
+          "visibleFrame": 89,
+          "symptom": "The player dies before reaching the flag."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "930845492efefa00",
       "file": "packages/sim/src/index.ts",
       "site": "collision",
       "mutator": "EqualityOperator",
       "location": {
         "start": {
           "column": 4,
-          "line": 50
+          "line": 58
         },
         "end": {
           "column": 24,
-          "line": 50
+          "line": 58
         }
       },
       "original": "a.y + a.height > b.y",
@@ -88,28 +296,60 @@
       "failedReplays": [
         "clean-flag",
         "buffered-landing",
-        "moving-edge"
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
       ],
       "evidence": [
         {
           "name": "clean-flag",
           "failed": true,
-          "firstDivergence": 81,
-          "visibleFrame": 81,
+          "firstDivergence": 87,
+          "visibleFrame": 87,
           "symptom": "The player dies before reaching the flag."
         },
         {
           "name": "buffered-landing",
           "failed": true,
-          "firstDivergence": 81,
-          "visibleFrame": 81,
+          "firstDivergence": 87,
+          "visibleFrame": 87,
           "symptom": "The player dies before reaching the flag."
         },
         {
           "name": "moving-edge",
           "failed": true,
-          "firstDivergence": 81,
-          "visibleFrame": 81,
+          "firstDivergence": 87,
+          "visibleFrame": 87,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 87,
+          "visibleFrame": 87,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 87,
+          "visibleFrame": 87,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 87,
+          "visibleFrame": 87,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 107,
+          "visibleFrame": 107,
           "symptom": "The player dies before reaching the flag."
         }
       ],
@@ -124,18 +364,18 @@
       }
     },
     {
-      "id": "e19c7baf91c301dc",
+      "id": "7539d22a5c5217c5",
       "file": "packages/sim/src/index.ts",
       "site": "collision",
       "mutator": "ArithmeticOperator",
       "location": {
         "start": {
           "column": 4,
-          "line": 50
+          "line": 58
         },
         "end": {
           "column": 18,
-          "line": 50
+          "line": 58
         }
       },
       "original": "a.y + a.height",
@@ -144,28 +384,60 @@
       "failedReplays": [
         "clean-flag",
         "buffered-landing",
-        "moving-edge"
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
       ],
       "evidence": [
         {
           "name": "clean-flag",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 11,
+          "visibleFrame": 9,
           "symptom": "The player falls below the expected landing."
         },
         {
           "name": "buffered-landing",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 11,
+          "visibleFrame": 9,
           "symptom": "The player falls below the expected landing."
         },
         {
           "name": "moving-edge",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 11,
+          "visibleFrame": 9,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 9,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 9,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 9,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 9,
           "symptom": "The player falls below the expected landing."
         }
       ],
@@ -180,18 +452,106 @@
       }
     },
     {
-      "id": "b7a2a3359d746a7c",
+      "id": "52953a3a6489ff68",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 47,
+          "line": 64
+        },
+        "end": {
+          "column": 63,
+          "line": 64
+        }
+      },
+      "original": "x + PLAYER_WIDTH",
+      "replacement": "x - PLAYER_WIDTH",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "5e186529987db7b7",
       "file": "packages/sim/src/index.ts",
       "site": "collision",
       "mutator": "ArithmeticOperator",
       "location": {
         "start": {
           "column": 48,
-          "line": 58
+          "line": 66
         },
         "end": {
           "column": 65,
-          "line": 58
+          "line": 66
         }
       },
       "original": "y + PLAYER_HEIGHT",
@@ -200,28 +560,60 @@
       "failedReplays": [
         "clean-flag",
         "buffered-landing",
-        "moving-edge"
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
       ],
       "evidence": [
         {
           "name": "clean-flag",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 11,
+          "visibleFrame": 9,
           "symptom": "The player falls below the expected landing."
         },
         {
           "name": "buffered-landing",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 11,
+          "visibleFrame": 9,
           "symptom": "The player falls below the expected landing."
         },
         {
           "name": "moving-edge",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 11,
+          "visibleFrame": 9,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 9,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 9,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 9,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 9,
           "symptom": "The player falls below the expected landing."
         }
       ],
@@ -236,18 +628,18 @@
       }
     },
     {
-      "id": "db4b607a66c51f96",
+      "id": "4b4a57f93abbaecf",
       "file": "packages/sim/src/index.ts",
       "site": "collision",
       "mutator": "EqualityOperator",
       "location": {
         "start": {
           "column": 23,
-          "line": 59
+          "line": 67
         },
         "end": {
           "column": 34,
-          "line": 59
+          "line": 67
         }
       },
       "original": "row <= maxY",
@@ -256,28 +648,60 @@
       "failedReplays": [
         "clean-flag",
         "buffered-landing",
-        "moving-edge"
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
       ],
       "evidence": [
         {
           "name": "clean-flag",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 42,
+          "visibleFrame": 9,
           "symptom": "The player falls below the expected landing."
         },
         {
           "name": "buffered-landing",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 42,
+          "visibleFrame": 9,
           "symptom": "The player falls below the expected landing."
         },
         {
           "name": "moving-edge",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 42,
+          "visibleFrame": 9,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 9,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 9,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 9,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 9,
           "symptom": "The player falls below the expected landing."
         }
       ],
@@ -292,18 +716,18 @@
       }
     },
     {
-      "id": "e04b27ff2c2abe01",
+      "id": "d0b5750b22f7f8c5",
       "file": "packages/sim/src/index.ts",
       "site": "collision",
       "mutator": "EqualityOperator",
       "location": {
         "start": {
           "column": 28,
-          "line": 60
+          "line": 68
         },
         "end": {
           "column": 42,
-          "line": 60
+          "line": 68
         }
       },
       "original": "column <= maxX",
@@ -312,28 +736,60 @@
       "failedReplays": [
         "clean-flag",
         "buffered-landing",
-        "moving-edge"
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
       ],
       "evidence": [
         {
           "name": "clean-flag",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 5,
+          "visibleFrame": 4,
           "symptom": "The player falls behind the expected route."
         },
         {
           "name": "buffered-landing",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 5,
+          "visibleFrame": 4,
           "symptom": "The player falls behind the expected route."
         },
         {
           "name": "moving-edge",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 5,
+          "visibleFrame": 4,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 4,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 4,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 4,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 4,
           "symptom": "The player falls behind the expected route."
         }
       ],
@@ -348,18 +804,194 @@
       }
     },
     {
-      "id": "964a5b8302ea1243",
+      "id": "2758441f314da52d",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 82
+        },
+        "end": {
+          "column": 14,
+          "line": 82
+        }
+      },
+      "original": "vx === 0",
+      "replacement": "true",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "9fe2c76e68a10ba4",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "EqualityOperator",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 82
+        },
+        "end": {
+          "column": 14,
+          "line": 82
+        }
+      },
+      "original": "vx === 0",
+      "replacement": "vx !== 0",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "53ebde0aa19d20f3",
       "file": "packages/sim/src/index.ts",
       "site": "collision",
       "mutator": "ArithmeticOperator",
       "location": {
         "start": {
           "column": 15,
-          "line": 74
+          "line": 83
         },
         "end": {
           "column": 21,
-          "line": 74
+          "line": 83
         }
       },
       "original": "x + vx",
@@ -368,7 +1000,11 @@
       "failedReplays": [
         "clean-flag",
         "buffered-landing",
-        "moving-edge"
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
       ],
       "evidence": [
         {
@@ -391,6 +1027,34 @@
           "firstDivergence": 1,
           "visibleFrame": 6,
           "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
         }
       ],
       "gates": {
@@ -404,18 +1068,428 @@
       }
     },
     {
-      "id": "2c4efa412be476b7",
+      "id": "ed5149ba48585fbb",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 86
+        },
+        "end": {
+          "column": 7,
+          "line": 89
+        }
+      },
+      "original": "overlaps(\n        { x: result, y, width: PLAYER_WIDTH, height: PLAYER_HEIGHT },\n        tile,\n      )",
+      "replacement": "false",
+      "family": "other",
+      "failedReplays": [
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "buffered-landing",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "moving-edge",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "late-coyote",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "expired-buffer",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 47,
+          "visibleFrame": 47,
+          "symptom": "The player drifts upward while airborne."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "f38bd798bac25938",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "BlockStatement",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 90
+        },
+        "end": {
+          "column": 5,
+          "line": 92
+        }
+      },
+      "original": "{\n      result = vx > 0 ? tile.x - PLAYER_WIDTH : tile.x + tile.width;\n    }",
+      "replacement": "{}",
+      "family": "other",
+      "failedReplays": [
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "buffered-landing",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "moving-edge",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "late-coyote",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "expired-buffer",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 47,
+          "visibleFrame": 47,
+          "symptom": "The player drifts upward while airborne."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "f3a53cff57f7f335",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 15,
+          "line": 91
+        },
+        "end": {
+          "column": 21,
+          "line": 91
+        }
+      },
+      "original": "vx > 0",
+      "replacement": "false",
+      "family": "other",
+      "failedReplays": [
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "buffered-landing",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "moving-edge",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "late-coyote",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "expired-buffer",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 47,
+          "visibleFrame": 47,
+          "symptom": "The player overshoots the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "848d3976acbce95e",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "EqualityOperator",
+      "location": {
+        "start": {
+          "column": 15,
+          "line": 91
+        },
+        "end": {
+          "column": 21,
+          "line": 91
+        }
+      },
+      "original": "vx > 0",
+      "replacement": "vx <= 0",
+      "family": "other",
+      "failedReplays": [
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "buffered-landing",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "moving-edge",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "late-coyote",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "expired-buffer",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 47,
+          "visibleFrame": 47,
+          "symptom": "The player overshoots the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "726d6b59feab2949",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 24,
+          "line": 91
+        },
+        "end": {
+          "column": 45,
+          "line": 91
+        }
+      },
+      "original": "tile.x - PLAYER_WIDTH",
+      "replacement": "tile.x + PLAYER_WIDTH",
+      "family": "other",
+      "failedReplays": [
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "buffered-landing",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "moving-edge",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "late-coyote",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "expired-buffer",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 47,
+          "visibleFrame": 47,
+          "symptom": "The player overshoots the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "9810bc5048fba5e2",
       "file": "packages/sim/src/index.ts",
       "site": "collision",
       "mutator": "ArithmeticOperator",
       "location": {
         "start": {
           "column": 15,
-          "line": 92
+          "line": 101
         },
         "end": {
           "column": 21,
-          "line": 92
+          "line": 101
         }
       },
       "original": "y + vy",
@@ -424,29 +1498,61 @@
       "failedReplays": [
         "clean-flag",
         "buffered-landing",
-        "moving-edge"
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
       ],
       "evidence": [
         {
           "name": "clean-flag",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 47,
-          "symptom": "The player falls below the expected landing."
+          "visibleFrame": 27,
+          "symptom": "The player overshoots the expected route."
         },
         {
           "name": "buffered-landing",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 47,
-          "symptom": "The player falls below the expected landing."
+          "visibleFrame": 27,
+          "symptom": "The player overshoots the expected route."
         },
         {
           "name": "moving-edge",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 47,
-          "symptom": "The player falls below the expected landing."
+          "visibleFrame": 27,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 27,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 27,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 27,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 27,
+          "symptom": "The player overshoots the expected route."
         }
       ],
       "gates": {
@@ -460,18 +1566,18 @@
       }
     },
     {
-      "id": "f36b1854c741624e",
+      "id": "7f5ec81caf256935",
       "file": "packages/sim/src/index.ts",
       "site": "collision",
       "mutator": "BooleanLiteral",
       "location": {
         "start": {
           "column": 17,
-          "line": 93
+          "line": 102
         },
         "end": {
           "column": 22,
-          "line": 93
+          "line": 102
         }
       },
       "original": "false",
@@ -480,7 +1586,11 @@
       "failedReplays": [
         "clean-flag",
         "buffered-landing",
-        "moving-edge"
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
       ],
       "evidence": [
         {
@@ -503,6 +1613,34 @@
           "firstDivergence": 41,
           "visibleFrame": 45,
           "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 41,
+          "visibleFrame": 45,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 41,
+          "visibleFrame": 45,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 41,
+          "visibleFrame": 45,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 61,
+          "visibleFrame": 65,
+          "symptom": "The player falls below the expected landing."
         }
       ],
       "gates": {
@@ -516,18 +1654,106 @@
       }
     },
     {
-      "id": "1f9a5b03bb4e5508",
+      "id": "d3367df62fd39d59",
+      "file": "packages/sim/src/index.ts",
+      "site": "collision",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 17,
+          "line": 111
+        },
+        "end": {
+          "column": 39,
+          "line": 111
+        }
+      },
+      "original": "tile.y - PLAYER_HEIGHT",
+      "replacement": "tile.y + PLAYER_HEIGHT",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 1,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 1,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 1,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 1,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 1,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 1,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 1,
+          "symptom": "The player falls below the expected landing."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "b862c3a479900306",
       "file": "packages/sim/src/index.ts",
       "site": "collision",
       "mutator": "BooleanLiteral",
       "location": {
         "start": {
           "column": 19,
-          "line": 103
+          "line": 112
         },
         "end": {
           "column": 23,
-          "line": 103
+          "line": 112
         }
       },
       "original": "true",
@@ -536,29 +1762,61 @@
       "failedReplays": [
         "clean-flag",
         "buffered-landing",
-        "moving-edge"
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
       ],
       "evidence": [
         {
           "name": "clean-flag",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 44,
-          "symptom": "The player falls below the expected landing."
+          "visibleFrame": 34,
+          "symptom": "The player overshoots the expected route."
         },
         {
           "name": "buffered-landing",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 44,
-          "symptom": "The player falls below the expected landing."
+          "visibleFrame": 34,
+          "symptom": "The player overshoots the expected route."
         },
         {
           "name": "moving-edge",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 44,
-          "symptom": "The player falls below the expected landing."
+          "visibleFrame": 34,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 34,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 34,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 34,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 34,
+          "symptom": "The player overshoots the expected route."
         }
       ],
       "gates": {
@@ -572,18 +1830,18 @@
       }
     },
     {
-      "id": "d24985be96faa3dc",
+      "id": "621cb6b359b27b85",
       "file": "packages/sim/src/index.ts",
       "site": "input",
       "mutator": "ConditionalExpression",
       "location": {
         "start": {
           "column": 15,
-          "line": 113
+          "line": 122
         },
         "end": {
           "column": 41,
-          "line": 113
+          "line": 122
         }
       },
       "original": "(input & INPUT.LEFT) !== 0",
@@ -592,7 +1850,11 @@
       "failedReplays": [
         "clean-flag",
         "buffered-landing",
-        "moving-edge"
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
       ],
       "evidence": [
         {
@@ -615,6 +1877,34 @@
           "firstDivergence": 1,
           "visibleFrame": 11,
           "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
         }
       ],
       "gates": {
@@ -628,18 +1918,100 @@
       }
     },
     {
-      "id": "05279a7d4da420e3",
+      "id": "6e71fa5d018eabdf",
+      "file": "packages/sim/src/index.ts",
+      "site": "input",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 15,
+          "line": 122
+        },
+        "end": {
+          "column": 41,
+          "line": 122
+        }
+      },
+      "original": "(input & INPUT.LEFT) !== 0",
+      "replacement": "false",
+      "family": "other",
+      "failedReplays": [
+        "moving-edge"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "buffered-landing",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 140,
+          "visibleFrame": 156,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "expired-buffer",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "wall-contact",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "6121421652b513e6",
       "file": "packages/sim/src/index.ts",
       "site": "input",
       "mutator": "EqualityOperator",
       "location": {
         "start": {
           "column": 15,
-          "line": 113
+          "line": 122
         },
         "end": {
           "column": 41,
-          "line": 113
+          "line": 122
         }
       },
       "original": "(input & INPUT.LEFT) !== 0",
@@ -648,7 +2020,11 @@
       "failedReplays": [
         "clean-flag",
         "buffered-landing",
-        "moving-edge"
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
       ],
       "evidence": [
         {
@@ -671,6 +2047,34 @@
           "firstDivergence": 1,
           "visibleFrame": 11,
           "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
         }
       ],
       "gates": {
@@ -684,18 +2088,18 @@
       }
     },
     {
-      "id": "31b8707a7e65479d",
+      "id": "9164fc5b9e3d93d6",
       "file": "packages/sim/src/index.ts",
       "site": "input",
       "mutator": "ConditionalExpression",
       "location": {
         "start": {
           "column": 16,
-          "line": 114
+          "line": 123
         },
         "end": {
           "column": 43,
-          "line": 114
+          "line": 123
         }
       },
       "original": "(input & INPUT.RIGHT) !== 0",
@@ -704,7 +2108,11 @@
       "failedReplays": [
         "clean-flag",
         "buffered-landing",
-        "moving-edge"
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
       ],
       "evidence": [
         {
@@ -727,58 +2135,30 @@
           "firstDivergence": 1,
           "visibleFrame": 11,
           "symptom": "The player falls behind the expected route."
-        }
-      ],
-      "gates": {
-        "typecheck": true,
-        "differentMinifiedOutput": true,
-        "killed": true,
-        "visible": true,
-        "frameBudget": 3600,
-        "processBudgetMs": 3000,
-        "canaryFrames": 1200
-      }
-    },
-    {
-      "id": "1914336c4f42aa32",
-      "file": "packages/sim/src/index.ts",
-      "site": "input",
-      "mutator": "EqualityOperator",
-      "location": {
-        "start": {
-          "column": 16,
-          "line": 114
         },
-        "end": {
-          "column": 43,
-          "line": 114
-        }
-      },
-      "original": "(input & INPUT.RIGHT) !== 0",
-      "replacement": "(input & INPUT.RIGHT) === 0",
-      "family": "other",
-      "failedReplays": [
-        "clean-flag",
-        "buffered-landing",
-        "moving-edge"
-      ],
-      "evidence": [
         {
-          "name": "clean-flag",
+          "name": "late-coyote",
           "failed": true,
           "firstDivergence": 1,
           "visibleFrame": 11,
           "symptom": "The player falls behind the expected route."
         },
         {
-          "name": "buffered-landing",
+          "name": "expired-buffer",
           "failed": true,
           "firstDivergence": 1,
           "visibleFrame": 11,
           "symptom": "The player falls behind the expected route."
         },
         {
-          "name": "moving-edge",
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 11,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "wall-contact",
           "failed": true,
           "firstDivergence": 1,
           "visibleFrame": 11,
@@ -796,18 +2176,18 @@
       }
     },
     {
-      "id": "0a1b378d2e836555",
+      "id": "327e4aad82d92e86",
       "file": "packages/sim/src/index.ts",
       "site": "input",
       "mutator": "ArithmeticOperator",
       "location": {
         "start": {
           "column": 20,
-          "line": 115
+          "line": 124
         },
         "end": {
           "column": 32,
-          "line": 115
+          "line": 124
         }
       },
       "original": "left - right",
@@ -816,7 +2196,11 @@
       "failedReplays": [
         "clean-flag",
         "buffered-landing",
-        "moving-edge"
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
       ],
       "evidence": [
         {
@@ -839,6 +2223,34 @@
           "firstDivergence": 1,
           "visibleFrame": 6,
           "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
         }
       ],
       "gates": {
@@ -852,18 +2264,449 @@
       }
     },
     {
-      "id": "c857b1572ff845d3",
+      "id": "56547a79ae1d5a30",
+      "file": "packages/sim/src/index.ts",
+      "site": "input",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 126
+        },
+        "end": {
+          "column": 20,
+          "line": 126
+        }
+      },
+      "original": "state.platform",
+      "replacement": "true",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 33,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 33,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 33,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 33,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 33,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 33,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 33,
+          "symptom": "The player falls behind the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "64b0bfc2d27ec61f",
+      "file": "packages/sim/src/index.ts",
+      "site": "input",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 126
+        },
+        "end": {
+          "column": 20,
+          "line": 126
+        }
+      },
+      "original": "state.platform",
+      "replacement": "false",
+      "family": "other",
+      "failedReplays": [
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 130,
+          "visibleFrame": 148,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 140,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 140,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "expired-buffer",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "wall-contact",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "dfb952cc8ef4c99c",
       "file": "packages/sim/src/index.ts",
       "site": "input",
       "mutator": "ArithmeticOperator",
       "location": {
         "start": {
-          "column": 9,
-          "line": 116
+          "column": 29,
+          "line": 126
         },
         "end": {
-          "column": 30,
-          "line": 116
+          "column": 59,
+          "line": 126
+        }
+      },
+      "original": "0 - direction * PLATFORM_SPEED",
+      "replacement": "0 + direction * PLATFORM_SPEED",
+      "family": "swapped-controls",
+      "failedReplays": [
+        "buffered-landing",
+        "late-coyote"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 130,
+          "visibleFrame": 138,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": false,
+          "firstDivergence": 140,
+          "visibleFrame": 149,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 140,
+          "visibleFrame": 145,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "wall-contact",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "531516b3123fb9e4",
+      "file": "packages/sim/src/index.ts",
+      "site": "input",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 127
+        },
+        "end": {
+          "column": 20,
+          "line": 127
+        }
+      },
+      "original": "state.grounded",
+      "replacement": "true",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 74,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 74,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 74,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 74,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 74,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 74,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 62,
+          "visibleFrame": 97,
+          "symptom": "The player falls behind the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "6d913c960ddd3ce6",
+      "file": "packages/sim/src/index.ts",
+      "site": "input",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 127
+        },
+        "end": {
+          "column": 20,
+          "line": 127
+        }
+      },
+      "original": "state.grounded",
+      "replacement": "false",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 115,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 179,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 141,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 141,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 115,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 115,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 140,
+          "symptom": "The player overshoots the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "cd8c0ba3bfdfd927",
+      "file": "packages/sim/src/index.ts",
+      "site": "input",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 29,
+          "line": 127
+        },
+        "end": {
+          "column": 50,
+          "line": 127
         }
       },
       "original": "0 - direction * SPEED",
@@ -872,7 +2715,11 @@
       "failedReplays": [
         "clean-flag",
         "buffered-landing",
-        "moving-edge"
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
       ],
       "evidence": [
         {
@@ -895,6 +2742,34 @@
           "firstDivergence": 1,
           "visibleFrame": 6,
           "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The player falls behind the expected route."
         }
       ],
       "gates": {
@@ -908,48 +2783,432 @@
       }
     },
     {
-      "id": "3cd2d0ca23494a0e",
+      "id": "ebfb847f4b65bdd0",
       "file": "packages/sim/src/index.ts",
-      "site": "physics",
-      "mutator": "MethodExpression",
+      "site": "input",
+      "mutator": "ArithmeticOperator",
       "location": {
         "start": {
-          "column": 9,
-          "line": 122
+          "column": 17,
+          "line": 128
         },
         "end": {
           "column": 42,
-          "line": 122
+          "line": 128
         }
       },
-      "original": "Math.min(vy + GRAVITY, 12 * UNIT)",
-      "replacement": "Math.max(vy + GRAVITY, 12 * UNIT)",
+      "original": "0 - direction * AIR_SPEED",
+      "replacement": "0 + direction * AIR_SPEED",
+      "family": "swapped-controls",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 48,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 48,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 48,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 48,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 48,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 48,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 62,
+          "visibleFrame": 69,
+          "symptom": "The player falls behind the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "40b4e3a542f99962",
+      "file": "packages/sim/src/index.ts",
+      "site": "input",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 23,
+          "line": 130
+        },
+        "end": {
+          "column": 43,
+          "line": 130
+        }
+      },
+      "original": "state.vx + AIR_ACCEL",
+      "replacement": "state.vx - AIR_ACCEL",
       "family": "other",
       "failedReplays": [
         "clean-flag",
         "buffered-landing",
-        "moving-edge"
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
       ],
       "evidence": [
         {
           "name": "clean-flag",
           "failed": true,
           "firstDivergence": 42,
-          "visibleFrame": 44,
+          "visibleFrame": 48,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 48,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 48,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 48,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 48,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 48,
+          "symptom": "The player falls behind the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 62,
+          "visibleFrame": 69,
+          "symptom": "The player falls behind the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "c32f4fae0b68ece2",
+      "file": "packages/sim/src/index.ts",
+      "site": "input",
+      "mutator": "MethodExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 131
+        },
+        "end": {
+          "column": 44,
+          "line": 131
+        }
+      },
+      "original": "Math.max(target, state.vx - AIR_ACCEL)",
+      "replacement": "Math.min(target, state.vx - AIR_ACCEL)",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 43,
+          "visibleFrame": 87,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 43,
+          "visibleFrame": 87,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 43,
+          "visibleFrame": 87,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 43,
+          "visibleFrame": 87,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 43,
+          "visibleFrame": 87,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 43,
+          "visibleFrame": 87,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 63,
+          "visibleFrame": 107,
+          "symptom": "The player dies before reaching the flag."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "9ef29fa627d553c2",
+      "file": "packages/sim/src/index.ts",
+      "site": "input",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 23,
+          "line": 131
+        },
+        "end": {
+          "column": 43,
+          "line": 131
+        }
+      },
+      "original": "state.vx - AIR_ACCEL",
+      "replacement": "state.vx + AIR_ACCEL",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 43,
+          "visibleFrame": 50,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 43,
+          "visibleFrame": 50,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 43,
+          "visibleFrame": 50,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 43,
+          "visibleFrame": 50,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 43,
+          "visibleFrame": 50,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 43,
+          "visibleFrame": 50,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 63,
+          "visibleFrame": 70,
+          "symptom": "The player overshoots the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "402422820f72fe72",
+      "file": "packages/sim/src/index.ts",
+      "site": "physics",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 139
+        },
+        "end": {
+          "column": 20,
+          "line": 139
+        }
+      },
+      "original": "state.grounded",
+      "replacement": "true",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 64,
           "symptom": "The player falls below the expected landing."
         },
         {
           "name": "buffered-landing",
           "failed": true,
           "firstDivergence": 42,
-          "visibleFrame": 44,
+          "visibleFrame": 64,
           "symptom": "The player falls below the expected landing."
         },
         {
           "name": "moving-edge",
           "failed": true,
           "firstDivergence": 42,
-          "visibleFrame": 44,
+          "visibleFrame": 64,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 64,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 64,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 64,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 62,
+          "visibleFrame": 84,
           "symptom": "The player falls below the expected landing."
         }
       ],
@@ -964,18 +3223,18 @@
       }
     },
     {
-      "id": "3ea2023f768196c3",
+      "id": "87496ad157291936",
       "file": "packages/sim/src/index.ts",
       "site": "physics",
       "mutator": "ArithmeticOperator",
       "location": {
         "start": {
-          "column": 18,
-          "line": 122
+          "column": 29,
+          "line": 139
         },
         "end": {
-          "column": 30,
-          "line": 122
+          "column": 41,
+          "line": 139
         }
       },
       "original": "vy + GRAVITY",
@@ -984,29 +3243,1380 @@
       "failedReplays": [
         "clean-flag",
         "buffered-landing",
-        "moving-edge"
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
       ],
       "evidence": [
         {
           "name": "clean-flag",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 11,
+          "visibleFrame": 124,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 144,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 141,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 141,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 124,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 124,
+          "symptom": "The player overshoots the expected route."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 150,
+          "symptom": "The player overshoots the expected route."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "0c6313d61f493177",
+      "file": "packages/sim/src/index.ts",
+      "site": "physics",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 140
+        },
+        "end": {
+          "column": 12,
+          "line": 140
+        }
+      },
+      "original": "vy < 0",
+      "replacement": "true",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 81,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 81,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 81,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 81,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 81,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 81,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 89,
+          "visibleFrame": 101,
+          "symptom": "The player drifts upward while airborne."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "4399a84604fa3a2c",
+      "file": "packages/sim/src/index.ts",
+      "site": "physics",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 140
+        },
+        "end": {
+          "column": 12,
+          "line": 140
+        }
+      },
+      "original": "vy < 0",
+      "replacement": "false",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 54,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 54,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 54,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 54,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 54,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 54,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 62,
+          "visibleFrame": 74,
+          "symptom": "The player falls below the expected landing."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "6b70bd95f57cd9d3",
+      "file": "packages/sim/src/index.ts",
+      "site": "physics",
+      "mutator": "EqualityOperator",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 140
+        },
+        "end": {
+          "column": 12,
+          "line": 140
+        }
+      },
+      "original": "vy < 0",
+      "replacement": "vy >= 0",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 54,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 54,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 54,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 54,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 54,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 54,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 62,
+          "visibleFrame": 74,
+          "symptom": "The player falls below the expected landing."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "f3376568ff47da9f",
+      "file": "packages/sim/src/index.ts",
+      "site": "physics",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 21,
+          "line": 140
+        },
+        "end": {
+          "column": 38,
+          "line": 140
+        }
+      },
+      "original": "vy + RISE_GRAVITY",
+      "replacement": "vy - RISE_GRAVITY",
+      "family": "gravity-sign",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 50,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 50,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 50,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 50,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 50,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 50,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 62,
+          "visibleFrame": 70,
+          "symptom": "The player drifts upward while airborne."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "1254267b567428d5",
+      "file": "packages/sim/src/index.ts",
+      "site": "physics",
+      "mutator": "MethodExpression",
+      "location": {
+        "start": {
+          "column": 9,
+          "line": 141
+        },
+        "end": {
+          "column": 47,
+          "line": 141
+        }
+      },
+      "original": "Math.min(vy + FALL_GRAVITY, 12 * UNIT)",
+      "replacement": "Math.max(vy + FALL_GRAVITY, 12 * UNIT)",
+      "family": "other",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 71,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 71,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 71,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 71,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 71,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 71,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 89,
+          "visibleFrame": 91,
+          "symptom": "The player falls below the expected landing."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "7a2ed5a55c5fe570",
+      "file": "packages/sim/src/index.ts",
+      "site": "physics",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 18,
+          "line": 141
+        },
+        "end": {
+          "column": 35,
+          "line": 141
+        }
+      },
+      "original": "vy + FALL_GRAVITY",
+      "replacement": "vy - FALL_GRAVITY",
+      "family": "gravity-sign",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 77,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 77,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 77,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 77,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 77,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 69,
+          "visibleFrame": 77,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 89,
+          "visibleFrame": 97,
+          "symptom": "The player drifts upward while airborne."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "f67b6d49e59c1578",
+      "file": "packages/sim/src/index.ts",
+      "site": "coyote",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 54,
+          "line": 147
+        },
+        "end": {
+          "column": 70,
+          "line": 147
+        }
+      },
+      "original": "state.coyote - 1",
+      "replacement": "state.coyote + 1",
+      "family": "coyote-never-expires",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 85,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 149,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": 66,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 42,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "wall-contact",
+          "failed": false,
+          "firstDivergence": 62,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "cf88c789427c8f48",
+      "file": "packages/sim/src/index.ts",
+      "site": "buffer",
+      "mutator": "LogicalOperator",
+      "location": {
+        "start": {
+          "column": 9,
+          "line": 153
+        },
+        "end": {
+          "column": 35,
+          "line": 153
+        }
+      },
+      "original": "pressed && !state.jumpHeld",
+      "replacement": "pressed || !state.jumpHeld",
+      "family": "jump-buffer",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 4,
           "symptom": "The player drifts upward while airborne."
         },
         {
           "name": "buffered-landing",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 11,
+          "visibleFrame": 4,
           "symptom": "The player drifts upward while airborne."
         },
         {
           "name": "moving-edge",
           "failed": true,
           "firstDivergence": 1,
-          "visibleFrame": 11,
+          "visibleFrame": 4,
           "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 4,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 4,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 4,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 4,
+          "symptom": "The player drifts upward while airborne."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "cdbf3488de9fc74f",
+      "file": "packages/sim/src/index.ts",
+      "site": "buffer",
+      "mutator": "BooleanLiteral",
+      "location": {
+        "start": {
+          "column": 20,
+          "line": 153
+        },
+        "end": {
+          "column": 35,
+          "line": 153
+        }
+      },
+      "original": "!state.jumpHeld",
+      "replacement": "state.jumpHeld",
+      "family": "jump-buffer",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 41,
+          "visibleFrame": 44,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 41,
+          "visibleFrame": 44,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 41,
+          "visibleFrame": 44,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 41,
+          "visibleFrame": 44,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 41,
+          "visibleFrame": 44,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 41,
+          "visibleFrame": 44,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 61,
+          "visibleFrame": 64,
+          "symptom": "The player falls below the expected landing."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "49c73acb9cc5730c",
+      "file": "packages/sim/src/index.ts",
+      "site": "buffer",
+      "mutator": "MethodExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 155
+        },
+        "end": {
+          "column": 35,
+          "line": 155
+        }
+      },
+      "original": "Math.max(0, state.buffer - 1)",
+      "replacement": "Math.min(0, state.buffer - 1)",
+      "family": "jump-buffer",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 91,
+          "symptom": "The player falls below the expected landing."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "8fe0115f4ee20d3e",
+      "file": "packages/sim/src/index.ts",
+      "site": "buffer",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 18,
+          "line": 155
+        },
+        "end": {
+          "column": 34,
+          "line": 155
+        }
+      },
+      "original": "state.buffer - 1",
+      "replacement": "state.buffer + 1",
+      "family": "jump-buffer",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 4,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 4,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 4,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 4,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 4,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 4,
+          "symptom": "The player drifts upward while airborne."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 4,
+          "symptom": "The player drifts upward while airborne."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "b6347dd92a33daae",
+      "file": "packages/sim/src/index.ts",
+      "site": "enemy",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 16,
+          "line": 161
+        },
+        "end": {
+          "column": 35,
+          "line": 161
+        }
+      },
+      "original": "enemy.direction > 0",
+      "replacement": "true",
+      "family": "enemy-ledge-turn",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 244,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 232,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 255,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 220,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 244,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 334,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 272,
+          "symptom": "The player dies before reaching the flag."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "2d70253426ef48f4",
+      "file": "packages/sim/src/index.ts",
+      "site": "enemy",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 16,
+          "line": 161
+        },
+        "end": {
+          "column": 35,
+          "line": 161
+        }
+      },
+      "original": "enemy.direction > 0",
+      "replacement": "false",
+      "family": "enemy-ledge-turn",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 173,
+          "visibleFrame": 236,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 173,
+          "visibleFrame": 230,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 173,
+          "visibleFrame": 241,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 173,
+          "visibleFrame": 224,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 173,
+          "visibleFrame": 236,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 173,
+          "visibleFrame": 281,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 173,
+          "visibleFrame": 250,
+          "symptom": "The player dies before reaching the flag."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "af04177540f805d6",
+      "file": "packages/sim/src/index.ts",
+      "site": "enemy",
+      "mutator": "EqualityOperator",
+      "location": {
+        "start": {
+          "column": 16,
+          "line": 161
+        },
+        "end": {
+          "column": 35,
+          "line": 161
+        }
+      },
+      "original": "enemy.direction > 0",
+      "replacement": "enemy.direction <= 0",
+      "family": "enemy-ledge-turn",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 172,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 166,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 177,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 159,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 172,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 172,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 185,
+          "symptom": "The player dies before reaching the flag."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "76ed706301ed5b37",
+      "file": "packages/sim/src/index.ts",
+      "site": "enemy",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 38,
+          "line": 165
+        },
+        "end": {
+          "column": 57,
+          "line": 165
+        }
+      },
+      "original": "0 - enemy.direction",
+      "replacement": "0 + enemy.direction",
+      "family": "enemy-ledge-turn",
+      "failedReplays": [
+        "clean-flag",
+        "buffered-landing",
+        "moving-edge",
+        "late-coyote",
+        "expired-buffer",
+        "enemy-ledge-patrol",
+        "wall-contact"
+      ],
+      "evidence": [
+        {
+          "name": "clean-flag",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 168,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "buffered-landing",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 162,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "moving-edge",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 173,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "late-coyote",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 156,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "expired-buffer",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 168,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "enemy-ledge-patrol",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 168,
+          "symptom": "The player dies before reaching the flag."
+        },
+        {
+          "name": "wall-contact",
+          "failed": true,
+          "firstDivergence": 65,
+          "visibleFrame": 182,
+          "symptom": "The player dies before reaching the flag."
         }
       ],
       "gates": {

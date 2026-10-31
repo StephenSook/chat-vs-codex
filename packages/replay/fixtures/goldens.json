@@ -3,48 +3,48 @@
     "hashes": [
       {
         "frame": 60,
-        "hash": "f159b59a"
+        "hash": "0498c8bb"
       },
       {
         "frame": 120,
-        "hash": "3f74e0a6"
+        "hash": "67bfd962"
       },
       {
         "frame": 180,
-        "hash": "dedb92cf"
+        "hash": "7636ba4f"
       },
       {
         "frame": 240,
-        "hash": "b1313cde"
+        "hash": "7b7304ba"
       },
       {
         "frame": 300,
-        "hash": "2c6fa315"
+        "hash": "45950a24"
       },
       {
         "frame": 360,
-        "hash": "dd16769e"
+        "hash": "f07b77a5"
       },
       {
         "frame": 420,
-        "hash": "e7516eda"
+        "hash": "0a5fa299"
       },
       {
         "frame": 480,
-        "hash": "16c024b6"
+        "hash": "cde0575d"
       },
       {
         "frame": 540,
-        "hash": "3f393e97"
+        "hash": "852ec99c"
       },
       {
         "frame": 600,
-        "hash": "20ebf513"
+        "hash": "00bad9e0"
       }
     ],
     "outcome": {
       "frame": 600,
-      "x": 290560,
+      "x": 290048,
       "y": 75776,
       "alive": true,
       "won": true
@@ -54,48 +54,48 @@
     "hashes": [
       {
         "frame": 60,
-        "hash": "f159b59a"
+        "hash": "0498c8bb"
       },
       {
         "frame": 120,
-        "hash": "15cddcf7"
+        "hash": "87ce2d61"
       },
       {
         "frame": 180,
-        "hash": "0882967e"
+        "hash": "92fea8b9"
       },
       {
         "frame": 240,
-        "hash": "eb07352f"
+        "hash": "8cbe1de4"
       },
       {
         "frame": 300,
-        "hash": "6532dac4"
+        "hash": "3f200895"
       },
       {
         "frame": 360,
-        "hash": "3c6794ef"
+        "hash": "573d50b5"
       },
       {
         "frame": 420,
-        "hash": "07e3992b"
+        "hash": "4e2b42b9"
       },
       {
         "frame": 480,
-        "hash": "bf143707"
+        "hash": "7351939d"
       },
       {
         "frame": 540,
-        "hash": "9761b846"
+        "hash": "c1a95920"
       },
       {
         "frame": 600,
-        "hash": "c3347cc2"
+        "hash": "3e99e954"
       }
     ],
     "outcome": {
       "frame": 600,
-      "x": 290560,
+      "x": 289920,
       "y": 75776,
       "alive": true,
       "won": true
@@ -105,48 +105,252 @@
     "hashes": [
       {
         "frame": 60,
-        "hash": "f159b59a"
+        "hash": "0498c8bb"
       },
       {
         "frame": 120,
-        "hash": "15cddcf7"
+        "hash": "360da97c"
       },
       {
         "frame": 180,
-        "hash": "f55882b4"
+        "hash": "4be475c5"
       },
       {
         "frame": 240,
-        "hash": "cf81559b"
+        "hash": "2886a080"
       },
       {
         "frame": 300,
-        "hash": "102f868c"
+        "hash": "73469c8a"
       },
       {
         "frame": 360,
-        "hash": "e6eb9489"
+        "hash": "57673845"
       },
       {
         "frame": 420,
-        "hash": "2747a095"
+        "hash": "b353d679"
       },
       {
         "frame": 480,
-        "hash": "abc89d41"
+        "hash": "419e5ded"
       },
       {
         "frame": 540,
-        "hash": "f9b48e2c"
+        "hash": "37ee6230"
       },
       {
         "frame": 600,
-        "hash": "f2576df8"
+        "hash": "1b1b5954"
       }
     ],
     "outcome": {
       "frame": 600,
-      "x": 290432,
+      "x": 290048,
+      "y": 75776,
+      "alive": true,
+      "won": true
+    }
+  },
+  "late-coyote": {
+    "hashes": [
+      {
+        "frame": 60,
+        "hash": "0498c8bb"
+      },
+      {
+        "frame": 120,
+        "hash": "360da97c"
+      },
+      {
+        "frame": 180,
+        "hash": "929d16c3"
+      },
+      {
+        "frame": 240,
+        "hash": "fb1fb69e"
+      },
+      {
+        "frame": 300,
+        "hash": "65dcf63b"
+      },
+      {
+        "frame": 360,
+        "hash": "7efb92a3"
+      },
+      {
+        "frame": 420,
+        "hash": "0c9db207"
+      },
+      {
+        "frame": 480,
+        "hash": "9e696fbb"
+      },
+      {
+        "frame": 540,
+        "hash": "4f41e912"
+      },
+      {
+        "frame": 600,
+        "hash": "0115acb6"
+      }
+    ],
+    "outcome": {
+      "frame": 600,
+      "x": 290304,
+      "y": 75776,
+      "alive": true,
+      "won": true
+    }
+  },
+  "expired-buffer": {
+    "hashes": [
+      {
+        "frame": 60,
+        "hash": "0498c8bb"
+      },
+      {
+        "frame": 120,
+        "hash": "67bfd962"
+      },
+      {
+        "frame": 180,
+        "hash": "7636ba4f"
+      },
+      {
+        "frame": 240,
+        "hash": "7b7304ba"
+      },
+      {
+        "frame": 300,
+        "hash": "45950a24"
+      },
+      {
+        "frame": 360,
+        "hash": "f07b77a5"
+      },
+      {
+        "frame": 420,
+        "hash": "0a5fa299"
+      },
+      {
+        "frame": 480,
+        "hash": "cde0575d"
+      },
+      {
+        "frame": 540,
+        "hash": "852ec99c"
+      },
+      {
+        "frame": 600,
+        "hash": "00bad9e0"
+      }
+    ],
+    "outcome": {
+      "frame": 600,
+      "x": 290048,
+      "y": 75776,
+      "alive": true,
+      "won": true
+    }
+  },
+  "enemy-ledge-patrol": {
+    "hashes": [
+      {
+        "frame": 60,
+        "hash": "0498c8bb"
+      },
+      {
+        "frame": 120,
+        "hash": "67bfd962"
+      },
+      {
+        "frame": 180,
+        "hash": "7636ba4f"
+      },
+      {
+        "frame": 240,
+        "hash": "6d539045"
+      },
+      {
+        "frame": 300,
+        "hash": "ea763628"
+      },
+      {
+        "frame": 360,
+        "hash": "7486138d"
+      },
+      {
+        "frame": 420,
+        "hash": "6780c17d"
+      },
+      {
+        "frame": 480,
+        "hash": "3fd35209"
+      },
+      {
+        "frame": 540,
+        "hash": "2248fc74"
+      },
+      {
+        "frame": 600,
+        "hash": "dfd6ade0"
+      }
+    ],
+    "outcome": {
+      "frame": 600,
+      "x": 290048,
+      "y": 75776,
+      "alive": true,
+      "won": true
+    }
+  },
+  "wall-contact": {
+    "hashes": [
+      {
+        "frame": 60,
+        "hash": "4f595c20"
+      },
+      {
+        "frame": 120,
+        "hash": "27b5fb9d"
+      },
+      {
+        "frame": 180,
+        "hash": "450cfed0"
+      },
+      {
+        "frame": 240,
+        "hash": "bdfda5b5"
+      },
+      {
+        "frame": 300,
+        "hash": "8c6182b3"
+      },
+      {
+        "frame": 360,
+        "hash": "7f11506c"
+      },
+      {
+        "frame": 420,
+        "hash": "1616a708"
+      },
+      {
+        "frame": 480,
+        "hash": "f991e6d4"
+      },
+      {
+        "frame": 540,
+        "hash": "ef1d89b5"
+      },
+      {
+        "frame": 600,
+        "hash": "e71059a1"
+      }
+    ],
+    "outcome": {
+      "frame": 600,
+      "x": 290560,
       "y": 75776,
       "alive": true,
       "won": true

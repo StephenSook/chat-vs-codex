@@ -28,6 +28,22 @@ describe("Stryker enumeration and single splices", () => {
     expect(candidates.every((m) => m.location.start.line === 2)).toBe(true);
   });
 
+  it("enumerates the paired coyote, buffer and enemy regions only", async () => {
+    for (const name of ["coyote", "buffer", "enemy"]) {
+      const source = `const stable = 1 + 2;\n// @hotfix-site ${name}\nconst changed = 3 + 4;\n// @hotfix-site-end ${name}\n`;
+      const candidates = await enumerate(source, "game.ts");
+      expect(candidates.length).toBeGreaterThan(0);
+      expect(
+        candidates.every(
+          (candidate) =>
+            candidate.site === name && candidate.location.start.line === 2,
+        ),
+      ).toBe(true);
+      expect(() =>
+        regions(`// @hotfix-site ${name}\n// @hotfix-site-end physics\n`),
+      ).toThrow("Unpaired");
+    }
+  });
   it("handles CRLF and UTF-16 columns and refuses invalid positions", () => {
     expect(offsetAt("a\r\n😀 + b", { line: 1, column: 3 })).toBe(6);
     expect(() => offsetAt(source, { line: -1, column: 0 })).toThrow();

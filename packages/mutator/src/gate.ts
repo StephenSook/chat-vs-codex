@@ -29,6 +29,9 @@ export const FAMILIES = [
   "gravity-sign",
   "collision-off-by-one",
   "swapped-controls",
+  "coyote-never-expires",
+  "jump-buffer",
+  "enemy-ledge-turn",
 ] as const;
 
 export interface PooledMutant extends Candidate {
@@ -69,14 +72,16 @@ export async function sourceDigest(root = ROOT): Promise<string> {
 export function operatorFamily(candidate: Candidate): string {
   if (
     candidate.site === "physics" &&
-    candidate.original === "vy + GRAVITY" &&
-    candidate.replacement === "vy - GRAVITY"
+    /^vy \+ (?:GRAVITY|RISE_GRAVITY|FALL_GRAVITY)$/.test(candidate.original) &&
+    candidate.replacement === candidate.original.replace(" + ", " - ")
   )
     return "gravity-sign";
   if (
     candidate.site === "input" &&
-    candidate.original === "0 - direction * SPEED" &&
-    candidate.replacement === "0 + direction * SPEED"
+    /^0 - direction \* (?:SPEED|AIR_SPEED|PLATFORM_SPEED)$/.test(
+      candidate.original,
+    ) &&
+    candidate.replacement === candidate.original.replace("0 -", "0 +")
   )
     return "swapped-controls";
   if (
@@ -93,6 +98,14 @@ export function operatorFamily(candidate: Candidate): string {
         return "collision-off-by-one";
     }
   }
+  if (
+    candidate.site === "coyote" &&
+    candidate.original === "state.coyote - 1" &&
+    candidate.replacement === "state.coyote + 1"
+  )
+    return "coyote-never-expires";
+  if (candidate.site === "buffer") return "jump-buffer";
+  if (candidate.site === "enemy") return "enemy-ledge-turn";
   return "other";
 }
 
@@ -291,7 +304,13 @@ export async function generatePool(): Promise<void> {
       }
     }
     const missing = FAMILIES.filter(
-      (f) => !accepted.some((m) => m.family === f),
+      (f) =>
+        accepted.filter((m) => m.family === f).length <
+        (f === "gravity-sign" ||
+        f === "swapped-controls" ||
+        f === "collision-off-by-one"
+          ? 3
+          : 1),
     );
     if ((await sourceDigest()) !== digest)
       throw new Error(

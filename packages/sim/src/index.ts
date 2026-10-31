@@ -1,16 +1,23 @@
 import { xoroshiro128plus } from "pure-rand";
 import {
+  AIR_ACCEL,
+  AIR_SPEED,
   BUFFER_FRAMES,
   COYOTE_FRAMES,
+  ENEMY,
+  type EnemyState,
+  FALL_GRAVITY,
   GRAVITY,
   HEIGHT,
   INPUT,
   JUMP_SPEED,
   LEVEL,
+  PLATFORM_SPEED,
   PLAYER_HEIGHT,
   PLAYER_WIDTH,
   platformAt,
   type Rect,
+  RISE_GRAVITY,
   SPAWN,
   SPEED,
   type State,
@@ -39,6 +46,7 @@ export function createState(seed = 1): State {
     platformLandings: 0,
     edgeLandings: 0,
     rng: xoroshiro128plus(seed).getState(),
+    enemy: { x: ENEMY.x, y: ENEMY.y, vy: 0, direction: -1, turns: 0 },
   };
 }
 
@@ -72,6 +80,7 @@ function tileRects(x: number, y: number): Rect[] {
   return tiles;
 }
 function resolveX(x: number, y: number, vx: number): number {
+  if (vx === 0) return x;
   let result = x + vx;
   for (const tile of tileRects(result, y)) {
     if (
@@ -110,28 +119,78 @@ function resolveY(
 // @hotfix-site-end collision
 
 // @hotfix-site input
-function horizontalVelocity(input: number): number {
+function horizontalVelocity(state: State, input: number): number {
   const left = (input & INPUT.LEFT) !== 0 ? 1 : 0;
   const right = (input & INPUT.RIGHT) !== 0 ? 1 : 0;
   const direction = left - right;
-  return 0 - direction * SPEED;
+  // Moving platforms have slower relative footing; airborne control accelerates.
+  if (state.platform) return 0 - direction * PLATFORM_SPEED;
+  if (state.grounded) return 0 - direction * SPEED;
+  const target = 0 - direction * AIR_SPEED;
+  return state.vx < target
+    ? Math.min(target, state.vx + AIR_ACCEL)
+    : Math.max(target, state.vx - AIR_ACCEL);
 }
 // @hotfix-site-end input
 
 // @hotfix-site physics
-function verticalVelocity(vy: number): number {
-  return Math.min(vy + GRAVITY, 12 * UNIT);
+function verticalVelocity(state: State): number {
+  const vy = state.vy;
+  // Ground contact needs a settling probe; rising is floatier than falling.
+  if (state.grounded) return vy + GRAVITY;
+  if (vy < 0) return vy + RISE_GRAVITY;
+  return Math.min(vy + FALL_GRAVITY, 12 * UNIT);
 }
 // @hotfix-site-end physics
+
+// @hotfix-site coyote
+function coyoteFrames(state: State): number {
+  return state.grounded ? COYOTE_FRAMES : Math.max(0, state.coyote - 1);
+}
+// @hotfix-site-end coyote
+
+// @hotfix-site buffer
+function bufferedFrames(state: State, pressed: boolean): number {
+  return pressed && !state.jumpHeld
+    ? BUFFER_FRAMES
+    : Math.max(0, state.buffer - 1);
+}
+// @hotfix-site-end buffer
+
+// @hotfix-site enemy
+function ledgeDirection(enemy: EnemyState): number {
+  const footX = enemy.direction > 0 ? enemy.x + PLAYER_WIDTH : enemy.x - 1;
+  const row = Math.floor((enemy.y + PLAYER_HEIGHT) / TILE);
+  const column = Math.floor(footX / TILE);
+  const hasFloor = LEVEL[row]?.[column] === "#";
+  return hasFloor ? enemy.direction : 0 - enemy.direction;
+}
+// @hotfix-site-end enemy
+
+function advanceEnemy(enemy: EnemyState): EnemyState {
+  const direction = ledgeDirection(enemy);
+  const x = resolveX(enemy.x, enemy.y, direction * ENEMY.speed);
+  const vertical = resolveY(
+    x,
+    enemy.y,
+    Math.min(enemy.vy + GRAVITY, 12 * UNIT),
+  );
+  return {
+    x,
+    y: vertical.y,
+    vy: vertical.grounded ? 0 : enemy.vy + GRAVITY,
+    direction: x === enemy.x ? 0 - direction : direction,
+    turns: enemy.turns + Number(direction !== enemy.direction),
+  };
+}
 
 /** Pure fixed-timestep transition. No clock, mutable module state or DOM. */
 export function step(state: State, input: number): State {
   if (!state.alive || state.won) return { ...state, frame: state.frame + 1 };
   const pressed = (input & INPUT.JUMP) !== 0;
-  let buffer =
-    pressed && !state.jumpHeld ? BUFFER_FRAMES : Math.max(0, state.buffer - 1);
-  let coyote = state.grounded ? COYOTE_FRAMES : Math.max(0, state.coyote - 1);
-  let vy = verticalVelocity(state.vy);
+  let buffer = bufferedFrames(state, pressed);
+  let coyote = coyoteFrames(state);
+  let vy = verticalVelocity(state);
   let jumps = state.jumps;
   let bufferedJumps = state.bufferedJumps;
   if (buffer > 0 && coyote > 0) {
@@ -141,7 +200,7 @@ export function step(state: State, input: number): State {
     buffer = 0;
     coyote = 0;
   }
-  const vx = horizontalVelocity(input);
+  const vx = horizontalVelocity(state, input);
   const oldPlatform = platformAt(state.frame);
   const nextPlatform = platformAt(state.frame + 1);
   const carriedX = state.platform
@@ -194,8 +253,14 @@ export function step(state: State, input: number): State {
       }
     }
   }
+  const enemy = advanceEnemy(state.enemy);
+  if (
+    overlaps(player, { ...enemy, width: PLAYER_WIDTH, height: PLAYER_HEIGHT })
+  )
+    alive = false;
   return {
     ...state,
+    enemy,
     frame: state.frame + 1,
     x,
     y,
@@ -235,6 +300,11 @@ export function hashState(state: State): string {
     state.platformLandings,
     state.edgeLandings,
     ...state.rng,
+    state.enemy.x,
+    state.enemy.y,
+    state.enemy.vy,
+    state.enemy.direction,
+    state.enemy.turns,
   ];
   let hash = 0x811c9dc5;
   for (const value of values) {

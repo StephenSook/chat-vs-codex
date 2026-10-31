@@ -10,7 +10,7 @@ Requires Node 22 and pnpm. Run `pnpm install`, then `pnpm check`.
 
 `packages/sim` is a DOM-free 60 Hz platformer using Q8 integers (256 units per
 pixel). State and the level live outside paired mutation regions. The replay
-package supplies three hand-authored tracks, per-frame state hashes, recorded
+package supplies seven hand-authored tracks, per-frame state hashes, recorded
 60-frame FNV-1a checkpoints, and a separate held-out route.
 
 - `pnpm replay:check` verifies recorded goldens without changing them.
@@ -25,8 +25,11 @@ limit and runs in a process killed after three seconds. A scripted canary jumps,
 moves briefly, then waits; it must remain alive and outside a terminal state for
 1,200 frames. This proves survival, not that the flag remains reachable.
 
-The pool includes gravity reversal, collision boundary and swapped-control
-families. Tests check its source digest and independently execute representatives.
+The pool includes gravity reversal, collision boundary, swapped controls, coyote
+expiry, jump buffer and enemy ledge-turn families. Ground, air and platform
+control reversals are separate contexts. The first three families each have at
+least three qualified mutants. Tests check the source digest and independently
+execute representatives.
 Regenerate it after changing simulation, replay inputs, goldens or the lockfile.
 Minification is an equivalence filter, not a proof of semantic equivalence.
 

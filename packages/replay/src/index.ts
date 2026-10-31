@@ -41,12 +41,12 @@ export const TRACKS: Track[] = [
   {
     name: "clean-flag",
     seed: 13,
-    inputs: expand([40, R], [1, R | J], [41, R], [1, R | J], [517, R]),
+    inputs: expand([40, R], [1, R | J], [559, R]),
   },
   {
     name: "buffered-landing",
     seed: 13,
-    inputs: expand([40, R], [1, R | J], [37, R], [1, R | J], [521, R]),
+    inputs: expand([40, R], [1, R | J], [42, R], [1, R | J], [516, R]),
   },
   {
     name: "moving-edge",
@@ -54,12 +54,40 @@ export const TRACKS: Track[] = [
     inputs: expand(
       [40, R],
       [1, R | J],
+      [56, R],
+      [1, R | J],
+      [41, R],
+      [10, INPUT.LEFT],
+      [451, R],
+    ),
+  },
+  {
+    name: "late-coyote",
+    seed: 13,
+    inputs: expand(
       [40, R],
+      [1, R | J],
+      [56, R],
       [1, R | J],
       [48, R],
       [1, R | J],
-      [469, R],
+      [453, R],
     ),
+  },
+  {
+    name: "expired-buffer",
+    seed: 13,
+    inputs: expand([40, R], [1, R | J], [20, R], [1, R | J], [538, R]),
+  },
+  {
+    name: "enemy-ledge-patrol",
+    seed: 13,
+    inputs: expand([40, R], [1, R | J], [158, R], [60, 0], [341, R]),
+  },
+  {
+    name: "wall-contact",
+    seed: 13,
+    inputs: expand([55, R], [5, 0], [1, R | J], [539, R]),
   },
 ];
 export const CANARY: Track = {
@@ -70,7 +98,7 @@ export const CANARY: Track = {
 export const HELD_OUT: Track = {
   name: "held-out-delayed-start",
   seed: 97,
-  inputs: expand([17, 0], [40, R], [1, R | J], [40, R], [1, R | J], [501, R]),
+  inputs: expand([17, 0], [40, R], [1, R | J], [542, R]),
 };
 
 /** Frame count is bounded here; callers execute unknown code in a killable worker too. */

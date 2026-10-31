@@ -40,18 +40,80 @@ describe("mutation pool", () => {
     ).toBe("other");
   });
 
+  it("classifies exact directional reversals in each real movement context", () => {
+    const base: Candidate = {
+      id: "context",
+      file: "index.ts",
+      site: "input",
+      mutator: "ArithmeticOperator",
+      original: "",
+      replacement: "",
+      location: { start: { line: 0, column: 0 }, end: { line: 0, column: 1 } },
+    };
+    for (const speed of ["SPEED", "AIR_SPEED", "PLATFORM_SPEED"]) {
+      expect(
+        operatorFamily({
+          ...base,
+          original: `0 - direction * ${speed}`,
+          replacement: `0 + direction * ${speed}`,
+        }),
+      ).toBe("swapped-controls");
+      expect(
+        operatorFamily({
+          ...base,
+          original: `0 - direction * ${speed}`,
+          replacement: `0 - direction / ${speed}`,
+        }),
+      ).toBe("other");
+    }
+    for (const gravity of ["GRAVITY", "RISE_GRAVITY", "FALL_GRAVITY"]) {
+      expect(
+        operatorFamily({
+          ...base,
+          site: "physics",
+          original: `vy + ${gravity}`,
+          replacement: `vy - ${gravity}`,
+        }),
+      ).toBe("gravity-sign");
+    }
+    expect(
+      operatorFamily({
+        ...base,
+        site: "coyote",
+        original: "state.coyote - 1",
+        replacement: "state.coyote + 1",
+      }),
+    ).toBe("coyote-never-expires");
+    expect(
+      operatorFamily({
+        ...base,
+        site: "coyote",
+        original: "state.coyote - 1",
+        replacement: "state.coyote * 1",
+      }),
+    ).toBe("other");
+  });
+
   it("binds nonempty, fully gated evidence to the current sources", async () => {
     const pool = JSON.parse(
       await readFile(`${ROOT}/packages/mutator/pool.json`, "utf8"),
     ) as Pool;
     expect(pool.sourceDigest).toBe(await sourceDigest());
-    expect(pool.mutants.length).toBeGreaterThanOrEqual(3);
+    expect(pool.mutants.length).toBeGreaterThanOrEqual(12);
     expect(pool.candidateCount).toBe(
       pool.mutants.length +
         Object.values(pool.rejectedByStage).reduce((a, b) => a + b, 0),
     );
-    for (const family of FAMILIES)
-      expect(pool.mutants.some((m) => m.family === family)).toBe(true);
+    for (const family of FAMILIES) {
+      const count = pool.mutants.filter((m) => m.family === family).length;
+      expect(count).toBeGreaterThanOrEqual(
+        ["gravity-sign", "swapped-controls", "collision-off-by-one"].includes(
+          family,
+        )
+          ? 3
+          : 1,
+      );
+    }
     for (const mutant of pool.mutants) {
       expect(mutant.file).not.toContain("world.ts");
       expect(operatorFamily(mutant)).toBe(mutant.family);

@@ -55,7 +55,7 @@ export function regions(
   const result: { name: string; start: number; end: number }[] = [];
   let open: { name: string; start: number } | undefined;
   const markers =
-    /^\s*\/\/ @hotfix-site(-end)? (physics|input|collision)\s*$/gm;
+    /^\s*\/\/ @hotfix-site(-end)? (physics|input|collision|coyote|buffer|enemy)\s*$/gm;
   for (const match of source.matchAll(markers)) {
     const name = match[2];
     if (!name) throw new Error("Missing site name");
