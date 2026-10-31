@@ -1,0 +1,524 @@
+{
+  "schemaVersion": 1,
+  "mutation": {
+    "path": "live-gated",
+    "sourceDigest": "ca09383a037b8c1147d9db72774ea53d9a33c933355b563988214e48f83ef726",
+    "candidateDigest": "bfc1e36e6ef2aea16c6509fe9f05d6efd46dbc9406889c8775e245c890f9d216",
+    "enumerated": 160,
+    "eligible": 3,
+    "attempted": 1,
+    "budgetMs": 10000,
+    "elapsedMs": 4178.1385419999715,
+    "gates": {
+      "typecheck": true,
+      "differentMinifiedOutput": true,
+      "killed": true,
+      "visible": true,
+      "frameBudget": 3600,
+      "processBudgetMs": 3000,
+      "canaryFrames": 1200
+    }
+  },
+  "roundId": "b403faf1-abc9-4c89-9a2a-c3a67fd4d105",
+  "trigger": "broadcaster-test",
+  "mode": "live-twitch",
+  "model": "gpt-6.1-terra",
+  "effort": "low",
+  "breaker": "viewer-4277d87e9e95a08f",
+  "firstCorrectGuesser": null,
+  "validationReplay": {
+    "sourceDigest": "403c76c51327cb44d95d16b9ea2a6e7cefb331df83b775158f83fe2a9e63c28e",
+    "trackDigest": "bcca810f6178004b27e9befc22021e596ec847697710987ae493af1626d8d0ce",
+    "buildDigest": "4715351bcb89d1a766bac1607c4579201fd2d5c28e2a42227ead259d47d1b6ed",
+    "frameCount": 600,
+    "framesDigest": "bb3cc82edf8131ee1bb65c3bc0f8de96ab9dd34fe1c547a52f0dfecc7ba5ffd3"
+  },
+  "autopsy": {
+    "roundId": "b403faf1-abc9-4c89-9a2a-c3a67fd4d105",
+    "trigger": "broadcaster-test",
+    "status": "verified",
+    "reason": null,
+    "breaker": "viewer-4277d87e9e95a08f",
+    "firstCorrectGuesser": null,
+    "family": "swapped-controls",
+    "winner": "codex",
+    "patch": {
+      "added": 1,
+      "removed": 1,
+      "preview": [
+        "-  const target = 0 + direction * AIR_SPEED;",
+        "+  const target = 0 - direction * AIR_SPEED;"
+      ]
+    },
+    "explanation": "Corrected the airborne target direction so input accelerates the player along the intended route. The requested Vitest run passed all 26 tests across 3 files.",
+    "headline": "Airborne movement now follows the intended direction",
+    "durations": {
+      "headStartMs": 15000.90925002098,
+      "repairMs": 29432.77920794487,
+      "validationMs": 12684.327541828156,
+      "swapMs": 47.02749991416931,
+      "timeToGreenMs": 42238.22199988365
+    },
+    "previousRoundId": "dbf91971-4ef0-4f39-9a90-d84d14a5535c",
+    "deltaMs": 11075.189874887466,
+    "regressionTest": {
+      "path": "chat-found/b403faf1-abc9-4c89-9a2a-c3a67fd4d105.json",
+      "digest": "8013bdc6bda5fa0ea81bf4459e95ee11e55ba1afb895ef670b673983e02e6d78"
+    },
+    "regressionError": null
+  },
+  "family": "swapped-controls",
+  "winner": "codex",
+  "reason": null,
+  "scores": {
+    "chat": 0,
+    "codex": 3
+  },
+  "clock": "host-monotonic-ms",
+  "timingVersion": 1,
+  "durations": {
+    "headStartMs": 15000.90925002098,
+    "repairMs": 29432.77920794487,
+    "validationMs": 12684.327541828156,
+    "swapMs": 47.02749991416931,
+    "timeToGreenMs": 42238.22199988365
+  },
+  "timingDefinition": "Time to green starts immediately before the SDK call and ends after verified build installation; head start is separate. Repair ends at submitted patch verification after the SDK turn.",
+  "completedAt": "2026-10-31T19:06:11.838Z",
+  "events": [
+    {
+      "sequence": 93,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "preparing",
+      "atMs": 1445610410.210041,
+      "wallTime": "2026-10-31T19:05:03.680Z"
+    },
+    {
+      "sequence": 94,
+      "trigger": "broadcaster-test",
+      "type": "round.mutation",
+      "atMs": 1445620077.409291,
+      "wallTime": "2026-10-31T19:05:13.354Z"
+    },
+    {
+      "sequence": 95,
+      "trigger": "broadcaster-test",
+      "type": "game.build",
+      "phase": "broken",
+      "atMs": 1445620094.91125,
+      "wallTime": "2026-10-31T19:05:13.372Z"
+    },
+    {
+      "sequence": 96,
+      "trigger": "broadcaster-test",
+      "type": "round.started",
+      "atMs": 1445620111.384791,
+      "wallTime": "2026-10-31T19:05:13.388Z"
+    },
+    {
+      "sequence": 97,
+      "trigger": "broadcaster-test",
+      "type": "bug.active",
+      "atMs": 1445620111.424041,
+      "wallTime": "2026-10-31T19:05:13.388Z"
+    },
+    {
+      "sequence": 98,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "head-start",
+      "atMs": 1445620111.443333,
+      "wallTime": "2026-10-31T19:05:13.388Z"
+    },
+    {
+      "sequence": 99,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1445635115.639541,
+      "wallTime": "2026-10-31T19:05:28.390Z"
+    },
+    {
+      "sequence": 100,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1445636002.267041,
+      "wallTime": "2026-10-31T19:05:29.279Z"
+    },
+    {
+      "sequence": 101,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445641013.976291,
+      "wallTime": "2026-10-31T19:05:34.290Z"
+    },
+    {
+      "sequence": 102,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445643680.844625,
+      "wallTime": "2026-10-31T19:05:36.957Z"
+    },
+    {
+      "sequence": 103,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445643681.457833,
+      "wallTime": "2026-10-31T19:05:36.958Z"
+    },
+    {
+      "sequence": 104,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445643681.473291,
+      "wallTime": "2026-10-31T19:05:36.958Z"
+    },
+    {
+      "sequence": 105,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445643707.000291,
+      "wallTime": "2026-10-31T19:05:36.984Z"
+    },
+    {
+      "sequence": 106,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445643707.595083,
+      "wallTime": "2026-10-31T19:05:36.984Z"
+    },
+    {
+      "sequence": 107,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445643708.108916,
+      "wallTime": "2026-10-31T19:05:36.985Z"
+    },
+    {
+      "sequence": 108,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445643789.239166,
+      "wallTime": "2026-10-31T19:05:37.066Z"
+    },
+    {
+      "sequence": 109,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445644229.184791,
+      "wallTime": "2026-10-31T19:05:37.506Z"
+    },
+    {
+      "sequence": 110,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445645725.999541,
+      "wallTime": "2026-10-31T19:05:39.002Z"
+    },
+    {
+      "sequence": 111,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445645726.989,
+      "wallTime": "2026-10-31T19:05:39.003Z"
+    },
+    {
+      "sequence": 112,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445645727.996208,
+      "wallTime": "2026-10-31T19:05:39.004Z"
+    },
+    {
+      "sequence": 113,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445645730.117208,
+      "wallTime": "2026-10-31T19:05:39.007Z"
+    },
+    {
+      "sequence": 114,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445645731.521875,
+      "wallTime": "2026-10-31T19:05:39.008Z"
+    },
+    {
+      "sequence": 115,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445645735.906208,
+      "wallTime": "2026-10-31T19:05:39.012Z"
+    },
+    {
+      "sequence": 116,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445645737.342291,
+      "wallTime": "2026-10-31T19:05:39.014Z"
+    },
+    {
+      "sequence": 117,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445645739.504,
+      "wallTime": "2026-10-31T19:05:39.016Z"
+    },
+    {
+      "sequence": 118,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445645741.129666,
+      "wallTime": "2026-10-31T19:05:39.018Z"
+    },
+    {
+      "sequence": 119,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445645742.121666,
+      "wallTime": "2026-10-31T19:05:39.019Z"
+    },
+    {
+      "sequence": 120,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445645742.917041,
+      "wallTime": "2026-10-31T19:05:39.019Z"
+    },
+    {
+      "sequence": 121,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445645743.435875,
+      "wallTime": "2026-10-31T19:05:39.020Z"
+    },
+    {
+      "sequence": 122,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445645807.086,
+      "wallTime": "2026-10-31T19:05:39.084Z"
+    },
+    {
+      "sequence": 123,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445645807.542541,
+      "wallTime": "2026-10-31T19:05:39.084Z"
+    },
+    {
+      "sequence": 124,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445645807.796666,
+      "wallTime": "2026-10-31T19:05:39.084Z"
+    },
+    {
+      "sequence": 125,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445646076.496125,
+      "wallTime": "2026-10-31T19:05:39.353Z"
+    },
+    {
+      "sequence": 126,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445646669.241375,
+      "wallTime": "2026-10-31T19:05:39.946Z"
+    },
+    {
+      "sequence": 127,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445647238.208833,
+      "wallTime": "2026-10-31T19:05:40.515Z"
+    },
+    {
+      "sequence": 128,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445647569.552958,
+      "wallTime": "2026-10-31T19:05:40.846Z"
+    },
+    {
+      "sequence": 129,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445648215.922333,
+      "wallTime": "2026-10-31T19:05:41.492Z"
+    },
+    {
+      "sequence": 130,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445648588.311166,
+      "wallTime": "2026-10-31T19:05:41.865Z"
+    },
+    {
+      "sequence": 131,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445649157.118333,
+      "wallTime": "2026-10-31T19:05:42.434Z"
+    },
+    {
+      "sequence": 132,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445650425.558666,
+      "wallTime": "2026-10-31T19:05:43.702Z"
+    },
+    {
+      "sequence": 133,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445650427.293166,
+      "wallTime": "2026-10-31T19:05:43.704Z"
+    },
+    {
+      "sequence": 134,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445654010.912208,
+      "wallTime": "2026-10-31T19:05:47.287Z"
+    },
+    {
+      "sequence": 135,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445662514.382083,
+      "wallTime": "2026-10-31T19:05:55.790Z"
+    },
+    {
+      "sequence": 136,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1445663032.636583,
+      "wallTime": "2026-10-31T19:05:56.309Z"
+    },
+    {
+      "sequence": 137,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1445665423.237291,
+      "wallTime": "2026-10-31T19:05:58.699Z"
+    },
+    {
+      "sequence": 138,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "validating",
+      "atMs": 1445665425.063,
+      "wallTime": "2026-10-31T19:05:58.701Z"
+    },
+    {
+      "sequence": 139,
+      "trigger": "broadcaster-test",
+      "type": "round.ghost",
+      "atMs": 1445672161.882791,
+      "wallTime": "2026-10-31T19:06:05.435Z"
+    },
+    {
+      "sequence": 140,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "validating",
+      "atMs": 1445678108.719708,
+      "wallTime": "2026-10-31T19:06:11.385Z"
+    },
+    {
+      "sequence": 141,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "swapping",
+      "atMs": 1445678180.696166,
+      "wallTime": "2026-10-31T19:06:11.457Z"
+    },
+    {
+      "sequence": 142,
+      "trigger": "broadcaster-test",
+      "type": "game.build",
+      "phase": "repaired",
+      "atMs": 1445678200.5895,
+      "wallTime": "2026-10-31T19:06:11.476Z"
+    },
+    {
+      "sequence": 143,
+      "trigger": "broadcaster-test",
+      "type": "score.changed",
+      "atMs": 1445678562.058208,
+      "wallTime": "2026-10-31T19:06:11.838Z"
+    },
+    {
+      "sequence": 144,
+      "trigger": "broadcaster-test",
+      "type": "bug.named",
+      "atMs": 1445678562.164791,
+      "wallTime": "2026-10-31T19:06:11.838Z"
+    },
+    {
+      "sequence": 145,
+      "trigger": "broadcaster-test",
+      "type": "tests.green",
+      "atMs": 1445678562.190583,
+      "wallTime": "2026-10-31T19:06:11.838Z"
+    },
+    {
+      "sequence": 146,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "resolved",
+      "atMs": 1445678562.218625,
+      "wallTime": "2026-10-31T19:06:11.838Z"
+    },
+    {
+      "sequence": 147,
+      "trigger": "broadcaster-test",
+      "type": "round.autopsy",
+      "atMs": 1445678621.086625,
+      "wallTime": "2026-10-31T19:06:11.897Z"
+    }
+  ],
+  "verification": {
+    "fullReplaySuite": true,
+    "heldOutReplay": true,
+    "statePreserved": true,
+    "finalStateHash": "e31c8be0",
+    "builds": [
+      {
+        "digest": "fe18b126f80b8a93d5768c7cf5932ed8a6328c5fe5f7b4f6df96dadd55cf47c2",
+        "frame": 2474,
+        "statePreserved": true
+      },
+      {
+        "digest": "4715351bcb89d1a766bac1607c4579201fd2d5c28e2a42227ead259d47d1b6ed",
+        "frame": 5039,
+        "statePreserved": true
+      },
+      {
+        "digest": "4a7c75623c49983bc33b4abee6406a709b2699d900ac5ebcca448a5e0dea8324",
+        "frame": 31692,
+        "statePreserved": true
+      },
+      {
+        "digest": "9efecfca97acb466eccc049ad67232c8b32b597df54877408d701b1f33890a46",
+        "frame": 34512,
+        "statePreserved": true
+      },
+      {
+        "digest": "c097c9623d505cf75a2964f4c747515c3583446551eb370de4d27d1080cd3915",
+        "frame": 51866,
+        "statePreserved": true
+      },
+      {
+        "digest": "4715351bcb89d1a766bac1607c4579201fd2d5c28e2a42227ead259d47d1b6ed",
+        "frame": 55352,
+        "statePreserved": true
+      }
+    ]
+  }
+}
