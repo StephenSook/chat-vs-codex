@@ -1,0 +1,13 @@
+{
+  "name": "@chat-vs-codex/replay",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": {
+    "record": "tsx src/record.ts"
+  },
+  "dependencies": {
+    "@chat-vs-codex/sim": "workspace:*"
+  }
+}

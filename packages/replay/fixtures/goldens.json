@@ -1,0 +1,155 @@
+{
+  "clean-flag": {
+    "hashes": [
+      {
+        "frame": 60,
+        "hash": "f159b59a"
+      },
+      {
+        "frame": 120,
+        "hash": "3f74e0a6"
+      },
+      {
+        "frame": 180,
+        "hash": "dedb92cf"
+      },
+      {
+        "frame": 240,
+        "hash": "b1313cde"
+      },
+      {
+        "frame": 300,
+        "hash": "2c6fa315"
+      },
+      {
+        "frame": 360,
+        "hash": "dd16769e"
+      },
+      {
+        "frame": 420,
+        "hash": "e7516eda"
+      },
+      {
+        "frame": 480,
+        "hash": "16c024b6"
+      },
+      {
+        "frame": 540,
+        "hash": "3f393e97"
+      },
+      {
+        "frame": 600,
+        "hash": "20ebf513"
+      }
+    ],
+    "outcome": {
+      "frame": 600,
+      "x": 290560,
+      "y": 75776,
+      "alive": true,
+      "won": true
+    }
+  },
+  "buffered-landing": {
+    "hashes": [
+      {
+        "frame": 60,
+        "hash": "f159b59a"
+      },
+      {
+        "frame": 120,
+        "hash": "15cddcf7"
+      },
+      {
+        "frame": 180,
+        "hash": "0882967e"
+      },
+      {
+        "frame": 240,
+        "hash": "eb07352f"
+      },
+      {
+        "frame": 300,
+        "hash": "6532dac4"
+      },
+      {
+        "frame": 360,
+        "hash": "3c6794ef"
+      },
+      {
+        "frame": 420,
+        "hash": "07e3992b"
+      },
+      {
+        "frame": 480,
+        "hash": "bf143707"
+      },
+      {
+        "frame": 540,
+        "hash": "9761b846"
+      },
+      {
+        "frame": 600,
+        "hash": "c3347cc2"
+      }
+    ],
+    "outcome": {
+      "frame": 600,
+      "x": 290560,
+      "y": 75776,
+      "alive": true,
+      "won": true
+    }
+  },
+  "moving-edge": {
+    "hashes": [
+      {
+        "frame": 60,
+        "hash": "f159b59a"
+      },
+      {
+        "frame": 120,
+        "hash": "15cddcf7"
+      },
+      {
+        "frame": 180,
+        "hash": "f55882b4"
+      },
+      {
+        "frame": 240,
+        "hash": "cf81559b"
+      },
+      {
+        "frame": 300,
+        "hash": "102f868c"
+      },
+      {
+        "frame": 360,
+        "hash": "e6eb9489"
+      },
+      {
+        "frame": 420,
+        "hash": "2747a095"
+      },
+      {
+        "frame": 480,
+        "hash": "abc89d41"
+      },
+      {
+        "frame": 540,
+        "hash": "f9b48e2c"
+      },
+      {
+        "frame": 600,
+        "hash": "f2576df8"
+      }
+    ],
+    "outcome": {
+      "frame": 600,
+      "x": 290432,
+      "y": 75776,
+      "alive": true,
+      "won": true
+    }
+  }
+}

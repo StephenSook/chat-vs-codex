@@ -1,0 +1,10 @@
+{
+  "name": "@chat-vs-codex/sim",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "pure-rand": "7.0.1"
+  }
+}

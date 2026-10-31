@@ -3,6 +3,6 @@
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": { "includes": ["**", "!**/goldens.json", "!**/pool.json"] },
   "formatter": { "indentStyle": "space" },
-  "linter": { "enabled": true, "rules": { "recommended": true } },
+  "linter": { "enabled": true, "rules": { "preset": "recommended" } },
   "javascript": { "formatter": { "quoteStyle": "double" } }
 }
