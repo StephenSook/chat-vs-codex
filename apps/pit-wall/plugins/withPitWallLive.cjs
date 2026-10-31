@@ -66,17 +66,19 @@ function configureWidgetTarget(project, config, platformProjectRoot) {
       `${bundleIdentifier}.${TARGET}`,
     );
     targetId = target.uuid;
-    const sourcePaths = [
-      "PitWallLiveWidget.swift",
-      "PitWallAttributes.swift",
-    ].map((name) => `${TARGET}/${name}`);
-    const group = project.addPbxGroup(sourcePaths, TARGET);
+    const sourceFiles = ["PitWallLiveWidget.swift", "PitWallAttributes.swift"];
+    // File references are relative to this explicit group path, not the iOS root.
+    const group = project.addPbxGroup(
+      [...sourceFiles, "Info.plist"],
+      TARGET,
+      TARGET,
+    );
     project.addToPbxGroup(
       group.uuid,
       project.getFirstProject().firstProject.mainGroup,
     );
     project.addBuildPhase(
-      sourcePaths,
+      sourceFiles,
       "PBXSourcesBuildPhase",
       "Sources",
       targetId,

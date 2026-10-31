@@ -65,6 +65,69 @@ afterEach(() => {
 });
 
 describe("Pit Wall Live Activity config plugin", () => {
+  it("resolves serialized widget sources and Info.plist inside the target folder", () => {
+    const { folder, file, project } = projectFixture();
+    withPitWallLive.configureWidgetTarget(
+      project,
+      { ios: { bundleIdentifier: "com.example.pitwall" } },
+      folder,
+    );
+    const serialized = project.writeSync();
+    expect(serialized).not.toMatch(/\bpath\s*=\s*[^;]*undefined/);
+    writeFileSync(file, serialized);
+    const parsed = xcode.project(file);
+    parsed.parseSync();
+    const objects = parsed.hash.project.objects;
+    const unquote = (value: string) => value.replace(/^"|"$/g, "");
+    const mainGroup =
+      objects.PBXGroup[parsed.getFirstProject().firstProject.mainGroup];
+    const group = mainGroup.children
+      .map((entry: { value: string }) => objects.PBXGroup[entry.value])
+      .find((entry: { name?: string }) => entry?.name === "PitWallLiveWidget");
+    expect(unquote(group.path)).toBe("PitWallLiveWidget");
+    const resolveFile = (refId: string) => {
+      expect(group.children).toContainEqual(
+        expect.objectContaining({ value: refId }),
+      );
+      const ref = objects.PBXFileReference[refId];
+      expect(unquote(ref.sourceTree)).toBe("<group>");
+      return join(folder, unquote(group.path), unquote(ref.path));
+    };
+    const widget = Object.values(objects.PBXNativeTarget).find(
+      (entry: unknown) =>
+        typeof entry === "object" &&
+        (entry as { name: string }).name === '"PitWallLiveWidget"',
+    ) as { buildPhases: { value: string }[]; buildConfigurationList: string };
+    const sources = widget.buildPhases
+      .map((entry) => objects.PBXSourcesBuildPhase?.[entry.value])
+      .find(Boolean);
+    const resolvedSources = sources.files.map((entry: { value: string }) =>
+      resolveFile(objects.PBXBuildFile[entry.value].fileRef),
+    );
+    expect(resolvedSources.sort()).toEqual(
+      ["PitWallAttributes.swift", "PitWallLiveWidget.swift"].map((name) =>
+        join(folder, "PitWallLiveWidget", name),
+      ),
+    );
+    for (const source of resolvedSources) {
+      expect(readFileSync(source, "utf8")).not.toBe("");
+    }
+    const plist = group.children.find(
+      (entry: { value: string }) =>
+        unquote(objects.PBXFileReference[entry.value].path) === "Info.plist",
+    );
+    const plistPath = resolveFile(plist.value);
+    for (const entry of objects.XCConfigurationList[
+      widget.buildConfigurationList
+    ].buildConfigurations) {
+      const settings = objects.XCBuildConfiguration[entry.value].buildSettings;
+      expect(join(folder, unquote(settings.INFOPLIST_FILE))).toBe(plistPath);
+    }
+    expect(readFileSync(plistPath, "utf8")).toContain(
+      "com.apple.widgetkit-extension",
+    );
+  });
+
   it("creates, embeds and signs a widget target with both Swift sources", () => {
     const { folder, file, project } = projectFixture();
     withPitWallLive.configureWidgetTarget(
@@ -107,8 +170,7 @@ describe("Pit Wall Live Activity config plugin", () => {
     expect(sources.files).toHaveLength(2);
     for (const name of ["PitWallLiveWidget.swift", "PitWallAttributes.swift"]) {
       const refId = Object.keys(objects.PBXFileReference).find(
-        (key) =>
-          objects.PBXFileReference[key]?.path === `"PitWallLiveWidget/${name}"`,
+        (key) => objects.PBXFileReference[key]?.path === `"${name}"`,
       );
       expect(refId).toBeTruthy();
       expect(
