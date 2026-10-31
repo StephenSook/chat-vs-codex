@@ -31,7 +31,8 @@
     "breakout:bench": "tsx games/breakout/bench.ts",
     "sound:generate": "tsx scripts/sound-synth.ts",
     "chat-found:pr": "tsx scripts/chat-found-pr.ts",
-    "ci:local": "pnpm install --frozen-lockfile && pnpm typecheck && pnpm lint && pnpm test",
+    "pit-wall:bundle": "pnpm --filter @chat-vs-codex/pit-wall-app exec expo export --platform ios --output-dir dist/ios && pnpm --filter @chat-vs-codex/pit-wall-app exec expo export --platform android --output-dir dist/android",
+    "ci:local": "pnpm install --frozen-lockfile && pnpm typecheck && pnpm lint && pnpm test && pnpm pit-wall:bundle",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
     "season:record": "tsx scripts/season.ts",
     "season:check": "tsx scripts/season.ts --check"
