@@ -1,0 +1,406 @@
+{
+  "schemaVersion": 1,
+  "mutation": {
+    "path": "live-gated",
+    "sourceDigest": "ca09383a037b8c1147d9db72774ea53d9a33c933355b563988214e48f83ef726",
+    "candidateDigest": "cb9f5c70e27b9ef1cc6aab5a37acee1722fc7dc31b33166e0dbd5b4eb2491ae3",
+    "enumerated": 160,
+    "eligible": 39,
+    "attempted": 1,
+    "budgetMs": 10000,
+    "elapsedMs": 2266.1251660000016,
+    "gates": {
+      "typecheck": true,
+      "differentMinifiedOutput": true,
+      "killed": true,
+      "visible": true,
+      "frameBudget": 3600,
+      "processBudgetMs": 3000,
+      "canaryFrames": 1200
+    }
+  },
+  "roundId": "c81bdc19-304f-47d5-800e-5098b9a1b5e2",
+  "trigger": "broadcaster-test",
+  "mode": "live-twitch",
+  "model": "gpt-6.1-terra",
+  "effort": "low",
+  "breaker": "viewer-64e8151b950b82cd",
+  "firstCorrectGuesser": null,
+  "validationReplay": {
+    "sourceDigest": "403c76c51327cb44d95d16b9ea2a6e7cefb331df83b775158f83fe2a9e63c28e",
+    "trackDigest": "bcca810f6178004b27e9befc22021e596ec847697710987ae493af1626d8d0ce",
+    "buildDigest": "4715351bcb89d1a766bac1607c4579201fd2d5c28e2a42227ead259d47d1b6ed",
+    "frameCount": 600,
+    "framesDigest": "bb3cc82edf8131ee1bb65c3bc0f8de96ab9dd34fe1c547a52f0dfecc7ba5ffd3"
+  },
+  "autopsy": {
+    "roundId": "c81bdc19-304f-47d5-800e-5098b9a1b5e2",
+    "trigger": "broadcaster-test",
+    "status": "verified",
+    "reason": null,
+    "breaker": "viewer-64e8151b950b82cd",
+    "firstCorrectGuesser": null,
+    "family": "gravity-sign",
+    "winner": "codex",
+    "patch": {
+      "added": 1,
+      "removed": 1,
+      "preview": [
+        "-  if (state.grounded) return vy - GRAVITY;",
+        "+  if (state.grounded) return vy + GRAVITY;"
+      ]
+    },
+    "explanation": "Changed the grounded probe to add gravity, keeping the player in contact with the floor. The requested Vitest run passed all 24 tests, including all seven replay tests.",
+    "headline": "Grounded movement follows the expected route",
+    "durations": {
+      "headStartMs": 15001.463124990463,
+      "repairMs": 14363.694207906723,
+      "validationMs": 2350.5069580078125,
+      "swapMs": 3.171916961669922,
+      "timeToGreenMs": 16728.31524991989
+    },
+    "previousRoundId": "82589ac9-1b1b-4393-8085-9bed5d88ee2b",
+    "deltaMs": -7240.668292045593,
+    "regressionTest": {
+      "path": "chat-found/c81bdc19-304f-47d5-800e-5098b9a1b5e2.json",
+      "digest": "1a6c86aaf523c3a9ed56d20e4d81338c306518999a5aa2b721df7f7efa02c1d7"
+    },
+    "regressionError": null
+  },
+  "family": "gravity-sign",
+  "winner": "codex",
+  "reason": null,
+  "scores": {
+    "chat": 0,
+    "codex": 1
+  },
+  "clock": "host-monotonic-ms",
+  "timingVersion": 1,
+  "durations": {
+    "headStartMs": 15001.463124990463,
+    "repairMs": 14363.694207906723,
+    "validationMs": 2350.5069580078125,
+    "swapMs": 3.171916961669922,
+    "timeToGreenMs": 16728.31524991989
+  },
+  "timingDefinition": "Time to green starts immediately before the SDK call and ends after verified build installation; head start is separate. Repair ends at submitted patch verification after the SDK turn.",
+  "completedAt": "2026-10-31T09:19:41.580Z",
+  "events": [
+    {
+      "sequence": 1,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "preparing",
+      "atMs": 1410452186.157,
+      "wallTime": "2026-10-31T09:19:05.603Z"
+    },
+    {
+      "sequence": 2,
+      "trigger": "broadcaster-test",
+      "type": "round.mutation",
+      "atMs": 1410455896.473291,
+      "wallTime": "2026-10-31T09:19:09.313Z"
+    },
+    {
+      "sequence": 3,
+      "trigger": "broadcaster-test",
+      "type": "game.build",
+      "phase": "broken",
+      "atMs": 1410455898.960583,
+      "wallTime": "2026-10-31T09:19:09.316Z"
+    },
+    {
+      "sequence": 4,
+      "trigger": "broadcaster-test",
+      "type": "round.started",
+      "atMs": 1410455900.205583,
+      "wallTime": "2026-10-31T09:19:09.317Z"
+    },
+    {
+      "sequence": 5,
+      "trigger": "broadcaster-test",
+      "type": "bug.active",
+      "atMs": 1410455900.225375,
+      "wallTime": "2026-10-31T09:19:09.317Z"
+    },
+    {
+      "sequence": 6,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "head-start",
+      "atMs": 1410455900.242916,
+      "wallTime": "2026-10-31T09:19:09.317Z"
+    },
+    {
+      "sequence": 7,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1410470901.723291,
+      "wallTime": "2026-10-31T09:19:24.319Z"
+    },
+    {
+      "sequence": 8,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1410471388.878958,
+      "wallTime": "2026-10-31T09:19:24.806Z"
+    },
+    {
+      "sequence": 9,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410475791.574541,
+      "wallTime": "2026-10-31T09:19:29.209Z"
+    },
+    {
+      "sequence": 10,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410477618.151,
+      "wallTime": "2026-10-31T09:19:31.035Z"
+    },
+    {
+      "sequence": 11,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410477618.410375,
+      "wallTime": "2026-10-31T09:19:31.035Z"
+    },
+    {
+      "sequence": 12,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410477624.726958,
+      "wallTime": "2026-10-31T09:19:31.042Z"
+    },
+    {
+      "sequence": 13,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410477625.693791,
+      "wallTime": "2026-10-31T09:19:31.043Z"
+    },
+    {
+      "sequence": 14,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410477700.12875,
+      "wallTime": "2026-10-31T09:19:31.117Z"
+    },
+    {
+      "sequence": 15,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410477972.039958,
+      "wallTime": "2026-10-31T09:19:31.389Z"
+    },
+    {
+      "sequence": 16,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410479469.82675,
+      "wallTime": "2026-10-31T09:19:32.887Z"
+    },
+    {
+      "sequence": 17,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410479470.519416,
+      "wallTime": "2026-10-31T09:19:32.888Z"
+    },
+    {
+      "sequence": 18,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410479470.86475,
+      "wallTime": "2026-10-31T09:19:32.888Z"
+    },
+    {
+      "sequence": 19,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410479471.607625,
+      "wallTime": "2026-10-31T09:19:32.889Z"
+    },
+    {
+      "sequence": 20,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410479533.90325,
+      "wallTime": "2026-10-31T09:19:32.951Z"
+    },
+    {
+      "sequence": 21,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410479534.29425,
+      "wallTime": "2026-10-31T09:19:32.951Z"
+    },
+    {
+      "sequence": 22,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410479700.601708,
+      "wallTime": "2026-10-31T09:19:33.118Z"
+    },
+    {
+      "sequence": 23,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410480025.161416,
+      "wallTime": "2026-10-31T09:19:33.442Z"
+    },
+    {
+      "sequence": 24,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410481229.158375,
+      "wallTime": "2026-10-31T09:19:34.646Z"
+    },
+    {
+      "sequence": 25,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410481763.503875,
+      "wallTime": "2026-10-31T09:19:35.181Z"
+    },
+    {
+      "sequence": 26,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410481987.558958,
+      "wallTime": "2026-10-31T09:19:35.405Z"
+    },
+    {
+      "sequence": 27,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410482170.440791,
+      "wallTime": "2026-10-31T09:19:35.587Z"
+    },
+    {
+      "sequence": 28,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410482171.45775,
+      "wallTime": "2026-10-31T09:19:35.589Z"
+    },
+    {
+      "sequence": 29,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410483225.761625,
+      "wallTime": "2026-10-31T09:19:36.643Z"
+    },
+    {
+      "sequence": 30,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1410484449.280958,
+      "wallTime": "2026-10-31T09:19:37.866Z"
+    },
+    {
+      "sequence": 31,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1410485751.685541,
+      "wallTime": "2026-10-31T09:19:39.169Z"
+    },
+    {
+      "sequence": 32,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "validating",
+      "atMs": 1410485751.862583,
+      "wallTime": "2026-10-31T09:19:39.169Z"
+    },
+    {
+      "sequence": 33,
+      "trigger": "broadcaster-test",
+      "type": "round.ghost",
+      "atMs": 1410487422.351541,
+      "wallTime": "2026-10-31T09:19:40.839Z"
+    },
+    {
+      "sequence": 34,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "validating",
+      "atMs": 1410488102.303458,
+      "wallTime": "2026-10-31T09:19:41.519Z"
+    },
+    {
+      "sequence": 35,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "swapping",
+      "atMs": 1410488112.98625,
+      "wallTime": "2026-10-31T09:19:41.530Z"
+    },
+    {
+      "sequence": 36,
+      "trigger": "broadcaster-test",
+      "type": "game.build",
+      "phase": "repaired",
+      "atMs": 1410488115.190666,
+      "wallTime": "2026-10-31T09:19:41.532Z"
+    },
+    {
+      "sequence": 37,
+      "trigger": "broadcaster-test",
+      "type": "score.changed",
+      "atMs": 1410488163.106291,
+      "wallTime": "2026-10-31T09:19:41.580Z"
+    },
+    {
+      "sequence": 38,
+      "trigger": "broadcaster-test",
+      "type": "bug.named",
+      "atMs": 1410488163.151375,
+      "wallTime": "2026-10-31T09:19:41.580Z"
+    },
+    {
+      "sequence": 39,
+      "trigger": "broadcaster-test",
+      "type": "tests.green",
+      "atMs": 1410488163.162833,
+      "wallTime": "2026-10-31T09:19:41.580Z"
+    },
+    {
+      "sequence": 40,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "resolved",
+      "atMs": 1410488163.182916,
+      "wallTime": "2026-10-31T09:19:41.580Z"
+    },
+    {
+      "sequence": 41,
+      "trigger": "broadcaster-test",
+      "type": "round.autopsy",
+      "atMs": 1410488171.984666,
+      "wallTime": "2026-10-31T09:19:41.589Z"
+    }
+  ],
+  "verification": {
+    "fullReplaySuite": true,
+    "heldOutReplay": true,
+    "statePreserved": true,
+    "finalStateHash": "3879f95e",
+    "builds": [
+      {
+        "digest": "9284d4f463cc418b54c4a70bfa159e0be421ae27f2aa8e870974586db50e2bbe",
+        "frame": 1562,
+        "statePreserved": true
+      },
+      {
+        "digest": "4715351bcb89d1a766bac1607c4579201fd2d5c28e2a42227ead259d47d1b6ed",
+        "frame": 3495,
+        "statePreserved": true
+      }
+    ]
+  }
+}
