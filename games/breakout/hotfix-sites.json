@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "files": [
+    {
+      "file": "src/index.ts",
+      "sha256": "cb50182b06bc9c303970f73aa3a58e7ab7500b0add19c9ca6212037da026ba91",
+      "regions": [
+        {
+          "name": "createState",
+          "marker": "@hotfix-site createState",
+          "endMarker": "@hotfix-site-end createState",
+          "start": 600,
+          "end": 891
+        },
+        {
+          "name": "advancePaddle",
+          "marker": "@hotfix-site advancePaddle",
+          "endMarker": "@hotfix-site-end advancePaddle",
+          "start": 956,
+          "end": 1161
+        },
+        {
+          "name": "wallBounce",
+          "marker": "@hotfix-site wallBounce",
+          "endMarker": "@hotfix-site-end wallBounce",
+          "start": 1203,
+          "end": 1470
+        },
+        {
+          "name": "paddleBounce",
+          "marker": "@hotfix-site paddleBounce",
+          "endMarker": "@hotfix-site-end paddleBounce",
+          "start": 1533,
+          "end": 1948
+        },
+        {
+          "name": "hitBrick",
+          "marker": "@hotfix-site hitBrick",
+          "endMarker": "@hotfix-site-end hitBrick",
+          "start": 2007,
+          "end": 2523
+        }
+      ]
+    }
+  ]
+}

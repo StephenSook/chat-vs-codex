@@ -1,0 +1,17 @@
+{
+  "name": "@chat-vs-codex/breakout",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "pure-rand": "7.0.1"
+  },
+  "devDependencies": {
+    "vite": "6.4.1"
+  }
+}

@@ -44,6 +44,16 @@ export interface TrialWorkspace {
 }
 
 export function git(game: string, args: string[]): string {
+  const env = { ...process.env };
+  for (const key of [
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_INDEX_FILE",
+    "GIT_COMMON_DIR",
+    "GIT_OBJECT_DIRECTORY",
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+  ])
+    delete env[key];
   return execFileSync(
     "git",
     [
@@ -58,6 +68,7 @@ export function git(game: string, args: string[]): string {
       ...args,
     ],
     {
+      env,
       encoding: "utf8",
       timeout: 15000,
       maxBuffer: 4 * 1024 * 1024,
@@ -165,7 +176,10 @@ export async function prepareWorkspace(
   mutant: PooledMutant | null,
   regressionsDirectory = REGRESSIONS_DIRECTORY,
   inspector = false,
+  gameId?: "breakout",
 ): Promise<TrialWorkspace> {
+  if (gameId === "breakout")
+    return (await import("./game-adapter.js")).prepareAdapterWorkspace(mutant);
   const parent = await mkdtemp(join(tmpdir(), "cv-"));
   const game = join(parent, "game");
   const home = await mkdtemp(join(tmpdir(), "cv-home-"));

@@ -10,7 +10,7 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { type PooledMutant, ROOT } from "../../mutator/src/gate.js";
 import { HELD_OUT } from "../../replay/src/index.js";
 import { captureRegression, persistRegression } from "../src/regressions.js";
@@ -22,6 +22,23 @@ import {
   prepareWorkspace,
   snapshot,
 } from "../src/workspace.js";
+
+it("keeps trial Git isolated from inherited publishing repository selectors", async () => {
+  const scratch = await mkdtemp(join(tmpdir(), "isolated-git-"));
+  try {
+    vi.stubEnv("GIT_DIR", join(scratch, "absent-publisher"));
+    vi.stubEnv("GIT_WORK_TREE", join(scratch, "absent-tree"));
+    vi.stubEnv("GIT_INDEX_FILE", join(scratch, "absent-index"));
+    git(scratch, ["init", "--quiet"]);
+    expect(await readdir(scratch)).toContain(".git");
+    expect(git(scratch, ["rev-parse", "--show-toplevel"])).toBe(
+      await realpath(scratch),
+    );
+  } finally {
+    vi.unstubAllEnvs();
+    await rm(scratch, { recursive: true, force: true });
+  }
+});
 
 it("creates a neutral isolated mutated repo with one commit and self-contained tests", async () => {
   const pool = JSON.parse(

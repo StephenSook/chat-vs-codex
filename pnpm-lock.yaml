@@ -74,6 +74,18 @@ importers:
         specifier: 6.4.1
         version: 6.4.1(@types/node@22.20.5)(tsx@4.23.15)
 
+  games/breakout:
+    dependencies:
+      pure-rand:
+        specifier: 7.0.1
+        version: 7.0.1
+    devDependencies:
+      vite:
+        specifier: 6.4.1
+        version: 6.4.1(@types/node@22.20.5)(tsx@4.23.15)
+
+  packages/hotfix-ready: {}
+
   packages/inspector-mcp: {}
 
   packages/mutator:

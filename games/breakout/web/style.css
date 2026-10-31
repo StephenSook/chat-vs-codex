@@ -1,0 +1,28 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #e5d5c4;
+  color: #1f1d1b;
+  font: 700 18px monospace;
+}
+main {
+  max-width: 1040px;
+  margin: 3vh auto;
+  padding: 24px;
+}
+h1 {
+  font-size: clamp(28px, 6vw, 54px);
+  margin: 0;
+}
+canvas {
+  display: block;
+  width: 100%;
+  border: 4px solid #1f1d1b;
+  box-shadow: 9px 9px #1f1d1b;
+  margin-top: 24px;
+}
+p {
+  line-height: 1.5;
+}

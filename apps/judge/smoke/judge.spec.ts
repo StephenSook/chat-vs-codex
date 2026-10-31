@@ -63,6 +63,27 @@ test("committed evidence recomputes in a static preview at desktop and phone wid
   const evidence = await (
     await page.request.get("/evidence/index.json")
   ).json();
+  if (evidence.secondGame) {
+    const second = page.getByTestId("second-game-card");
+    await expect(second).toContainText("Breakout");
+    await expect(second.locator(".big-number")).toHaveText(
+      `${evidence.secondGame.pool.accepted} / ${evidence.secondGame.pool.enumerated}`,
+    );
+    if (!evidence.secondGame.benchmark)
+      await expect(second).toContainText("Runtime benchmark pending.");
+    await second
+      .getByText("Pool, replay gates + commands", { exact: true })
+      .click();
+    await expect(
+      second.getByText("pnpm breakout:bench --run", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      second.getByRole("link", { name: "$hotfix-ready skill" }),
+    ).toHaveAttribute("href", /tools\/skills\/hotfix-ready\/SKILL\.md$/);
+    await second
+      .getByText("Pool, replay gates + commands", { exact: true })
+      .click();
+  }
   await expect(page.locator(".round-card")).toHaveCount(evidence.rounds.length);
   await page.getByText("Session + commit graph", { exact: true }).click();
   await expect(

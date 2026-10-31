@@ -12,8 +12,8 @@ export interface ReplayEvidence {
 /** Fixed-point positions are compared in pixels, never to hash differences alone. */
 export function compareReplay(
   name: string,
-  clean: ReplayResult,
-  bugged: ReplayResult,
+  clean: Pick<ReplayResult, "hashes" | "outcome" | "samples">,
+  bugged: Pick<ReplayResult, "hashes" | "outcome" | "samples">,
 ): ReplayEvidence {
   if (clean.samples.length !== bugged.samples.length || !clean.samples.length) {
     throw new Error("Incomplete replay samples");

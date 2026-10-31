@@ -8,6 +8,11 @@ import type {
   JudgeEvidence,
   Receipt,
 } from "../apps/judge/src/evidence.js";
+import {
+  type SecondGameEvidence,
+  summarizeSecondGamePool,
+  summarizeSecondGameTrials,
+} from "../apps/judge/src/second-game.js";
 import type { RegressionRecord } from "../packages/bench/src/regressions.js";
 import {
   parseResultsJsonl,
@@ -27,6 +32,29 @@ export interface CommittedSource {
   list(path: string): string[];
   commitCount(): number;
   regressionCommits(): string[];
+}
+
+export function committedSecondGame(
+  source: CommittedSource,
+  emit: (path: string, bytes: string) => string,
+): SecondGameEvidence | null {
+  const paths = new Set(source.list("games/breakout"));
+  const poolPath = "games/breakout/pool.json";
+  if (!paths.has(poolPath)) return null;
+  const poolText = source.read(poolPath);
+  const pool = summarizeSecondGamePool(poolText);
+  const resultsPath = "games/breakout/bench/results.jsonl";
+  let benchmark: SecondGameEvidence["benchmark"] = null;
+  if (paths.has(resultsPath)) {
+    const text = source.read(resultsPath);
+    summarizeSecondGameTrials(text, pool.sourceDigest);
+    benchmark = { path: emit(resultsPath, text), digest: sha(text) };
+  }
+  return {
+    game: "breakout",
+    pool: { ...pool, path: emit(poolPath, poolText), digest: sha(poolText) },
+    benchmark,
+  };
 }
 
 /** Pin one SHA before any read. Never enumerate or read working-tree evidence. */
@@ -311,6 +339,7 @@ export async function buildJudgeEvidence(
       track: simulation.track,
     },
     canary,
+    secondGame: committedSecondGame(source, emit),
   };
   emit("index.json", `${JSON.stringify(manifest)}\n`);
   return { manifest, files };

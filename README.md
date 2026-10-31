@@ -33,6 +33,11 @@ browser, presents committed round receipts and re-simulates recorded validation
 tracks when the matching build is available. Run `pnpm judge:build`; the static
 output is `apps/judge/dist/`. Run `pnpm judge:smoke` for its Playwright preview check.
 
+[Clay Breakout](games/breakout/README.md) is an original second game with seeded
+replays and source-bound sidecar mutation sites. The staged
+[`hotfix-ready` skill](tools/skills/hotfix-ready/SKILL.md) prepares small pure
+TypeScript or JavaScript game modules through the same six mutation gates.
+
 The [Game Inspector MCP](packages/inspector-mcp/README.md) gives runtime rounds
 read-only player and enemy telemetry from the original visible replays. Its SDK
 wiring is tested with a fake CLI and the real validation gate. The retained

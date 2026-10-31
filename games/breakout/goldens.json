@@ -1,0 +1,206 @@
+{
+  "replay-01": {
+    "hashes": [
+      {
+        "frame": 60,
+        "hash": "1a45bc6b"
+      },
+      {
+        "frame": 120,
+        "hash": "2ac10153"
+      },
+      {
+        "frame": 180,
+        "hash": "7ef80c17"
+      },
+      {
+        "frame": 240,
+        "hash": "31e1337b"
+      },
+      {
+        "frame": 300,
+        "hash": "29167624"
+      },
+      {
+        "frame": 360,
+        "hash": "fad9fd38"
+      },
+      {
+        "frame": 420,
+        "hash": "b35a72ac"
+      },
+      {
+        "frame": 480,
+        "hash": "e0551c40"
+      },
+      {
+        "frame": 540,
+        "hash": "4cd9afa5"
+      },
+      {
+        "frame": 600,
+        "hash": "ea0a1939"
+      }
+    ],
+    "outcome": {
+      "frame": 600,
+      "x": 23552,
+      "y": 83456,
+      "alive": false,
+      "won": false
+    }
+  },
+  "replay-02": {
+    "hashes": [
+      {
+        "frame": 60,
+        "hash": "7e624c3d"
+      },
+      {
+        "frame": 120,
+        "hash": "97f77d5b"
+      },
+      {
+        "frame": 180,
+        "hash": "c27f4210"
+      },
+      {
+        "frame": 240,
+        "hash": "5b7d29f4"
+      },
+      {
+        "frame": 300,
+        "hash": "d92aef77"
+      },
+      {
+        "frame": 360,
+        "hash": "857569db"
+      },
+      {
+        "frame": 420,
+        "hash": "16f31dcf"
+      },
+      {
+        "frame": 480,
+        "hash": "5eedc913"
+      },
+      {
+        "frame": 540,
+        "hash": "401c7d6a"
+      },
+      {
+        "frame": 600,
+        "hash": "a0b92bce"
+      }
+    ],
+    "outcome": {
+      "frame": 600,
+      "x": 35072,
+      "y": 84224,
+      "alive": false,
+      "won": false
+    }
+  },
+  "replay-03": {
+    "hashes": [
+      {
+        "frame": 60,
+        "hash": "f384fa41"
+      },
+      {
+        "frame": 120,
+        "hash": "2266630d"
+      },
+      {
+        "frame": 180,
+        "hash": "88d0d7d7"
+      },
+      {
+        "frame": 240,
+        "hash": "db622953"
+      },
+      {
+        "frame": 300,
+        "hash": "8e864cfc"
+      },
+      {
+        "frame": 360,
+        "hash": "009765e8"
+      },
+      {
+        "frame": 420,
+        "hash": "e5da4b44"
+      },
+      {
+        "frame": 480,
+        "hash": "8ffd88f0"
+      },
+      {
+        "frame": 540,
+        "hash": "2199609d"
+      },
+      {
+        "frame": 600,
+        "hash": "f0580719"
+      }
+    ],
+    "outcome": {
+      "frame": 600,
+      "x": 73984,
+      "y": 83456,
+      "alive": false,
+      "won": false
+    }
+  },
+  "held-out": {
+    "hashes": [
+      {
+        "frame": 60,
+        "hash": "b3cc5121"
+      },
+      {
+        "frame": 120,
+        "hash": "36c7001a"
+      },
+      {
+        "frame": 180,
+        "hash": "04d1290e"
+      },
+      {
+        "frame": 240,
+        "hash": "3cc98fa2"
+      },
+      {
+        "frame": 300,
+        "hash": "862a955d"
+      },
+      {
+        "frame": 360,
+        "hash": "be1ea211"
+      },
+      {
+        "frame": 420,
+        "hash": "22bddc85"
+      },
+      {
+        "frame": 480,
+        "hash": "35a69ff9"
+      },
+      {
+        "frame": 540,
+        "hash": "16265728"
+      },
+      {
+        "frame": 600,
+        "hash": "f6ac936c"
+      }
+    ],
+    "outcome": {
+      "frame": 600,
+      "x": 38144,
+      "y": 83456,
+      "alive": false,
+      "won": false
+    }
+  }
+}

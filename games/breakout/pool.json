@@ -1,0 +1,3335 @@
+{
+  "schemaVersion": 1,
+  "game": "breakout",
+  "sourceDigest": "3d69193fbcd40bc9bb182f1cf03b6cd27d5448ac6d66dbdc99f338c708323ab4",
+  "enumerated": 130,
+  "mutants": [
+    {
+      "id": "65b6fae1945e4acf",
+      "file": "src/index.ts",
+      "site": "createState",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 7,
+          "line": 42
+        },
+        "end": {
+          "column": 28,
+          "line": 42
+        }
+      },
+      "original": "PADDLE_Y - RADIUS - Q",
+      "replacement": "PADDLE_Y - RADIUS + Q",
+      "family": "createState",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 71,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 68,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "66f70b05adeddab1",
+      "file": "src/index.ts",
+      "site": "createState",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 7,
+          "line": 42
+        },
+        "end": {
+          "column": 24,
+          "line": 42
+        }
+      },
+      "original": "PADDLE_Y - RADIUS",
+      "replacement": "PADDLE_Y + RADIUS",
+      "family": "createState",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 105,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 68,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "f4919f65545ec3e9",
+      "file": "src/index.ts",
+      "site": "createState",
+      "mutator": "UnaryOperator",
+      "location": {
+        "start": {
+          "column": 25,
+          "line": 43
+        },
+        "end": {
+          "column": 27,
+          "line": 43
+        }
+      },
+      "original": "-3",
+      "replacement": "+3",
+      "family": "createState",
+      "failedReplays": [
+        "replay-01",
+        "replay-02"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 18,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "a3012c40aaab5612",
+      "file": "src/index.ts",
+      "site": "createState",
+      "mutator": "UnaryOperator",
+      "location": {
+        "start": {
+          "column": 8,
+          "line": 44
+        },
+        "end": {
+          "column": 10,
+          "line": 44
+        }
+      },
+      "original": "-4",
+      "replacement": "+4",
+      "family": "createState",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 33,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 45,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 47,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "a3da85f38aa9cdbd",
+      "file": "src/index.ts",
+      "site": "createState",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 12,
+          "line": 45
+        },
+        "end": {
+          "column": 21,
+          "line": 45
+        }
+      },
+      "original": "WIDTH / 2",
+      "replacement": "WIDTH * 2",
+      "family": "createState",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 1,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 1,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 1,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "8c89202bc0a66754",
+      "file": "src/index.ts",
+      "site": "createState",
+      "mutator": "BooleanLiteral",
+      "location": {
+        "start": {
+          "column": 14,
+          "line": 50
+        },
+        "end": {
+          "column": 19,
+          "line": 50
+        }
+      },
+      "original": "false",
+      "replacement": "true",
+      "family": "createState",
+      "failedReplays": [
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 6,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "edc93f4e8e6624e7",
+      "file": "src/index.ts",
+      "site": "wallBounce",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 62
+        },
+        "end": {
+          "column": 21,
+          "line": 62
+        }
+      },
+      "original": "next.x < RADIUS",
+      "replacement": "true",
+      "family": "wallBounce",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 1,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 13,
+          "visibleFrame": 13,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 15,
+          "visibleFrame": 15,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "67921e36128b74f7",
+      "file": "src/index.ts",
+      "site": "wallBounce",
+      "mutator": "EqualityOperator",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 62
+        },
+        "end": {
+          "column": 21,
+          "line": 62
+        }
+      },
+      "original": "next.x < RADIUS",
+      "replacement": "next.x <= RADIUS",
+      "family": "wallBounce",
+      "failedReplays": [
+        "replay-02"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 71,
+          "visibleFrame": 108,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "29e67b7322ff8248",
+      "file": "src/index.ts",
+      "site": "wallBounce",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 66
+        },
+        "end": {
+          "column": 29,
+          "line": 66
+        }
+      },
+      "original": "next.x > WIDTH - RADIUS",
+      "replacement": "true",
+      "family": "wallBounce",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 1,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 13,
+          "visibleFrame": 13,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 15,
+          "visibleFrame": 15,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "a1d65df57e876595",
+      "file": "src/index.ts",
+      "site": "wallBounce",
+      "mutator": "EqualityOperator",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 66
+        },
+        "end": {
+          "column": 29,
+          "line": 66
+        }
+      },
+      "original": "next.x > WIDTH - RADIUS",
+      "replacement": "next.x >= WIDTH - RADIUS",
+      "family": "wallBounce",
+      "failedReplays": [
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 68,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "c1c252ae9e219d81",
+      "file": "src/index.ts",
+      "site": "wallBounce",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 15,
+          "line": 66
+        },
+        "end": {
+          "column": 29,
+          "line": 66
+        }
+      },
+      "original": "WIDTH - RADIUS",
+      "replacement": "WIDTH + RADIUS",
+      "family": "wallBounce",
+      "failedReplays": [
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 60,
+          "visibleFrame": 72,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "141a54cffa19614b",
+      "file": "src/index.ts",
+      "site": "wallBounce",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 13,
+          "line": 67
+        },
+        "end": {
+          "column": 27,
+          "line": 67
+        }
+      },
+      "original": "WIDTH - RADIUS",
+      "replacement": "WIDTH + RADIUS",
+      "family": "wallBounce",
+      "failedReplays": [
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 60,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "6e0f676c04f9816b",
+      "file": "src/index.ts",
+      "site": "wallBounce",
+      "mutator": "UnaryOperator",
+      "location": {
+        "start": {
+          "column": 14,
+          "line": 68
+        },
+        "end": {
+          "column": 32,
+          "line": 68
+        }
+      },
+      "original": "-Math.abs(next.vx)",
+      "replacement": "+Math.abs(next.vx)",
+      "family": "wallBounce",
+      "failedReplays": [
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 60,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "ee6c77e4183402ca",
+      "file": "src/index.ts",
+      "site": "wallBounce",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 70
+        },
+        "end": {
+          "column": 21,
+          "line": 70
+        }
+      },
+      "original": "next.y < RADIUS",
+      "replacement": "true",
+      "family": "wallBounce",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 1,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 13,
+          "visibleFrame": 13,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 15,
+          "visibleFrame": 15,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "bb2627e13a50425b",
+      "file": "src/index.ts",
+      "site": "wallBounce",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 70
+        },
+        "end": {
+          "column": 21,
+          "line": 70
+        }
+      },
+      "original": "next.y < RADIUS",
+      "replacement": "false",
+      "family": "wallBounce",
+      "failedReplays": [
+        "replay-02"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 83,
+          "visibleFrame": 87,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "8351a244de624f43",
+      "file": "src/index.ts",
+      "site": "wallBounce",
+      "mutator": "EqualityOperator",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 70
+        },
+        "end": {
+          "column": 21,
+          "line": 70
+        }
+      },
+      "original": "next.y < RADIUS",
+      "replacement": "next.y >= RADIUS",
+      "family": "wallBounce",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 1,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 13,
+          "visibleFrame": 13,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 15,
+          "visibleFrame": 15,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "7b4fa25844c905de",
+      "file": "src/index.ts",
+      "site": "wallBounce",
+      "mutator": "BlockStatement",
+      "location": {
+        "start": {
+          "column": 23,
+          "line": 70
+        },
+        "end": {
+          "column": 3,
+          "line": 73
+        }
+      },
+      "original": "{\n    next.y = RADIUS;\n    next.vy = Math.abs(next.vy);\n  }",
+      "replacement": "{}",
+      "family": "wallBounce",
+      "failedReplays": [
+        "replay-02"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 83,
+          "visibleFrame": 87,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "3557834df2e01cf4",
+      "file": "src/index.ts",
+      "site": "paddleBounce",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 4,
+          "line": 77
+        },
+        "end": {
+          "column": 48,
+          "line": 81
+        }
+      },
+      "original": "next.vy > 0 &&\n    previousY + RADIUS <= PADDLE_Y &&\n    next.y + RADIUS >= PADDLE_Y &&\n    next.x + RADIUS >= next.paddle - PADDLE_HALF &&\n    next.x - RADIUS <= next.paddle + PADDLE_HALF",
+      "replacement": "true",
+      "family": "paddleBounce",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 8,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 13,
+          "visibleFrame": 20,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 15,
+          "visibleFrame": 22,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "8b4b0075fdbc4381",
+      "file": "src/index.ts",
+      "site": "paddleBounce",
+      "mutator": "LogicalOperator",
+      "location": {
+        "start": {
+          "column": 4,
+          "line": 77
+        },
+        "end": {
+          "column": 48,
+          "line": 81
+        }
+      },
+      "original": "next.vy > 0 &&\n    previousY + RADIUS <= PADDLE_Y &&\n    next.y + RADIUS >= PADDLE_Y &&\n    next.x + RADIUS >= next.paddle - PADDLE_HALF &&\n    next.x - RADIUS <= next.paddle + PADDLE_HALF",
+      "replacement": "next.vy > 0 && previousY + RADIUS <= PADDLE_Y && next.y + RADIUS >= PADDLE_Y && next.x + RADIUS >= next.paddle - PADDLE_HALF || next.x - RADIUS <= next.paddle + PADDLE_HALF",
+      "family": "paddleBounce",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 8,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 13,
+          "visibleFrame": 20,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 15,
+          "visibleFrame": 46,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "62674a3aa4dcf7d7",
+      "file": "src/index.ts",
+      "site": "paddleBounce",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 4,
+          "line": 77
+        },
+        "end": {
+          "column": 48,
+          "line": 80
+        }
+      },
+      "original": "next.vy > 0 &&\n    previousY + RADIUS <= PADDLE_Y &&\n    next.y + RADIUS >= PADDLE_Y &&\n    next.x + RADIUS >= next.paddle - PADDLE_HALF",
+      "replacement": "true",
+      "family": "paddleBounce",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 8,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 13,
+          "visibleFrame": 20,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 15,
+          "visibleFrame": 46,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "4a2c9104636d4126",
+      "file": "src/index.ts",
+      "site": "paddleBounce",
+      "mutator": "LogicalOperator",
+      "location": {
+        "start": {
+          "column": 4,
+          "line": 77
+        },
+        "end": {
+          "column": 48,
+          "line": 80
+        }
+      },
+      "original": "next.vy > 0 &&\n    previousY + RADIUS <= PADDLE_Y &&\n    next.y + RADIUS >= PADDLE_Y &&\n    next.x + RADIUS >= next.paddle - PADDLE_HALF",
+      "replacement": "next.vy > 0 && previousY + RADIUS <= PADDLE_Y && next.y + RADIUS >= PADDLE_Y || next.x + RADIUS >= next.paddle - PADDLE_HALF",
+      "family": "paddleBounce",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 8,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 13,
+          "visibleFrame": 44,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 15,
+          "visibleFrame": 46,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "4ed295b21f831a27",
+      "file": "src/index.ts",
+      "site": "paddleBounce",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 4,
+          "line": 77
+        },
+        "end": {
+          "column": 31,
+          "line": 79
+        }
+      },
+      "original": "next.vy > 0 &&\n    previousY + RADIUS <= PADDLE_Y &&\n    next.y + RADIUS >= PADDLE_Y",
+      "replacement": "true",
+      "family": "paddleBounce",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 1,
+          "visibleFrame": 8,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 13,
+          "visibleFrame": 44,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 15,
+          "visibleFrame": 46,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "45c637e714bc1126",
+      "file": "src/index.ts",
+      "site": "paddleBounce",
+      "mutator": "LogicalOperator",
+      "location": {
+        "start": {
+          "column": 4,
+          "line": 77
+        },
+        "end": {
+          "column": 31,
+          "line": 79
+        }
+      },
+      "original": "next.vy > 0 &&\n    previousY + RADIUS <= PADDLE_Y &&\n    next.y + RADIUS >= PADDLE_Y",
+      "replacement": "next.vy > 0 && previousY + RADIUS <= PADDLE_Y || next.y + RADIUS >= PADDLE_Y",
+      "family": "paddleBounce",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 50,
+          "visibleFrame": 50,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 83,
+          "visibleFrame": 83,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 74,
+          "visibleFrame": 74,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "c10ead2b61df3cf5",
+      "file": "src/index.ts",
+      "site": "paddleBounce",
+      "mutator": "LogicalOperator",
+      "location": {
+        "start": {
+          "column": 4,
+          "line": 77
+        },
+        "end": {
+          "column": 34,
+          "line": 78
+        }
+      },
+      "original": "next.vy > 0 &&\n    previousY + RADIUS <= PADDLE_Y",
+      "replacement": "next.vy > 0 || previousY + RADIUS <= PADDLE_Y",
+      "family": "paddleBounce",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 50,
+          "visibleFrame": 50,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 83,
+          "visibleFrame": 83,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 74,
+          "visibleFrame": 74,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "ccc8de6df47d8747",
+      "file": "src/index.ts",
+      "site": "paddleBounce",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 4,
+          "line": 80
+        },
+        "end": {
+          "column": 48,
+          "line": 80
+        }
+      },
+      "original": "next.x + RADIUS >= next.paddle - PADDLE_HALF",
+      "replacement": "true",
+      "family": "paddleBounce",
+      "failedReplays": [
+        "replay-01",
+        "replay-02"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 99,
+          "visibleFrame": 101,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 164,
+          "visibleFrame": 165,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "dfcd08e2cc0f66e5",
+      "file": "src/index.ts",
+      "site": "paddleBounce",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 4,
+          "line": 81
+        },
+        "end": {
+          "column": 48,
+          "line": 81
+        }
+      },
+      "original": "next.x - RADIUS <= next.paddle + PADDLE_HALF",
+      "replacement": "true",
+      "family": "paddleBounce",
+      "failedReplays": [
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 133,
+          "visibleFrame": 135,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "b6bf4132222c91be",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "BlockStatement",
+      "location": {
+        "start": {
+          "column": 30,
+          "line": 90
+        },
+        "end": {
+          "column": 3,
+          "line": 108
+        }
+      },
+      "original": "{\n    if (!(next.bricks & (1 << brick.id))) continue;\n    if (\n      next.x + RADIUS >= brick.x &&\n      next.x - RADIUS <= brick.x + BRICK_W &&\n      next.y + RADIUS >= brick.y &&\n      next.y - RADIUS <= brick.y + BRICK_H\n    ) {\n      next.bricks &= ~(1 << brick.id);\n      next.score += 10;\n      if (\n        previousY + RADIUS <= brick.y ||\n        previousY - RADIUS >= brick.y + BRICK_H\n      )\n        next.vy = -next.vy;\n      else next.vx = -next.vx;\n      break;\n    }\n  }",
+      "replacement": "{}",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": 54,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": 75,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "83efc3e7e375f64c",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "BooleanLiteral",
+      "location": {
+        "start": {
+          "column": 8,
+          "line": 91
+        },
+        "end": {
+          "column": 40,
+          "line": 91
+        }
+      },
+      "original": "!(next.bricks & (1 << brick.id))",
+      "replacement": "next.bricks & 1 << brick.id",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": 54,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": 75,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "7b8086cf1284b9a1",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 8,
+          "line": 91
+        },
+        "end": {
+          "column": 40,
+          "line": 91
+        }
+      },
+      "original": "!(next.bricks & (1 << brick.id))",
+      "replacement": "true",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": 54,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": 75,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "442f4d6b22dde1e1",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 8,
+          "line": 91
+        },
+        "end": {
+          "column": 40,
+          "line": 91
+        }
+      },
+      "original": "!(next.bricks & (1 << brick.id))",
+      "replacement": "false",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 89,
+          "visibleFrame": 94,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 75,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "a99a874dae46c875",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 93
+        },
+        "end": {
+          "column": 42,
+          "line": 96
+        }
+      },
+      "original": "next.x + RADIUS >= brick.x &&\n      next.x - RADIUS <= brick.x + BRICK_W &&\n      next.y + RADIUS >= brick.y &&\n      next.y - RADIUS <= brick.y + BRICK_H",
+      "replacement": "false",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": 54,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": 75,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "9c508a40780b2a66",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 93
+        },
+        "end": {
+          "column": 32,
+          "line": 95
+        }
+      },
+      "original": "next.x + RADIUS >= brick.x &&\n      next.x - RADIUS <= brick.x + BRICK_W &&\n      next.y + RADIUS >= brick.y",
+      "replacement": "true",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 61,
+          "visibleFrame": 66,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 63,
+          "visibleFrame": 67,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "4d425ca9627799a0",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 93
+        },
+        "end": {
+          "column": 42,
+          "line": 94
+        }
+      },
+      "original": "next.x + RADIUS >= brick.x &&\n      next.x - RADIUS <= brick.x + BRICK_W",
+      "replacement": "true",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 61,
+          "visibleFrame": 66,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 63,
+          "visibleFrame": 67,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "f704b4ef365171a7",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 93
+        },
+        "end": {
+          "column": 32,
+          "line": 93
+        }
+      },
+      "original": "next.x + RADIUS >= brick.x",
+      "replacement": "true",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-02"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 61,
+          "visibleFrame": 66,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "0049f052b2be7699",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "EqualityOperator",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 93
+        },
+        "end": {
+          "column": 32,
+          "line": 93
+        }
+      },
+      "original": "next.x + RADIUS >= brick.x",
+      "replacement": "next.x + RADIUS > brick.x",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-02"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 93,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "09bace6015b52028",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "EqualityOperator",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 93
+        },
+        "end": {
+          "column": 32,
+          "line": 93
+        }
+      },
+      "original": "next.x + RADIUS >= brick.x",
+      "replacement": "next.x + RADIUS < brick.x",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 61,
+          "visibleFrame": 66,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": 75,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "220c8f4445bb818d",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 93
+        },
+        "end": {
+          "column": 21,
+          "line": 93
+        }
+      },
+      "original": "next.x + RADIUS",
+      "replacement": "next.x - RADIUS",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-02"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 75,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "32fd0e2c896afd07",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 94
+        },
+        "end": {
+          "column": 42,
+          "line": 94
+        }
+      },
+      "original": "next.x - RADIUS <= brick.x + BRICK_W",
+      "replacement": "true",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 63,
+          "visibleFrame": 67,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "34017a45d50dcef5",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "EqualityOperator",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 94
+        },
+        "end": {
+          "column": 42,
+          "line": 94
+        }
+      },
+      "original": "next.x - RADIUS <= brick.x + BRICK_W",
+      "replacement": "next.x - RADIUS > brick.x + BRICK_W",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 63,
+          "visibleFrame": 67,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "4c0270c378c651e8",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 94
+        },
+        "end": {
+          "column": 21,
+          "line": 94
+        }
+      },
+      "original": "next.x - RADIUS",
+      "replacement": "next.x + RADIUS",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": 78,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "0013d18dd14b196f",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 25,
+          "line": 94
+        },
+        "end": {
+          "column": 42,
+          "line": 94
+        }
+      },
+      "original": "brick.x + BRICK_W",
+      "replacement": "brick.x - BRICK_W",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": 54,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": 75,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "db00a97c6ccc8aa2",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 95
+        },
+        "end": {
+          "column": 32,
+          "line": 95
+        }
+      },
+      "original": "next.y + RADIUS >= brick.y",
+      "replacement": "true",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-02"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 85,
+          "visibleFrame": 169,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "fec8f47fee19b25e",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "EqualityOperator",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 95
+        },
+        "end": {
+          "column": 32,
+          "line": 95
+        }
+      },
+      "original": "next.y + RADIUS >= brick.y",
+      "replacement": "next.y + RADIUS < brick.y",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": 54,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 80,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "3e7dcdf629f710f6",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 95
+        },
+        "end": {
+          "column": 21,
+          "line": 95
+        }
+      },
+      "original": "next.y + RADIUS",
+      "replacement": "next.y - RADIUS",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 76,
+          "visibleFrame": 101,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 74,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "804bef172d6e7883",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 96
+        },
+        "end": {
+          "column": 21,
+          "line": 96
+        }
+      },
+      "original": "next.y - RADIUS",
+      "replacement": "next.y + RADIUS",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": 53,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 93,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "5961bc99b5a4e4c1",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 25,
+          "line": 96
+        },
+        "end": {
+          "column": 42,
+          "line": 96
+        }
+      },
+      "original": "brick.y + BRICK_H",
+      "replacement": "brick.y - BRICK_H",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": 54,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": 75,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "281d8514d40e38ca",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "BlockStatement",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 97
+        },
+        "end": {
+          "column": 5,
+          "line": 107
+        }
+      },
+      "original": "{\n      next.bricks &= ~(1 << brick.id);\n      next.score += 10;\n      if (\n        previousY + RADIUS <= brick.y ||\n        previousY - RADIUS >= brick.y + BRICK_H\n      )\n        next.vy = -next.vy;\n      else next.vx = -next.vx;\n      break;\n    }",
+      "replacement": "{}",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": 54,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": 75,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "2423c2763ff58feb",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "AssignmentOperator",
+      "location": {
+        "start": {
+          "column": 6,
+          "line": 98
+        },
+        "end": {
+          "column": 37,
+          "line": 98
+        }
+      },
+      "original": "next.bricks &= ~(1 << brick.id)",
+      "replacement": "next.bricks |= ~(1 << brick.id)",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 94,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "67dad40ded5c4c71",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "UnaryOperator",
+      "location": {
+        "start": {
+          "column": 21,
+          "line": 98
+        },
+        "end": {
+          "column": 37,
+          "line": 98
+        }
+      },
+      "original": "~(1 << brick.id)",
+      "replacement": "1 << brick.id",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 97,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "a018a3fe39ff9da9",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 8,
+          "line": 101
+        },
+        "end": {
+          "column": 47,
+          "line": 102
+        }
+      },
+      "original": "previousY + RADIUS <= brick.y ||\n        previousY - RADIUS >= brick.y + BRICK_H",
+      "replacement": "true",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 75,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": 68,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "c9a681ff21b6b773",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 8,
+          "line": 101
+        },
+        "end": {
+          "column": 47,
+          "line": 102
+        }
+      },
+      "original": "previousY + RADIUS <= brick.y ||\n        previousY - RADIUS >= brick.y + BRICK_H",
+      "replacement": "false",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": 53,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 99,
+          "visibleFrame": 103,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 73,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "932d77fe43a25e5d",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "LogicalOperator",
+      "location": {
+        "start": {
+          "column": 8,
+          "line": 101
+        },
+        "end": {
+          "column": 47,
+          "line": 102
+        }
+      },
+      "original": "previousY + RADIUS <= brick.y ||\n        previousY - RADIUS >= brick.y + BRICK_H",
+      "replacement": "previousY + RADIUS <= brick.y && previousY - RADIUS >= brick.y + BRICK_H",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": 53,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 99,
+          "visibleFrame": 103,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 73,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "e23a0f1418adf406",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 8,
+          "line": 101
+        },
+        "end": {
+          "column": 37,
+          "line": 101
+        }
+      },
+      "original": "previousY + RADIUS <= brick.y",
+      "replacement": "false",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-02"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 99,
+          "visibleFrame": 103,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "4db57ffeb7c61bd0",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "EqualityOperator",
+      "location": {
+        "start": {
+          "column": 8,
+          "line": 101
+        },
+        "end": {
+          "column": 37,
+          "line": 101
+        }
+      },
+      "original": "previousY + RADIUS <= brick.y",
+      "replacement": "previousY + RADIUS > brick.y",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 71,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": 68,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "6b91a73ebb3d8e1f",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 8,
+          "line": 101
+        },
+        "end": {
+          "column": 26,
+          "line": 101
+        }
+      },
+      "original": "previousY + RADIUS",
+      "replacement": "previousY - RADIUS",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 76,
+          "visibleFrame": 80,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 74,
+          "visibleFrame": 78,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "ff953c17acba9acc",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ConditionalExpression",
+      "location": {
+        "start": {
+          "column": 8,
+          "line": 102
+        },
+        "end": {
+          "column": 47,
+          "line": 102
+        }
+      },
+      "original": "previousY - RADIUS >= brick.y + BRICK_H",
+      "replacement": "false",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": 53,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 104,
+          "visibleFrame": 108,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 73,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "b59d976773a6ff96",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 8,
+          "line": 102
+        },
+        "end": {
+          "column": 26,
+          "line": 102
+        }
+      },
+      "original": "previousY - RADIUS",
+      "replacement": "previousY + RADIUS",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 75,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": 68,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "2ef443b47cedbde8",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "ArithmeticOperator",
+      "location": {
+        "start": {
+          "column": 30,
+          "line": 102
+        },
+        "end": {
+          "column": 47,
+          "line": 102
+        }
+      },
+      "original": "brick.y + BRICK_H",
+      "replacement": "brick.y - BRICK_H",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 75,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": 68,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "24e70a7092f7d266",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "UnaryOperator",
+      "location": {
+        "start": {
+          "column": 18,
+          "line": 104
+        },
+        "end": {
+          "column": 26,
+          "line": 104
+        }
+      },
+      "original": "-next.vy",
+      "replacement": "+next.vy",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-01",
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": true,
+          "firstDivergence": 49,
+          "visibleFrame": 54,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 99,
+          "visibleFrame": 104,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 73,
+          "visibleFrame": 77,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    },
+    {
+      "id": "000f176129a153b9",
+      "file": "src/index.ts",
+      "site": "hitBrick",
+      "mutator": "UnaryOperator",
+      "location": {
+        "start": {
+          "column": 21,
+          "line": 105
+        },
+        "end": {
+          "column": 29,
+          "line": 105
+        }
+      },
+      "original": "-next.vx",
+      "replacement": "+next.vx",
+      "family": "hitBrick",
+      "failedReplays": [
+        "replay-02",
+        "replay-03"
+      ],
+      "evidence": [
+        {
+          "name": "replay-01",
+          "failed": false,
+          "firstDivergence": null,
+          "visibleFrame": null,
+          "symptom": null
+        },
+        {
+          "name": "replay-02",
+          "failed": true,
+          "firstDivergence": 67,
+          "visibleFrame": 74,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        },
+        {
+          "name": "replay-03",
+          "failed": true,
+          "firstDivergence": 64,
+          "visibleFrame": 71,
+          "symptom": "The ball leaves its expected path or drops below the playfield."
+        }
+      ],
+      "gates": {
+        "typecheck": true,
+        "differentMinifiedOutput": true,
+        "killed": true,
+        "visible": true,
+        "frameBudget": 3600,
+        "processBudgetMs": 3000,
+        "canaryFrames": 1200
+      }
+    }
+  ],
+  "rejected": {
+    "typecheck": 1,
+    "not-killed": 43,
+    "frame-budget": 4,
+    "unsurvivable": 21,
+    "invisible": 1
+  }
+}

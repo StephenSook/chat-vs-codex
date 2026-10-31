@@ -19,6 +19,7 @@ import {
   sha256,
 } from "./proof.js";
 import "./style.css";
+import { summarizeSecondGameTrials } from "./second-game.js";
 
 const REPO = "https://github.com/StephenSook/chat-vs-codex";
 function element<K extends keyof HTMLElementTagNameMap>(
@@ -109,6 +110,7 @@ async function start(): Promise<void> {
     ["Sandbox", "sandbox"],
   ])
     nav.append(link(label ?? "", `#${id}`));
+  if (evidence.secondGame) nav.append(link("Second game", "#second-game"));
   const header = element("header");
   header.id = "top";
   const brand = element("h1", undefined, "brand");
@@ -248,6 +250,98 @@ async function start(): Promise<void> {
   );
   numbers.append(details("Recompute + retained losses", method));
   app.append(numbers);
+  if (evidence.secondGame) {
+    const game = evidence.secondGame;
+    const second = section(
+      "second-game",
+      "SAME REPAIR LOOP / NEW GENRE",
+      "Second game",
+    );
+    const card = element("article", undefined, "metric-card");
+    card.dataset.testid = "second-game-card";
+    card.append(
+      element("h3", "Breakout"),
+      element(
+        "p",
+        "Original paddle-and-brick game. Sidecar sites leave its source unchanged.",
+      ),
+      element(
+        "strong",
+        `${game.pool.accepted} / ${game.pool.enumerated}`,
+        "big-number",
+      ),
+      element("p", "Candidates passed every mutation gate"),
+    );
+    const more = element("div");
+    more.append(
+      element(
+        "p",
+        "Typecheck, minified difference, failing replay, visible divergence, bounded execution and a 20-second surviving canary.",
+      ),
+      element("code", `Pool SHA-256 ${game.pool.digest}`),
+      element("code", `Game source SHA-256 ${game.pool.sourceDigest}`),
+      element(
+        "code",
+        "pnpm exec tsx tools/skills/hotfix-ready/scripts/prepare.ts gate games/breakout",
+      ),
+      element("code", "pnpm breakout:bench --run"),
+      link("Download gated pool", game.pool.path),
+      link(
+        "Inspect original game",
+        `${REPO}/tree/${evidence.commit}/games/breakout`,
+      ),
+      link(
+        "$hotfix-ready skill",
+        `${REPO}/blob/${evidence.commit}/tools/skills/hotfix-ready/SKILL.md`,
+      ),
+      details(
+        "Sites, operators and rejected candidates",
+        json({
+          sites: game.pool.sites,
+          operators: game.pool.operators,
+          rejected: game.pool.rejected,
+        }),
+      ),
+    );
+    let trialText: string | null = null;
+    if (game.benchmark) {
+      const result = await fetch(
+        new URL(game.benchmark.path, document.baseURI),
+      );
+      if (!result.ok)
+        throw new Error("Second-game benchmark could not be loaded");
+      trialText = await result.text();
+      if ((await sha256(trialText)) !== game.benchmark.digest)
+        throw new Error("Second-game benchmark SHA-256 mismatch");
+      more.append(
+        link("Download second-game trial results", game.benchmark.path),
+      );
+    }
+    const measured =
+      trialText === null
+        ? null
+        : summarizeSecondGameTrials(trialText, game.pool.sourceDigest);
+    if (!measured?.models.length)
+      card.append(element("p", "Runtime benchmark pending."));
+    else {
+      for (const model of measured.models) {
+        const row = element("div", undefined, "mini-stats");
+        row.append(
+          stat(
+            `${model.model} / ${model.effort}`,
+            `${model.overall.green}/${model.overall.trials} green`,
+          ),
+          stat("Median", seconds(model.overall.medianGreenMs)),
+          stat("p90", seconds(model.overall.p90GreenMs)),
+        );
+        card.append(row);
+      }
+      more.append(details("Recomputed trial statistics", json(measured)));
+    }
+    card.append(details("Pool, replay gates + commands", more));
+    second.append(card);
+    app.append(second);
+  }
 
   const replay = section(
     "replay",

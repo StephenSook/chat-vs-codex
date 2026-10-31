@@ -15,6 +15,12 @@ export interface Candidate {
   replacement: string;
 }
 
+export interface HotfixRegion {
+  name: string;
+  start: number;
+  end: number;
+}
+
 const logger = {
   debug() {},
   info() {},
@@ -76,8 +82,10 @@ export function regions(
 export async function enumerate(
   source: string,
   file: string,
+  sidecar?: readonly HotfixRegion[],
 ): Promise<Candidate[]> {
-  const sites = regions(source);
+  const sites = sidecar ?? regions(source);
+  validateRegions(source, sites);
   if (!sites.length) return [];
   const result = await new Instrumenter(logger).instrument(
     [
@@ -124,13 +132,38 @@ function positionAt(source: string, offset: number): Position {
   return { line: prefix.length - 1, column: prefix.at(-1)?.length ?? 0 };
 }
 
-export function applyCandidate(source: string, candidate: Candidate): string {
+export function validateRegions(
+  source: string,
+  sites: readonly HotfixRegion[],
+): void {
+  let end = 0;
+  for (const site of sites) {
+    if (
+      !site.name ||
+      !Number.isSafeInteger(site.start) ||
+      !Number.isSafeInteger(site.end) ||
+      site.start < end ||
+      site.start >= site.end ||
+      site.end > source.length
+    )
+      throw new Error("Invalid or overlapping sidecar regions");
+    end = site.end;
+  }
+}
+
+export function applyCandidate(
+  source: string,
+  candidate: Candidate,
+  sidecar?: readonly HotfixRegion[],
+): string {
   const start = offsetAt(source, candidate.location.start);
   const end = offsetAt(source, candidate.location.end);
   if (source.slice(start, end) !== candidate.original) {
     throw new Error("Mutation source drift: original bytes no longer match");
   }
-  const site = regions(source).find(
+  const sites = sidecar ?? regions(source);
+  validateRegions(source, sites);
+  const site = sites.find(
     (s) => s.name === candidate.site && start >= s.start && end <= s.end,
   );
   if (!site) throw new Error("Mutation is outside an authorized hotfix site");

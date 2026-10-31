@@ -10,6 +10,7 @@ import { changedPaths, prepareWorkspace, snapshot } from "./workspace.js";
 export async function runPreflight(
   runsDirectory: string,
   profile?: string,
+  gameId?: "breakout",
 ): Promise<string> {
   await mkdir(runsDirectory, { recursive: true });
   const path = join(runsDirectory, `preflight-${randomUUID()}.jsonl`);
@@ -19,7 +20,7 @@ export async function runPreflight(
       `${JSON.stringify({ timestamp: new Date().toISOString(), ...(value as object) })}\n`,
     );
   };
-  const workspace = await prepareWorkspace(null);
+  const workspace = await prepareWorkspace(null, undefined, false, gameId);
   try {
     const permissions = profile ?? (await loadProfile());
     await log({
@@ -34,6 +35,8 @@ export async function runPreflight(
       permissions,
       () => 60000 - (performance.now() - started),
       log,
+      undefined,
+      gameId,
     );
     if (changedPaths(workspace.before, await snapshot(workspace.game)).length)
       throw new Error("Clean-source validation changed protected files");

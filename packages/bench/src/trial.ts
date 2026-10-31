@@ -31,7 +31,7 @@ import {
 
 export const HARD_BUDGET_MS = 240000;
 
-export function buildTicket(mutant: PooledMutant): string {
+export function buildTicket(mutant: PooledMutant, gameId?: "breakout"): string {
   const failures = mutant.evidence.filter((e) => e.failed);
   const frames = failures.flatMap((e) =>
     e.firstDivergence === null ? [] : [e.firstDivergence],
@@ -39,7 +39,7 @@ export function buildTicket(mutant: PooledMutant): string {
   const symptom = failures.find((e) => e.visibleFrame !== null)?.symptom;
   if (!frames.length || !symptom)
     throw new Error("Missing observable evidence");
-  return `Bug ticket\nFailing replays: ${failures.map((e) => neutralReplayName(e.name)).join(", ")}\nFirst divergent frame: ${Math.min(...frames)}\nViewer symptom: ${symptom}\n\nRepair the game source. Tests, fixtures and tooling are immutable. Run node node_modules/vitest/vitest.mjs run to check the repair. Return the requested structured diagnosis.`;
+  return `Bug ticket\nFailing replays: ${failures.map((e) => (gameId ? e.name : neutralReplayName(e.name))).join(", ")}\nFirst divergent frame: ${Math.min(...frames)}\nViewer symptom: ${symptom}\n\nRepair the game source. Tests, fixtures and tooling are immutable. Run node node_modules/vitest/vitest.mjs run to check the repair. Return the requested structured diagnosis.`;
 }
 
 export function sandboxCommand(
@@ -67,6 +67,7 @@ export async function validateWorkspace(
   remaining: () => number,
   log: (value: unknown) => Promise<void>,
   onReplay?: (replay: ValidatedReplay) => void | Promise<void>,
+  gameId?: "breakout",
 ): Promise<void> {
   let codex: string | undefined;
   async function command(program: string, args: string[]): Promise<string> {
@@ -111,6 +112,10 @@ export async function validateWorkspace(
     join(workspace.game, "node_modules/vitest/vitest.mjs"),
     "run",
   ]);
+  const proof =
+    gameId === "breakout"
+      ? await (await import("./game-adapter.js")).adapterHeldOut()
+      : { track: HELD_OUT, expected: goldenResult(HELD_OUT) };
   const hidden = join(workspace.game, "test/.held-out-check.mjs");
   let replay: ValidatedReplay | undefined;
   try {
@@ -119,7 +124,7 @@ export async function validateWorkspace(
       stdin: {
         contents: `
         import { createState, step, hashState } from ${JSON.stringify(join(workspace.game, "src/index.ts"))};
-        const track = ${JSON.stringify(HELD_OUT)};
+        const track = ${JSON.stringify(proof.track)};
         let state = createState(track.seed); const hashes = []; ${onReplay ? "const frames = [];" : ""}
         for (const input of track.inputs) {
           state = step(state,input);
@@ -127,7 +132,7 @@ export async function validateWorkspace(
           ${onReplay ? "frames.push({frame:state.frame,x:state.x,y:state.y,alive:state.alive,won:state.won,stateHash:hashState(state)});" : ""}
         }
         const outcome={frame:state.frame,x:state.x,y:state.y,alive:state.alive,won:state.won};
-        if(JSON.stringify({hashes,outcome})!==${JSON.stringify(JSON.stringify(goldenResult(HELD_OUT)))}) throw new Error('Held-out replay failed');
+        if(JSON.stringify({hashes,outcome})!==${JSON.stringify(JSON.stringify(proof.expected))}) throw new Error('Held-out replay failed');
         console.log('Held-out replay passed');
         ${onReplay ? `console.log(${JSON.stringify(REPLAY_TRACE_PREFIX)} + JSON.stringify(frames));` : ""}
       `,
@@ -158,6 +163,7 @@ export function isSandboxFailure(message: string): boolean {
 }
 
 export interface TrialOptions extends ModelSpec {
+  gameId?: "breakout";
   mutant: PooledMutant;
   trialId: string;
   batchId: string;
@@ -202,11 +208,16 @@ export async function executeTrial(
   const abort = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    workspace = await prepareWorkspace(options.mutant);
+    workspace = await prepareWorkspace(
+      options.mutant,
+      undefined,
+      false,
+      options.gameId,
+    );
     const profile = await loadProfile();
     const launcher = join(options.runsDirectory, `${options.trialId}.launcher`);
     await createLauncher(launcher);
-    const ticket = buildTicket(options.mutant);
+    const ticket = buildTicket(options.mutant, options.gameId);
     await log({
       kind: "trial.started",
       mutant: options.mutant.id,
@@ -291,6 +302,8 @@ export async function executeTrial(
       profile,
       () => HARD_BUDGET_MS - (performance.now() - started),
       log,
+      undefined,
+      options.gameId,
     );
     await checkChanges();
     const elapsed = performance.now() - started;

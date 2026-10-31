@@ -1,5 +1,6 @@
 import type { Track } from "../../../packages/replay/src/index.js";
 import type { publicReceipt } from "../../../packages/round/src/receipt.js";
+import type { SecondGameEvidence } from "./second-game.js";
 
 /** Type-only seam with the receipt producer. Legacy receipts lack newer fields. */
 export type Receipt = Omit<ReturnType<typeof publicReceipt>, "clock"> & {
@@ -33,6 +34,7 @@ export interface JudgeEvidence {
   }[];
   replay: { artifactPath: string; buildDigest: string; track: Track };
   canary: CanaryReceipt;
+  secondGame?: SecondGameEvidence | null;
 }
 
 export function roundLabel(receipt: Receipt): string {
