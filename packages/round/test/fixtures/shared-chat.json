@@ -1,0 +1,290 @@
+[
+  {
+    "subscriptionChannelId": "fixture-left",
+    "message": {
+      "type": "channel.chat.message",
+      "event": {
+        "broadcaster_user_id": "fixture-left",
+        "broadcaster_user_login": "fixture_channel",
+        "broadcaster_user_name": "Fixture Channel",
+        "chatter_user_id": "viewer-fixture-left",
+        "chatter_user_login": "fixture_viewer",
+        "chatter_user_name": "Fixture Viewer",
+        "message_id": "break-fixture-left",
+        "message": {
+          "text": "!break",
+          "fragments": [
+            {
+              "type": "text",
+              "text": "!break"
+            }
+          ]
+        },
+        "message_type": "text",
+        "badges": [],
+        "cheer": null,
+        "color": "",
+        "reply": null,
+        "channel_points_custom_reward_id": null,
+        "source_broadcaster_user_id": null,
+        "source_broadcaster_user_login": null,
+        "source_broadcaster_user_name": null,
+        "source_message_id": null,
+        "source_badges": null,
+        "is_source_only": false
+      }
+    }
+  },
+  {
+    "subscriptionChannelId": "fixture-right",
+    "message": {
+      "type": "channel.chat.message",
+      "event": {
+        "broadcaster_user_id": "fixture-right",
+        "broadcaster_user_login": "fixture_channel",
+        "broadcaster_user_name": "Fixture Channel",
+        "chatter_user_id": "viewer-fixture-left",
+        "chatter_user_login": "fixture_viewer",
+        "chatter_user_name": "Fixture Viewer",
+        "message_id": "echo-break-fixture-left",
+        "message": {
+          "text": "!break",
+          "fragments": [
+            {
+              "type": "text",
+              "text": "!break"
+            }
+          ]
+        },
+        "message_type": "text",
+        "badges": [],
+        "cheer": null,
+        "color": "",
+        "reply": null,
+        "channel_points_custom_reward_id": null,
+        "source_broadcaster_user_id": "fixture-left",
+        "source_broadcaster_user_login": "fixture_source",
+        "source_broadcaster_user_name": "Fixture Source",
+        "source_message_id": "break-fixture-left",
+        "source_badges": [],
+        "is_source_only": false
+      }
+    }
+  },
+  {
+    "subscriptionChannelId": "fixture-right",
+    "message": {
+      "type": "channel.chat.message",
+      "event": {
+        "broadcaster_user_id": "fixture-right",
+        "broadcaster_user_login": "fixture_channel",
+        "broadcaster_user_name": "Fixture Channel",
+        "chatter_user_id": "viewer-fixture-right",
+        "chatter_user_login": "fixture_viewer",
+        "chatter_user_name": "Fixture Viewer",
+        "message_id": "break-fixture-right",
+        "message": {
+          "text": "!break",
+          "fragments": [
+            {
+              "type": "text",
+              "text": "!break"
+            }
+          ]
+        },
+        "message_type": "text",
+        "badges": [],
+        "cheer": null,
+        "color": "",
+        "reply": null,
+        "channel_points_custom_reward_id": null,
+        "source_broadcaster_user_id": null,
+        "source_broadcaster_user_login": null,
+        "source_broadcaster_user_name": null,
+        "source_message_id": null,
+        "source_badges": null,
+        "is_source_only": false
+      }
+    }
+  },
+  {
+    "subscriptionChannelId": "fixture-left",
+    "message": {
+      "type": "channel.chat.message",
+      "event": {
+        "broadcaster_user_id": "fixture-left",
+        "broadcaster_user_login": "fixture_channel",
+        "broadcaster_user_name": "Fixture Channel",
+        "chatter_user_id": "viewer-fixture-right",
+        "chatter_user_login": "fixture_viewer",
+        "chatter_user_name": "Fixture Viewer",
+        "message_id": "echo-break-fixture-right",
+        "message": {
+          "text": "!break",
+          "fragments": [
+            {
+              "type": "text",
+              "text": "!break"
+            }
+          ]
+        },
+        "message_type": "text",
+        "badges": [],
+        "cheer": null,
+        "color": "",
+        "reply": null,
+        "channel_points_custom_reward_id": null,
+        "source_broadcaster_user_id": "fixture-right",
+        "source_broadcaster_user_login": "fixture_source",
+        "source_broadcaster_user_name": "Fixture Source",
+        "source_message_id": "break-fixture-right",
+        "source_badges": [],
+        "is_source_only": false
+      }
+    }
+  },
+  {
+    "subscriptionChannelId": "fixture-left",
+    "message": {
+      "type": "channel.chat.message",
+      "event": {
+        "broadcaster_user_id": "fixture-left",
+        "broadcaster_user_login": "fixture_channel",
+        "broadcaster_user_name": "Fixture Channel",
+        "chatter_user_id": "viewer-fixture-left",
+        "chatter_user_login": "fixture_viewer",
+        "chatter_user_name": "Fixture Viewer",
+        "message_id": "guess-fixture-left",
+        "message": {
+          "text": "!guess gravity-sign",
+          "fragments": [
+            {
+              "type": "text",
+              "text": "!guess gravity-sign"
+            }
+          ]
+        },
+        "message_type": "text",
+        "badges": [],
+        "cheer": null,
+        "color": "",
+        "reply": null,
+        "channel_points_custom_reward_id": null,
+        "source_broadcaster_user_id": null,
+        "source_broadcaster_user_login": null,
+        "source_broadcaster_user_name": null,
+        "source_message_id": null,
+        "source_badges": null,
+        "is_source_only": false
+      }
+    }
+  },
+  {
+    "subscriptionChannelId": "fixture-right",
+    "message": {
+      "type": "channel.chat.message",
+      "event": {
+        "broadcaster_user_id": "fixture-right",
+        "broadcaster_user_login": "fixture_channel",
+        "broadcaster_user_name": "Fixture Channel",
+        "chatter_user_id": "viewer-fixture-left",
+        "chatter_user_login": "fixture_viewer",
+        "chatter_user_name": "Fixture Viewer",
+        "message_id": "echo-guess-fixture-left",
+        "message": {
+          "text": "!guess gravity-sign",
+          "fragments": [
+            {
+              "type": "text",
+              "text": "!guess gravity-sign"
+            }
+          ]
+        },
+        "message_type": "text",
+        "badges": [],
+        "cheer": null,
+        "color": "",
+        "reply": null,
+        "channel_points_custom_reward_id": null,
+        "source_broadcaster_user_id": "fixture-left",
+        "source_broadcaster_user_login": "fixture_source",
+        "source_broadcaster_user_name": "Fixture Source",
+        "source_message_id": "guess-fixture-left",
+        "source_badges": [],
+        "is_source_only": false
+      }
+    }
+  },
+  {
+    "subscriptionChannelId": "fixture-right",
+    "message": {
+      "type": "channel.chat.message",
+      "event": {
+        "broadcaster_user_id": "fixture-right",
+        "broadcaster_user_login": "fixture_channel",
+        "broadcaster_user_name": "Fixture Channel",
+        "chatter_user_id": "viewer-fixture-right",
+        "chatter_user_login": "fixture_viewer",
+        "chatter_user_name": "Fixture Viewer",
+        "message_id": "guess-fixture-right",
+        "message": {
+          "text": "!guess gravity-sign",
+          "fragments": [
+            {
+              "type": "text",
+              "text": "!guess gravity-sign"
+            }
+          ]
+        },
+        "message_type": "text",
+        "badges": [],
+        "cheer": null,
+        "color": "",
+        "reply": null,
+        "channel_points_custom_reward_id": null,
+        "source_broadcaster_user_id": null,
+        "source_broadcaster_user_login": null,
+        "source_broadcaster_user_name": null,
+        "source_message_id": null,
+        "source_badges": null,
+        "is_source_only": false
+      }
+    }
+  },
+  {
+    "subscriptionChannelId": "fixture-left",
+    "message": {
+      "type": "channel.chat.message",
+      "event": {
+        "broadcaster_user_id": "fixture-left",
+        "broadcaster_user_login": "fixture_channel",
+        "broadcaster_user_name": "Fixture Channel",
+        "chatter_user_id": "viewer-fixture-right",
+        "chatter_user_login": "fixture_viewer",
+        "chatter_user_name": "Fixture Viewer",
+        "message_id": "echo-guess-fixture-right",
+        "message": {
+          "text": "!guess gravity-sign",
+          "fragments": [
+            {
+              "type": "text",
+              "text": "!guess gravity-sign"
+            }
+          ]
+        },
+        "message_type": "text",
+        "badges": [],
+        "cheer": null,
+        "color": "",
+        "reply": null,
+        "channel_points_custom_reward_id": null,
+        "source_broadcaster_user_id": "fixture-right",
+        "source_broadcaster_user_login": "fixture_source",
+        "source_broadcaster_user_name": "Fixture Source",
+        "source_message_id": "guess-fixture-right",
+        "source_badges": [],
+        "is_source_only": false
+      }
+    }
+  }
+]

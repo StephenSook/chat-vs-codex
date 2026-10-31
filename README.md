@@ -16,7 +16,7 @@ and repair the real TypeScript bug, checked by deterministic replay tests.
 
 Terra median 14.5 s across green trials. Recompute: `pnpm bench:summary`.
 
-642 tests. Recompute: `pnpm test`.
+701 tests. Recompute: `pnpm test`.
 
 Sol high finished green trials in a 29.40 second median. Both pass the GO gate.
 [Results and limits](bench/SUMMARY.md) include the retained infrastructure loss,
@@ -59,6 +59,8 @@ reachable commit count at build time with `git rev-list --count HEAD`.
 Requires Node 22 and pnpm. Run `pnpm ci:local` to mirror the workflow: frozen
 install, typecheck, lint, test. `pnpm check` repeats the checks without installing.
 Set `CI=true` when running the install without a TTY.
+On a busy development machine, `CI=true VITEST_MAX_WORKERS=1 pnpm ci:local`
+runs the same checks serially without changing their assertions or time budgets.
 
 The [static judge site](apps/judge/README.md) recomputes benchmark numbers in the
 browser, presents committed round receipts and re-simulates recorded validation
