@@ -1,0 +1,331 @@
+{
+  "schemaVersion": 1,
+  "roundId": "82589ac9-1b1b-4393-8085-9bed5d88ee2b",
+  "trigger": "broadcaster-test",
+  "mode": "live-twitch",
+  "model": "gpt-6.1-terra",
+  "effort": "low",
+  "breaker": "viewer-64e8151b950b82cd",
+  "firstCorrectGuesser": null,
+  "validationReplay": {
+    "sourceDigest": "403c76c51327cb44d95d16b9ea2a6e7cefb331df83b775158f83fe2a9e63c28e",
+    "trackDigest": "bcca810f6178004b27e9befc22021e596ec847697710987ae493af1626d8d0ce",
+    "buildDigest": "4715351bcb89d1a766bac1607c4579201fd2d5c28e2a42227ead259d47d1b6ed",
+    "frameCount": 600,
+    "framesDigest": "bb3cc82edf8131ee1bb65c3bc0f8de96ab9dd34fe1c547a52f0dfecc7ba5ffd3"
+  },
+  "autopsy": {
+    "roundId": "82589ac9-1b1b-4393-8085-9bed5d88ee2b",
+    "trigger": "broadcaster-test",
+    "status": "verified",
+    "reason": null,
+    "breaker": "viewer-64e8151b950b82cd",
+    "firstCorrectGuesser": null,
+    "family": "jump-buffer",
+    "winner": "codex",
+    "patch": {
+      "added": 1,
+      "removed": 1,
+      "preview": [
+        "-    : Math.min(0, state.buffer - 1);",
+        "+    : Math.max(0, state.buffer - 1);"
+      ]
+    },
+    "explanation": "Clamping the countdown at zero preserves buffered jump presses until they expire. The requested Vitest run passed all 23 tests, including all seven replays.",
+    "headline": "Buffered jumps now remain available until they expire",
+    "durations": {
+      "headStartMs": 15000.973207950592,
+      "repairMs": 21572.66716694832,
+      "validationMs": 2381.0374171733856,
+      "swapMs": 4.11566686630249,
+      "timeToGreenMs": 23968.983541965485
+    },
+    "previousRoundId": null,
+    "deltaMs": null,
+    "regressionTest": {
+      "path": "chat-found/82589ac9-1b1b-4393-8085-9bed5d88ee2b.json",
+      "digest": "b38803aef9babe94d0b9e5514a834f5655c6cfa12db585f86a7a670d0462192c"
+    },
+    "regressionError": null
+  },
+  "family": "jump-buffer",
+  "winner": "codex",
+  "reason": null,
+  "scores": {
+    "chat": 0,
+    "codex": 1
+  },
+  "clock": "host-monotonic-ms",
+  "timingVersion": 1,
+  "durations": {
+    "headStartMs": 15000.973207950592,
+    "repairMs": 21572.66716694832,
+    "validationMs": 2381.0374171733856,
+    "swapMs": 4.11566686630249,
+    "timeToGreenMs": 23968.983541965485
+  },
+  "timingDefinition": "Time to green starts immediately before the SDK call and ends after verified build installation; head start is separate. Repair ends at submitted patch verification after the SDK turn.",
+  "completedAt": "2026-10-31T08:18:38.870Z",
+  "events": [
+    {
+      "sequence": 1,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "preparing",
+      "atMs": 1406784808.267416,
+      "wallTime": "2026-10-31T08:17:58.191Z"
+    },
+    {
+      "sequence": 2,
+      "trigger": "broadcaster-test",
+      "type": "game.build",
+      "phase": "broken",
+      "atMs": 1406785967.011125,
+      "wallTime": "2026-10-31T08:17:59.350Z"
+    },
+    {
+      "sequence": 3,
+      "trigger": "broadcaster-test",
+      "type": "round.started",
+      "atMs": 1406785968.327083,
+      "wallTime": "2026-10-31T08:17:59.351Z"
+    },
+    {
+      "sequence": 4,
+      "trigger": "broadcaster-test",
+      "type": "bug.active",
+      "atMs": 1406785968.347708,
+      "wallTime": "2026-10-31T08:17:59.351Z"
+    },
+    {
+      "sequence": 5,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "head-start",
+      "atMs": 1406785968.363875,
+      "wallTime": "2026-10-31T08:17:59.351Z"
+    },
+    {
+      "sequence": 6,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1406800970.54675,
+      "wallTime": "2026-10-31T08:18:14.352Z"
+    },
+    {
+      "sequence": 7,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1406801468.944333,
+      "wallTime": "2026-10-31T08:18:14.852Z"
+    },
+    {
+      "sequence": 8,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1406806602.123416,
+      "wallTime": "2026-10-31T08:18:19.985Z"
+    },
+    {
+      "sequence": 9,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1406807672.767416,
+      "wallTime": "2026-10-31T08:18:21.056Z"
+    },
+    {
+      "sequence": 10,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1406807971.391958,
+      "wallTime": "2026-10-31T08:18:21.354Z"
+    },
+    {
+      "sequence": 11,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1406808885.65625,
+      "wallTime": "2026-10-31T08:18:22.269Z"
+    },
+    {
+      "sequence": 12,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1406809045.592083,
+      "wallTime": "2026-10-31T08:18:22.428Z"
+    },
+    {
+      "sequence": 13,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1406810871.321833,
+      "wallTime": "2026-10-31T08:18:24.254Z"
+    },
+    {
+      "sequence": 14,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1406811022.476916,
+      "wallTime": "2026-10-31T08:18:24.405Z"
+    },
+    {
+      "sequence": 15,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1406813647.289666,
+      "wallTime": "2026-10-31T08:18:27.030Z"
+    },
+    {
+      "sequence": 16,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1406813804.259791,
+      "wallTime": "2026-10-31T08:18:27.187Z"
+    },
+    {
+      "sequence": 17,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1406815180.469166,
+      "wallTime": "2026-10-31T08:18:28.563Z"
+    },
+    {
+      "sequence": 18,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1406815402.918291,
+      "wallTime": "2026-10-31T08:18:28.786Z"
+    },
+    {
+      "sequence": 19,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1406815575.127125,
+      "wallTime": "2026-10-31T08:18:28.958Z"
+    },
+    {
+      "sequence": 20,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1406818365.92125,
+      "wallTime": "2026-10-31T08:18:31.749Z"
+    },
+    {
+      "sequence": 21,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1406819694.223208,
+      "wallTime": "2026-10-31T08:18:33.077Z"
+    },
+    {
+      "sequence": 22,
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1406821430.927208,
+      "wallTime": "2026-10-31T08:18:34.814Z"
+    },
+    {
+      "sequence": 23,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1406823037.726208,
+      "wallTime": "2026-10-31T08:18:36.421Z"
+    },
+    {
+      "sequence": 24,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "validating",
+      "atMs": 1406823037.908,
+      "wallTime": "2026-10-31T08:18:36.421Z"
+    },
+    {
+      "sequence": 25,
+      "trigger": "broadcaster-test",
+      "type": "round.ghost",
+      "atMs": 1406824769.474416,
+      "wallTime": "2026-10-31T08:18:38.153Z"
+    },
+    {
+      "sequence": 26,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "validating",
+      "atMs": 1406825418.878916,
+      "wallTime": "2026-10-31T08:18:38.802Z"
+    },
+    {
+      "sequence": 27,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "swapping",
+      "atMs": 1406825429.795375,
+      "wallTime": "2026-10-31T08:18:38.813Z"
+    },
+    {
+      "sequence": 28,
+      "trigger": "broadcaster-test",
+      "type": "game.build",
+      "phase": "repaired",
+      "atMs": 1406825432.514625,
+      "wallTime": "2026-10-31T08:18:38.816Z"
+    },
+    {
+      "sequence": 29,
+      "trigger": "broadcaster-test",
+      "type": "score.changed",
+      "atMs": 1406825487.253041,
+      "wallTime": "2026-10-31T08:18:38.870Z"
+    },
+    {
+      "sequence": 30,
+      "trigger": "broadcaster-test",
+      "type": "bug.named",
+      "atMs": 1406825487.295791,
+      "wallTime": "2026-10-31T08:18:38.870Z"
+    },
+    {
+      "sequence": 31,
+      "trigger": "broadcaster-test",
+      "type": "tests.green",
+      "atMs": 1406825487.3085,
+      "wallTime": "2026-10-31T08:18:38.870Z"
+    },
+    {
+      "sequence": 32,
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "resolved",
+      "atMs": 1406825487.326791,
+      "wallTime": "2026-10-31T08:18:38.870Z"
+    },
+    {
+      "sequence": 33,
+      "trigger": "broadcaster-test",
+      "type": "round.autopsy",
+      "atMs": 1406825496.757666,
+      "wallTime": "2026-10-31T08:18:38.880Z"
+    }
+  ],
+  "verification": {
+    "fullReplaySuite": true,
+    "heldOutReplay": true,
+    "statePreserved": true,
+    "finalStateHash": "5e16e286",
+    "builds": [
+      {
+        "digest": "51a04ddbdb20c78a7f1de19687a39e764df04e489185cde05021bec851d8d892",
+        "frame": 1720,
+        "statePreserved": true
+      },
+      {
+        "digest": "4715351bcb89d1a766bac1607c4579201fd2d5c28e2a42227ead259d47d1b6ed",
+        "frame": 4088,
+        "statePreserved": true
+      }
+    ]
+  }
+}
