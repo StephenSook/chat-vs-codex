@@ -6,7 +6,7 @@ login, app, user and all 11 scopes, runs the clean sandbox gate, then opens one
 EventSub WebSocket on `steve_sociall`, including while offline. Build the overlay
 first. No command means no Codex call. Ctrl+C stops the listener and active round.
 
-Runtime rounds register the [Game Inspector](../../inspector-mcp/README.md) stdio
+Runtime rounds register the [Game Inspector](../inspector-mcp/README.md) stdio
 tools before repair. Immutable recordings cover only the original buggy visible
 replays. The Inspector runs with read-only workspace access, no network and the
 same outside-workspace and temporary-directory denies. Fixture tests prove SDK
