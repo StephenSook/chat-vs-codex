@@ -1,7 +1,9 @@
 # Breakout runtime benchmark
 
-Three total `gpt-6.1-terra` low trials are approved, selecting different pool
-families. No scored trials have started. The one dry-run invocation stopped at
+The approved batch is complete: [summary and limits](SUMMARY.md). It retained
+three total `gpt-6.1-terra` low trials, one per selected site, without reruns.
+
+The earlier sandbox dry-run invocation stopped at
 the mandatory clean-source preflight, before an SDK thread started:
 
 ```text
@@ -13,16 +15,11 @@ records the real validator, unchanged permission profile and workspace-local
 TMPDIR. This is an environment refusal, not a repair result. No retry or
 permission change was attempted.
 
-From a normal terminal with the existing ChatGPT sign-in:
+Recompute the committed evidence without starting a model:
 
 ```sh
-CI=true pnpm ci:local
-pnpm breakout:bench --plan
-pnpm breakout:bench --run
 pnpm breakout:bench --summary
 ```
 
-The batch performs the same clean sandbox preflight, then exactly three trials
-without retry. Commit its resulting JSONL and run logs before rebuilding the
-judge site. Pool gates and fake-CLI integration tests do not establish a real
-model fix rate.
+The successful batch's clean preflight, manifest and every trial log are retained
+beside the earlier refusal. Additional model trials require separate authorization.
