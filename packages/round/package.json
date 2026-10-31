@@ -9,6 +9,7 @@
     "./contracts": "./src/contracts.ts"
   },
   "scripts": {
-    "fixture": "tsx src/cli.ts"
+    "fixture": "tsx src/cli.ts",
+    "live": "tsx src/live-cli.ts"
   }
 }

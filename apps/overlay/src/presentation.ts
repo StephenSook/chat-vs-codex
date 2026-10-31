@@ -56,6 +56,12 @@ export function diffExcerpts(preview: readonly string[]) {
 }
 
 export function autopsyView(record: RoundAutopsy) {
+  const breaker = record.displayNames
+    ? record.displayNames.breaker
+    : record.breaker;
+  const guesser = record.displayNames
+    ? record.displayNames.firstCorrectGuesser
+    : record.firstCorrectGuesser;
   const restoreFailed =
     record.reason === "rollback-failed" || record.reason === "rollback-timeout";
   const diffLines = record.patch?.preview.length
@@ -74,8 +80,8 @@ export function autopsyView(record: RoundAutopsy) {
             ? "CODEX FIXED IT"
             : "FIX VERIFIED",
     family: record.family ?? "Family unavailable",
-    breaker: `BREAK: ${record.breaker ?? "Not recorded"}`,
-    guesser: `FOUND: ${record.firstCorrectGuesser ?? "No correct guess"}`,
+    breaker: `BREAK: ${breaker ?? "Not recorded"}`,
+    guesser: `FOUND: ${guesser ?? "No correct guess"}`,
     diff: diffLines.map((line) => line.text).join("\n"),
     patch: record.patch
       ? `Patch +${record.patch.added} / -${record.patch.removed}`
@@ -117,7 +123,7 @@ export function autopsyView(record: RoundAutopsy) {
         ? "failed"
         : null,
     regressionDetail: record.regressionTest
-      ? `${record.breaker ? `Found by ${record.breaker}\n` : ""}${record.regressionTest.path}\nSHA-256 ${record.regressionTest.digest}`
+      ? `${breaker ? `Found by ${breaker}\n` : ""}${record.regressionTest.path}\nSHA-256 ${record.regressionTest.digest}`
       : record.regressionError,
   };
 }

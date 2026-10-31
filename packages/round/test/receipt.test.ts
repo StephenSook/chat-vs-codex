@@ -87,6 +87,12 @@ it("publishes only whitelisted evidence, preserving actual monotonic and ISO sta
   });
   expect(JSON.stringify(receipt)).not.toMatch(/private-name|token=|secret/);
 });
+
+it("labels live Twitch receipts without inventing a fixture", () => {
+  const receipt = publicReceipt({ ...verified(), mode: "live-twitch" });
+  expect(receipt.mode).toBe("live-twitch");
+  expect(receipt).not.toHaveProperty("fixture");
+});
 it("refuses failed gates, failed swaps and raw viewer identities", () => {
   const input = verified();
   expect(() =>
@@ -276,6 +282,10 @@ it("retains terminal autopsy evidence without copying unrelated fields or raw vi
     reason: null,
     breaker: input.breaker,
     firstCorrectGuesser: "viewer-aaaaaaaaaaaaaaaa",
+    displayNames: {
+      breaker: "private-name",
+      firstCorrectGuesser: "private-name",
+    },
     family: "gravity-sign",
     winner: "codex",
     patch,

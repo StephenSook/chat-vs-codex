@@ -66,6 +66,18 @@ async function setup() {
 }
 
 describe("round runtime verification", () => {
+  it("rejects free text instead of passing it to private mutation selection", async () => {
+    const runtime = createRoundRuntime({
+      runsDirectory: join(tmpdir(), "unused-invalid-family"),
+    });
+    await expect(
+      runtime.prepare(
+        "invalid",
+        new AbortController().signal,
+        "free text" as Parameters<typeof runtime.prepare>[2],
+      ),
+    ).rejects.toThrow("Invalid private family selection");
+  });
   it.each([false, true])(
     "publishes validator frames bound to unchanged patched source (tamper=%s)",
     async (tamper) => {
@@ -768,7 +780,15 @@ describe("round runtime verification", () => {
       const prepared = await runtime.prepare(
         "round-fixture",
         new AbortController().signal,
+        "swapped-controls",
       );
+      await expect(
+        runtime.prepare(
+          "wrong-family",
+          new AbortController().signal,
+          "gravity-sign",
+        ),
+      ).rejects.toThrow("No eligible pooled mutant");
       expect(prepared.family).toBe("swapped-controls");
       expect(prepared.clean.id).not.toBe(prepared.broken.id);
       expect(prepared.broken.code).not.toContain(mutant.id);

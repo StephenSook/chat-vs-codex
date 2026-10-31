@@ -155,6 +155,30 @@ async function sse(origin: string, after?: number) {
 }
 
 describe("local round HTTP and SSE boundary", () => {
+  it("enriches live SSE presentation without changing canonical recorded events or reconnect evidence", async () => {
+    const records: RoundEnvelope[] = [];
+    const running = await server({
+      record: (envelope) => records.push(envelope),
+      present: (event) =>
+        event.type === "round.state"
+          ? { ...event, reason: "presentation-only" }
+          : event,
+    });
+    const canonical = preparing("r");
+    running.publish(canonical);
+    const stream = await sse(running.origin);
+    expect((await stream.next()).event).toMatchObject({
+      reason: "presentation-only",
+    });
+    expect(records[0]?.event).toMatchObject({ reason: null });
+    expect(canonical).toMatchObject({ reason: null });
+    stream.close();
+    const resumed = await sse(running.origin);
+    expect((await resumed.next()).event).toMatchObject({
+      reason: "presentation-only",
+    });
+    expect(records[0]?.event).toMatchObject({ reason: null });
+  });
   it("binds the verified bytes before an asynchronous install can mutate caller-owned data", async () => {
     let release!: () => void;
     const records: RoundEnvelope[] = [];

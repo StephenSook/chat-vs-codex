@@ -87,6 +87,8 @@ export interface RoundAutopsy {
   reason: string | null;
   breaker: string | null;
   firstCorrectGuesser: string | null;
+  /** Live presentation only; never retained in public receipts. */
+  displayNames?: { breaker: string | null; firstCorrectGuesser: string | null };
   family: BugFamily | null;
   winner: "chat" | "codex" | null;
   patch: RuntimePatch | null;
@@ -128,7 +130,11 @@ export interface PreparedGame {
 }
 
 export interface RoundRuntime {
-  prepare(roundId: string, signal: AbortSignal): Promise<PreparedGame>;
+  prepare(
+    roundId: string,
+    signal: AbortSignal,
+    family?: BugFamily,
+  ): Promise<PreparedGame>;
 }
 
 type RoundEventPayload =

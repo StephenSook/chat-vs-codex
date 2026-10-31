@@ -1,4 +1,32 @@
-# Local round loop
+# Round loop
+
+`pnpm round:live` uses the stored 0600 authorization in `.local/twitch/tokens.json`
+and `TWITCH_CLIENT_ID` from the environment. It validates the refreshed token's
+login, app, user and all 11 scopes, runs the clean sandbox gate, then opens one
+EventSub WebSocket on `steve_sociall`, including while offline. Build the overlay
+first. No command means no Codex call. Ctrl+C stops the listener and active round.
+
+Use a different viewer account: the broadcaster doubles as the bot and its own
+messages are ignored. Bare `!break` chooses a gated unlearned mutant. Whispering
+one of the six enum families to the broadcaster selects a secret round; phone
+verification and Twitch whisper restrictions still apply. `!guess <family>` is
+accepted only for `gravity-sign`, `collision-off-by-one`, `swapped-controls`,
+`coyote-never-expires`, `jump-buffer`, or `enemy-ledge-turn`. Starts have a 60 s
+per-user cooldown. One round, including recording, must finish before another
+starts. Chat and whisper text are never passed through to Codex.
+
+Live overlay attribution uses display names; public receipts and credited replay
+files keep HMAC labels. Send Chat Message announces the start, first correct
+guess and verified result. Markers at bug-in and fix-landed, the fix clip request,
+and a raw `/helix/chat/pins` autopsy pin each require a fresh Get Streams live
+result. Offline actions are skipped; refusals are logged in private `twitch.jsonl`
+without failing the round. An accepted clip request does not prove publication.
+`pnpm round:live --dry-chat` logs outgoing lines and skips all Twitch writes;
+it still listens and starts real Codex repairs when viewers send commands.
+The live command and HTTP contracts are fixture-tested; live delivery and OBS
+pixels require streamer verification.
+
+## Local fixture
 
 The fixture runner feeds the Twitch package's bare `!break` payload through its
 real handler, installs a gated mutant, waits the real 15-second chat head start,
@@ -25,9 +53,8 @@ deny intact. Add `--serve` to keep the local overlay open after the round:
 
 The engine owns phase, scoring and timers. One active round is allowed. Bare
 break requests choose a server-side mutant from the six enum families; the
-fixture selects an unlearned gated gravity mutant. Two-bug
-raid requests and private family selection are explicitly declined in this
-checkpoint. No live listener, chat writes or reward creation starts here.
+fixture selects an unlearned gated gravity mutant. Two-bug raid requests are
+declined. The fixture command starts no live listener, chat writes or rewards.
 
 During the head start, each actor's latest valid enum guess contributes one vote.
 At its end, the top family becomes the one-word Codex hint; lexical order breaks
@@ -59,8 +86,9 @@ patch line counts. Arguments, command output and arbitrary agent text stay out o
 the ticker. Command exit 0 does not claim tests green; only the engine publishes
 green after the full gate and successful activation.
 The terminal autopsy shows hashed breaker and first-correct attribution, the
-revealed family, up to four actual changed source lines, Codex's returned
-explanation, phase durations and a signed time-to-green delta. Prior verified
+revealed family, two excerpts of actual changed source lines, Codex's returned
+headline (at most 60 characters), phase durations and a signed time-to-green delta. Full
+source lines stay in the diff titles. Prior verified
 receipts supply the comparison across runner invocations. A legacy or incompatible
 prior measurement leaves the delta unavailable. Rollback cards carry no green
 split; failed cleanup rolls back before publishing a success or Codex point.

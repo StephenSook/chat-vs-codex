@@ -142,6 +142,22 @@ function validAutopsy(value: unknown): value is RoundAutopsy {
     nullableText(record.reason) &&
     alias(record.breaker) &&
     alias(record.firstCorrectGuesser) &&
+    (record.displayNames === undefined ||
+      (!!record.displayNames &&
+        [
+          record.displayNames.breaker,
+          record.displayNames.firstCorrectGuesser,
+        ].every(
+          (name) =>
+            name === null ||
+            (typeof name === "string" &&
+              name.length > 0 &&
+              name.length <= 50 &&
+              [...name].every(
+                (char) =>
+                  char.charCodeAt(0) >= 32 && char.charCodeAt(0) !== 127,
+              )),
+        ))) &&
     (record.family === null ||
       [
         "gravity-sign",

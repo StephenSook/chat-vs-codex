@@ -32,6 +32,7 @@ export interface RoundSnapshot extends PublicState {
 }
 interface ActiveRound {
   id: string;
+  selectedFamily?: BugFamily;
   abort: AbortController;
   prepared: PreparedGame | null;
   votes: Map<string, BugFamily>;
@@ -160,31 +161,7 @@ export class RoundEngine {
         });
         return;
       }
-      const round: ActiveRound = {
-        id: randomUUID(),
-        abort: new AbortController(),
-        prepared: null,
-        votes: new Map(),
-        startedAt: null,
-        winner: null,
-        reason: null,
-        timer: null,
-        visible: false,
-        headStartFinishedAt: null,
-        timings: {},
-        swapStartedAt: null,
-        swapFinishedAt: null,
-        patchSequence: 0,
-        breaker: this.identify(intent.actor),
-        firstCorrectGuesser: null,
-        correctGuessRecorded: false,
-        completed: false,
-      };
-      this.current = round;
-      this.autopsy = null;
-      this.guessClosesAt = null;
-      this.phase(round, "preparing");
-      this.task = this.run(round);
+      this.startRound(intent.actor);
       return;
     }
     const round = this.current;
@@ -215,12 +192,43 @@ export class RoundEngine {
     }
   }
 
-  /** Selection is private. Runtime mutation choice is server-owned in this phase. */
-  handlePrivate(_intent: PrivateIntent): {
-    accepted: false;
-    reason: "private-selection-unavailable";
-  } {
-    return { accepted: false, reason: "private-selection-unavailable" };
+  private startRound(actor: string, selectedFamily?: BugFamily): void {
+    const round: ActiveRound = {
+      id: randomUUID(),
+      ...(selectedFamily ? { selectedFamily } : {}),
+      abort: new AbortController(),
+      prepared: null,
+      votes: new Map(),
+      startedAt: null,
+      winner: null,
+      reason: null,
+      timer: null,
+      visible: false,
+      headStartFinishedAt: null,
+      timings: {},
+      swapStartedAt: null,
+      swapFinishedAt: null,
+      patchSequence: 0,
+      breaker: this.identify(actor),
+      firstCorrectGuesser: null,
+      correctGuessRecorded: false,
+      completed: false,
+    };
+    this.current = round;
+    this.autopsy = null;
+    this.guessClosesAt = null;
+    this.phase(round, "preparing");
+    this.task = this.run(round);
+  }
+
+  /** Only an enum reaches selection; it is never published or included in the ticket. */
+  handlePrivate(intent: PrivateIntent): { accepted: boolean; reason?: string } {
+    if (this.stopped) return { accepted: false, reason: "stopped" };
+    if (this.current) return { accepted: false, reason: "round-active" };
+    if (!BUG_FAMILIES.includes(intent.family))
+      return { accepted: false, reason: "invalid-family" };
+    this.startRound(intent.actor, intent.family);
+    return { accepted: true };
   }
 
   async stop(): Promise<void> {
@@ -543,7 +551,11 @@ export class RoundEngine {
     this.arm(round, this.hardBudgetMs, "prepare-deadline");
     try {
       const prepared = await abortable(
-        this.options.runtime.prepare(round.id, round.abort.signal),
+        this.options.runtime.prepare(
+          round.id,
+          round.abort.signal,
+          round.selectedFamily,
+        ),
         round.abort.signal,
         (late) => {
           void this.closePrepared(late).catch(() => {

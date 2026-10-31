@@ -113,6 +113,7 @@ export function publicReceipt(input: {
   client: ClientSnapshot;
   events: readonly RoundEnvelope[];
   breaker: string;
+  mode?: "local-fixture" | "live-twitch";
 }) {
   const { result, client } = input;
   const autopsy = result.autopsy ?? null;
@@ -176,8 +177,10 @@ export function publicReceipt(input: {
   return {
     schemaVersion: 1,
     roundId: result.roundId,
-    mode: "local-fixture",
-    fixture: "bare-break-then-wrong-enum-hint",
+    mode: input.mode ?? "local-fixture",
+    ...(input.mode === "live-twitch"
+      ? {}
+      : { fixture: "bare-break-then-wrong-enum-hint" }),
     model: "gpt-6.1-terra",
     effort: "low",
     breaker: input.breaker,

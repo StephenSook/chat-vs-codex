@@ -12,6 +12,8 @@ export async function startRoundServer(
     overlayDirectory?: string;
     now?: () => number;
     record?: (envelope: RoundEnvelope) => void;
+    /** Presentation only. Recorded evidence and sandbox client retain canonical hashes. */
+    present?: (event: RoundEvent) => RoundEvent;
     install?: (artifact: GameArtifact, signal: AbortSignal) => Promise<void>;
   } = {},
 ) {
@@ -26,7 +28,7 @@ export async function startRoundServer(
   const send = (client: ServerResponse, envelope: RoundEnvelope) => {
     // Preserve evidence clocks; only the delivery clock changes on reconnect.
     client.write(
-      `id: ${envelope.sequence}\nevent: round\ndata: ${JSON.stringify({ ...envelope, deliveryAtMs: now() })}\n\n`,
+      `id: ${envelope.sequence}\nevent: round\ndata: ${JSON.stringify({ ...envelope, event: options.present?.(envelope.event) ?? envelope.event, deliveryAtMs: now() })}\n\n`,
     );
   };
   const server = createServer(async (request, response) => {

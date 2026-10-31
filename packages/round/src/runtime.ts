@@ -156,8 +156,10 @@ export function createRoundRuntime(
   const regressionsDirectory =
     options.regressionsDirectory ?? REGRESSIONS_DIRECTORY;
   return {
-    async prepare(roundId, signal) {
+    async prepare(roundId, signal, family) {
       signal.throwIfAborted();
+      if (family !== undefined && !BUG_FAMILIES.includes(family))
+        throw new Error("Invalid private family selection");
       const pool = JSON.parse(
         await readFile(join(ROOT, "packages/mutator/pool.json"), "utf8"),
       ) as { sourceDigest: string; mutants: PooledMutant[] };
@@ -167,7 +169,11 @@ export function createRoundRuntime(
         pool.mutants,
         pool.sourceDigest,
         await loadRegressions(regressionsDirectory),
-      ).filter((mutant) => BUG_FAMILIES.includes(mutant.family as BugFamily));
+      ).filter(
+        (mutant) =>
+          BUG_FAMILIES.includes(mutant.family as BugFamily) &&
+          (family === undefined || mutant.family === family),
+      );
       const mutant = options.fixtureMutantId
         ? eligible.find((item) => item.id === options.fixtureMutantId)
         : eligible[randomInt(eligible.length || 1)];

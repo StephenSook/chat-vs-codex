@@ -499,7 +499,7 @@ describe("round race and safe swaps", () => {
       scores: { chat: 0, codex: 0 },
     });
   });
-  it("declines unsupported multi-bug requests and private selections without revealing a family", () => {
+  it("declines multi-bug requests and starts a selected secret round without revealing its family", async () => {
     const { engine, prepare, events } = setup();
     breakGame(engine, 2);
     expect(prepare).not.toHaveBeenCalled();
@@ -512,8 +512,45 @@ describe("round race and safe swaps", () => {
         actor: "secret",
         family: "gravity-sign",
       }),
-    ).toEqual({ accepted: false, reason: "private-selection-unavailable" });
+    ).toEqual({ accepted: true });
+    expect(prepare).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(AbortSignal),
+      "gravity-sign",
+    );
+    expect(
+      engine.handlePrivate({
+        kind: "sabotage-selected",
+        actor: "other",
+        family: "jump-buffer",
+      }),
+    ).toEqual({ accepted: false, reason: "round-active" });
+    breakGame(engine);
+    expect(prepare).toHaveBeenCalledTimes(1);
     expect(JSON.stringify(events)).not.toContain("gravity-sign");
+    await engine.stop();
+    expect(
+      engine.handlePrivate({
+        kind: "sabotage-selected",
+        actor: "other",
+        family: "jump-buffer",
+      }),
+    ).toEqual({ accepted: false, reason: "stopped" });
+  });
+  it("rejects a non-enum private selection before preparing anything", () => {
+    const { engine, prepare } = setup();
+    const intent = {
+      kind: "sabotage-selected" as const,
+      actor: "viewer",
+      family: "free text",
+    };
+    // Wire validation is also defended at the runtime boundary.
+    expect(
+      engine.handlePrivate(
+        intent as Parameters<RoundEngine["handlePrivate"]>[0],
+      ),
+    ).toEqual({ accepted: false, reason: "invalid-family" });
+    expect(prepare).not.toHaveBeenCalled();
   });
 });
 

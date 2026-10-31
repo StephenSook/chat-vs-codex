@@ -63,6 +63,30 @@ const wire = (autopsy: RoundAutopsy) => ({
 afterEach(() => vi.unstubAllGlobals());
 
 describe("observed round autopsy", () => {
+  it("uses live display names without replacing the canonical hashed identities", () => {
+    const record = autopsyFixture({
+      displayNames: { breaker: "ViewerName", firstCorrectGuesser: null },
+    });
+    expect(parseRoundEnvelope(wire(record))).toBeDefined();
+    expect(autopsyView(record).breaker).toBe("BREAK: ViewerName");
+    expect(autopsyView(record).guesser).toBe("FOUND: No correct guess");
+    expect(record.breaker).toBe("viewer-0123456789abcdef");
+    const anonymous = {
+      ...record,
+      displayNames: { breaker: null, firstCorrectGuesser: null },
+    };
+    expect(autopsyView(anonymous).breaker).toBe("BREAK: Not recorded");
+    for (const name of ["x".repeat(51), "line\nfeed", ""]) {
+      expect(() =>
+        parseRoundEnvelope(
+          wire({
+            ...record,
+            displayNames: { breaker: name, firstCorrectGuesser: null },
+          }),
+        ),
+      ).toThrow("Invalid round event");
+    }
+  });
   it("keeps the actual changed operator visible in short source excerpts", () => {
     const removed = "-  if (vy < 0) return vy - RISE_GRAVITY;";
     const added = "+  if (vy < 0) return vy + RISE_GRAVITY;";
