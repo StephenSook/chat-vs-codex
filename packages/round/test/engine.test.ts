@@ -4,6 +4,7 @@ import type {
   GameArtifact,
   PreparedGame,
   RoundEvent,
+  RuntimeObservation,
 } from "../src/contracts.js";
 import { RoundEngine } from "../src/engine.js";
 import { sdkOverlayEvent } from "../src/sdk-events.js";
@@ -58,6 +59,7 @@ function setup(
   const activate = vi.fn(overrides.activate ?? (async () => {}));
   const events: RoundEvent[] = [];
   const engine = new RoundEngine({
+    now: () => Date.now(),
     runtime: { prepare },
     activate,
     publish: (event) => events.push(event),
@@ -108,17 +110,119 @@ afterEach(async () => {
 });
 
 describe("round race and safe swaps", () => {
+  it("measures observed repair, verification and swap separately, excluding head start from time to green", async () => {
+    const installed = deferred<void>();
+    const { engine, game, repair, events } = setup({
+      activate: async (_artifact, phase) => {
+        if (phase === "repaired") await installed.promise;
+      },
+    });
+    breakGame(engine);
+    await vi.advanceTimersByTimeAsync(15_000);
+    const options = vi.mocked(game.repair).mock.calls[0]?.[0];
+    if (!options?.observe)
+      throw new Error("Missing runtime observation callback");
+    const observed = (phase: RuntimeObservation["phase"]) =>
+      options.observe?.({
+        type: "runtime.phase",
+        phase,
+        atMs: Date.now(),
+        wallTime: new Date().toISOString(),
+      });
+    await vi.advanceTimersByTimeAsync(10);
+    observed("thread-started");
+    await vi.advanceTimersByTimeAsync(3000);
+    observed("patch-ready");
+    await vi.advanceTimersByTimeAsync(100);
+    observed("validation-started");
+    expect(engine.snapshot().phase).toBe("validating");
+    expect(engine.snapshot().durations).toMatchObject({
+      repairMs: 3000,
+      validationMs: null,
+      timeToGreenMs: null,
+    });
+    await vi.advanceTimersByTimeAsync(500);
+    observed("validation-passed");
+    repair.resolve(repaired);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(engine.snapshot().phase).toBe("swapping");
+    await vi.advanceTimersByTimeAsync(80);
+    installed.resolve();
+    const result = await engine.waitForRound();
+    expect(result.durations).toEqual({
+      headStartMs: 15000,
+      repairMs: 3000,
+      validationMs: 500,
+      swapMs: 80,
+      timeToGreenMs: 3680,
+    });
+    for (const event of events) {
+      expect(Number.isFinite(event.atMs)).toBe(true);
+      expect(Number.isFinite(Date.parse(event.wallTime ?? ""))).toBe(true);
+    }
+    const count = events.length;
+    observed("validation-started");
+    expect(events).toHaveLength(count);
+  });
+
+  it("leaves unobserved runtime latencies unknown instead of reporting invented durations", async () => {
+    const { engine, repair } = setup();
+    breakGame(engine);
+    await vi.advanceTimersByTimeAsync(15000);
+    repair.resolve(repaired);
+    const result = await engine.waitForRound();
+    expect(result.durations).toEqual({
+      headStartMs: 15000,
+      repairMs: null,
+      validationMs: null,
+      swapMs: 0,
+      timeToGreenMs: null,
+    });
+  });
+
+  it("uses a monotonic default clock even when the wall clock changes", async () => {
+    const events: RoundEvent[] = [];
+    const game: PreparedGame = {
+      family: "gravity-sign",
+      clean,
+      broken,
+      repair: async () => repaired,
+      close: async () => {},
+    };
+    const engine = new RoundEngine({
+      runtime: { prepare: async () => game },
+      headStartMs: 0,
+      publish: (event) => events.push(event),
+      activate: async () => {
+        vi.setSystemTime(Date.now() + 1000000);
+      },
+    });
+    engines.push(engine);
+    breakGame(engine);
+    await engine.waitForRound();
+    const started = events.find(
+      (event) =>
+        event.type === "overlay" && event.event.type === "round.started",
+    );
+    if (started?.type !== "overlay" || started.event.type !== "round.started")
+      throw new Error("Missing round start");
+    expect(started.event.atMs).toBeLessThan(1000);
+    expect(engine.snapshot().winner).toBe("codex");
+  });
+
   it("publishes the configured head-start duration and starts repair at that deadline", async () => {
     const { engine, game, events, repair } = setup({ headStartMs: 2000 });
     breakGame(engine);
     await vi.advanceTimersByTimeAsync(0);
-    expect(events).toContainEqual({
-      type: "overlay",
-      event: expect.objectContaining({
-        type: "round.started",
-        headStartMs: 2000,
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        type: "overlay",
+        event: expect.objectContaining({
+          type: "round.started",
+          headStartMs: 2000,
+        }),
       }),
-    });
+    );
     await vi.advanceTimersByTimeAsync(1999);
     expect(game.repair).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(1);

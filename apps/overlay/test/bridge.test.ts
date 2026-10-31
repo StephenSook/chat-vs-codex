@@ -90,13 +90,41 @@ describe("ordered round bridge", () => {
     ]);
   });
 
-  it("converts server wall time at receipt, including late reconnect replay", async () => {
+  it("converts legacy server time at receipt, including late reconnect replay", async () => {
     const f = fixture();
     await f.bridge.receive(envelope(7, started("r", 96000), 100000));
     expect(f.received[0]).toMatchObject({ type: "round.started", atMs: 1000 });
     await f.bridge.receive(envelope(7, started("r", 96000), 100000));
     await f.bridge.receive(envelope(6, started("old"), 100000));
     expect(f.received).toHaveLength(1);
+  });
+
+  it("uses fresh monotonic delivery time on reconnect while preserving original event evidence clocks", async () => {
+    const f = fixture();
+    const original: RoundEnvelope = {
+      ...envelope(7, started("r", 96000), 100000),
+      atMs: 100000,
+      wallTime: "2026-10-31T12:00:00.000Z",
+      deliveryAtMs: 110000,
+    };
+    await f.bridge.receive(original);
+    expect(f.received[0]).toMatchObject({ type: "round.started", atMs: -9000 });
+    expect(original.atMs).toBe(100000);
+    expect(original.serverTimeMs).toBe(100000);
+    const earlier = fixture();
+    await earlier.bridge.receive({
+      ...original,
+      deliveryAtMs: undefined,
+      atMs: 102000,
+    });
+    expect(earlier.received[0]).toMatchObject({
+      type: "round.started",
+      atMs: -1000,
+    });
+    for (const key of ["deliveryAtMs", "atMs"] as const)
+      expect(() =>
+        parseRoundEnvelope({ ...original, [key]: Number.NaN }),
+      ).toThrow("clock");
   });
 
   it("suppresses an old round's slow import and events after a newer round arrives", async () => {

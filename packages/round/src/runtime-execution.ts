@@ -14,7 +14,8 @@ import {
   type TrialWorkspace,
 } from "../../bench/src/workspace.js";
 import { BUG_FAMILIES, type BugFamily } from "../../twitch/src/events.js";
-import type { GameArtifact } from "./contracts.js";
+import { eventStamp, monotonicMs } from "./clocks.js";
+import type { GameArtifact, RuntimeObservation } from "./contracts.js";
 
 export async function bundleGame(
   entry: string,
@@ -64,18 +65,40 @@ export async function executeRepair(
   signal: AbortSignal,
   event: (event: ThreadEvent) => void,
   dependencies: RepairDependencies = {},
+  observe?: (observation: RuntimeObservation) => void,
 ): Promise<GameArtifact> {
   if (options.hint !== null && !BUG_FAMILIES.includes(options.hint))
     throw new Error("Invalid round hint");
-  const started = performance.now();
+  const started = monotonicMs();
   const timeout = AbortSignal.timeout(options.budgetMs);
   const combined = AbortSignal.any([signal, timeout]);
-  const log = async (value: unknown) =>
-    appendFile(
+  const log = async (value: unknown, stamp = eventStamp()) => {
+    await appendFile(
       options.logFile,
-      `${JSON.stringify({ timestamp: new Date().toISOString(), ...(value as object) })}\n`,
+      `${JSON.stringify({ ...(value as object), ...stamp, timestamp: stamp.wallTime })}\n`,
     );
-  const remaining = () => options.budgetMs - (performance.now() - started);
+  };
+  const phaseLogs: Promise<void>[] = [];
+  let phaseLogFailure: unknown;
+  const phase = (value: RuntimeObservation["phase"]): number => {
+    combined.throwIfAborted();
+    const observation: RuntimeObservation = {
+      type: "runtime.phase",
+      phase: value,
+      ...eventStamp(),
+    };
+    observe?.(observation);
+    phaseLogs.push(
+      log({ kind: observation.type, ...observation }, observation).catch(
+        (error: unknown) => {
+          phaseLogFailure ??= error;
+        },
+      ),
+    );
+    combined.throwIfAborted();
+    return observation.atMs;
+  };
+  const remaining = () => options.budgetMs - (monotonicMs() - started);
   const check = async () => {
     combined.throwIfAborted();
     if (remaining() <= 0) throw new Error("Round repair deadline expired");
@@ -110,15 +133,20 @@ export async function executeRepair(
       event: async (value) => {
         await log({
           kind: "runtime.event",
-          elapsedMs: performance.now() - started,
+          elapsedMs: monotonicMs() - started,
           event: value,
         });
-        event(value);
+        if (!combined.aborted) event(value);
       },
     };
+    const threadStartedAtMs = phase("thread-started");
     await (dependencies.runtime ?? runRuntime)(runtimeOptions);
     await check();
     const submitted = await snapshot(options.workspace.game);
+    // This marks the submitted patch after the SDK turn and source guards pass.
+    // It does not claim to measure the first source edit during the turn.
+    const patchReadyAtMs = phase("patch-ready");
+    const validationStartedAtMs = phase("validation-started");
     await (dependencies.validate ?? validateWorkspace)(
       options.workspace,
       options.profile,
@@ -137,14 +165,26 @@ export async function executeRepair(
     await check();
     if (changedPaths(verified, await snapshot(options.workspace.game)).length)
       throw new Error("Game files changed while bundling verified source");
+    const validationFinishedAtMs = phase("validation-passed");
+    await Promise.all(phaseLogs);
+    if (phaseLogFailure) throw phaseLogFailure;
     await log({
       kind: "repair.verified",
-      elapsedMs: performance.now() - started,
+      elapsedMs: monotonicMs() - started,
       ...changes,
       digest: artifact.digest,
     });
-    return artifact;
+    return {
+      ...artifact,
+      timings: {
+        threadStartedAtMs,
+        patchReadyAtMs,
+        validationStartedAtMs,
+        validationFinishedAtMs,
+      },
+    };
   } catch (error) {
+    await Promise.all(phaseLogs);
     await log({ kind: "repair.failed", error: String(error) });
     throw error;
   }

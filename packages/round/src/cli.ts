@@ -6,7 +6,14 @@ import { type PooledMutant, ROOT } from "../../mutator/src/gate.js";
 import { TwitchHandler } from "../../twitch/src/events.js";
 import { parseFixture, replayFixtures } from "../../twitch/src/fixtures.js";
 import { startGameClient } from "./client.js";
+import type { RoundEnvelope } from "./contracts.js";
 import { RoundEngine } from "./engine.js";
+import {
+  publicReceipt,
+  saveReceipt,
+  viewerKey,
+  viewerLabel,
+} from "./receipt.js";
 import { createRoundRuntime } from "./runtime.js";
 import { startRoundServer } from "./server.js";
 
@@ -27,6 +34,7 @@ async function main() {
   let engine: RoundEngine | undefined;
   let guessTimer: ReturnType<typeof setTimeout> | undefined;
   const deliveries: Promise<unknown>[] = [];
+  const events: RoundEnvelope[] = [];
   const deliveryErrors: unknown[] = [];
   let guessSent = false;
   let fixtureSent = false;
@@ -75,6 +83,7 @@ async function main() {
         await client.install(artifact, signal);
       },
       record: (envelope) => {
+        events.push(envelope);
         deliveries.push(
           appendFile(
             join(directory, "events.jsonl"),
@@ -141,6 +150,9 @@ async function main() {
       throw new Error(
         "Local fixture round did not complete a verified hot swap",
       );
+    console.log(
+      `Public receipt: ${await saveReceipt(join(ROOT, "docs/rounds"), publicReceipt({ result, client: snapshot, events, breaker: viewerLabel(start.event.chatter_user_id, await viewerKey(join(ROOT, ".local"))) }))}`,
+    );
     if (process.argv.includes("--serve")) {
       console.log(
         "Round complete. Press Ctrl+C to close the local overlay server.",

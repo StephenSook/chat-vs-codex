@@ -6,6 +6,33 @@ export interface GameArtifact {
   id: string;
   code: string;
   digest: string;
+  timings?: RuntimeTimings;
+}
+
+export interface RuntimeTimings {
+  threadStartedAtMs: number;
+  patchReadyAtMs: number;
+  validationStartedAtMs: number;
+  validationFinishedAtMs: number;
+}
+
+export interface RuntimeObservation {
+  type: "runtime.phase";
+  phase:
+    | "thread-started"
+    | "patch-ready"
+    | "validation-started"
+    | "validation-passed";
+  atMs: number;
+  wallTime: string;
+}
+
+export interface RoundDurations {
+  headStartMs: number | null;
+  repairMs: number | null;
+  validationMs: number | null;
+  swapMs: number | null;
+  timeToGreenMs: number | null;
 }
 
 export interface PreparedGame {
@@ -18,6 +45,7 @@ export interface PreparedGame {
     hint: BugFamily | null;
     signal: AbortSignal;
     event: (event: ThreadEvent) => void;
+    observe?: (observation: RuntimeObservation) => void;
   }): Promise<GameArtifact>;
   close(): Promise<void>;
 }
@@ -26,7 +54,7 @@ export interface RoundRuntime {
   prepare(roundId: string, signal: AbortSignal): Promise<PreparedGame>;
 }
 
-export type RoundEvent =
+type RoundEventPayload =
   | { type: "overlay"; event: OverlayEvent }
   | {
       type: "game.build";
@@ -50,10 +78,20 @@ export type RoundEvent =
       headStartEndsAt: number | null;
       winner: "chat" | "codex" | null;
       reason: string | null;
+      durations?: RoundDurations;
     };
+
+export type RoundEvent = RoundEventPayload & {
+  atMs?: number;
+  wallTime?: string;
+};
 
 export interface RoundEnvelope {
   sequence: number;
   serverTimeMs: number;
+  atMs?: number;
+  wallTime?: string;
+  /** Current server clock at SSE delivery; recorded event clocks remain unchanged. */
+  deliveryAtMs?: number;
   event: RoundEvent;
 }

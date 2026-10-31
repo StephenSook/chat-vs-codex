@@ -3,6 +3,7 @@ import { createReadStream } from "node:fs";
 import { realpath, stat } from "node:fs/promises";
 import { createServer, type ServerResponse } from "node:http";
 import { extname, resolve, sep } from "node:path";
+import { eventStamp, monotonicMs } from "./clocks.js";
 import type { GameArtifact, RoundEnvelope, RoundEvent } from "./contracts.js";
 
 export async function startRoundServer(
@@ -14,7 +15,7 @@ export async function startRoundServer(
     install?: (artifact: GameArtifact, signal: AbortSignal) => Promise<void>;
   } = {},
 ) {
-  const now = options.now ?? Date.now;
+  const now = options.now ?? monotonicMs;
   const clients = new Set<ServerResponse>();
   const artifacts = new Map<string, GameArtifact>();
   const ring: RoundEnvelope[] = [];
@@ -23,9 +24,9 @@ export async function startRoundServer(
   let closing = false;
   let activation = 0;
   const send = (client: ServerResponse, envelope: RoundEnvelope) => {
-    // Replay uses the delivery clock so a late viewer never gets a fresh head start.
+    // Preserve evidence clocks; only the delivery clock changes on reconnect.
     client.write(
-      `id: ${envelope.sequence}\nevent: round\ndata: ${JSON.stringify({ ...envelope, serverTimeMs: now() })}\n\n`,
+      `id: ${envelope.sequence}\nevent: round\ndata: ${JSON.stringify({ ...envelope, deliveryAtMs: now() })}\n\n`,
     );
   };
   const server = createServer(async (request, response) => {
@@ -144,7 +145,17 @@ export async function startRoundServer(
       ring.length = 0;
       artifacts.clear();
     }
-    const envelope = { sequence: ++sequence, serverTimeMs: now(), event };
+    const stamp = { ...eventStamp(), atMs: now() };
+    const envelope: RoundEnvelope = {
+      sequence: ++sequence,
+      serverTimeMs: stamp.atMs,
+      ...stamp,
+      event: {
+        ...event,
+        atMs: event.atMs ?? stamp.atMs,
+        wallTime: event.wallTime ?? stamp.wallTime,
+      },
+    };
     ring.push(envelope);
     if (ring.length > 2000)
       throw new Error("Round event retention budget exceeded");

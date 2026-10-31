@@ -15,6 +15,8 @@ import { loadProfile } from "../../bench/src/runtime.js";
 import { buildTicket } from "../../bench/src/trial.js";
 import { git, prepareWorkspace } from "../../bench/src/workspace.js";
 import { type PooledMutant, ROOT } from "../../mutator/src/gate.js";
+import { monotonicMs } from "../src/clocks.js";
+import type { RuntimeObservation } from "../src/contracts.js";
 import { createRoundRuntime, superviseRepair } from "../src/runtime.js";
 import {
   bundleGame,
@@ -77,7 +79,14 @@ describe("round runtime verification", () => {
     try {
       const events: string[] = [];
       const order: string[] = [];
+      const observations: RuntimeObservation[] = [];
+      let runtimeEnteredAtMs = 0;
+      let runtimeFinishedAtMs = 0;
+      let validationEnteredAtMs = 0;
+      let validationFinishedAtMs = 0;
+      let bundleFinishedAtMs = 0;
       const runtime = vi.fn(async (options) => {
+        runtimeEnteredAtMs = monotonicMs();
         order.push("runtime");
         expect(options.prompt).toContain("First divergent frame:");
         expect(options.prompt).not.toContain(context.mutant.id);
@@ -98,32 +107,82 @@ describe("round runtime verification", () => {
             output_tokens: 4,
           },
         });
+        runtimeFinishedAtMs = monotonicMs();
         return { usage: null, answer: null };
       });
       const validate = vi.fn(async (workspace, profile, remaining) => {
+        validationEnteredAtMs = monotonicMs();
         order.push("validate");
         expect(workspace.game).toBe(context.workspace.game);
         expect(profile).toBe(await loadProfile());
         expect(remaining()).toBeGreaterThan(0);
+        await new Promise((done) => setTimeout(done, 10));
+        validationFinishedAtMs = monotonicMs();
       });
       const build = vi.fn(async (entry) => {
         order.push("build");
-        return bundleGame(entry);
+        const artifact = await bundleGame(entry);
+        bundleFinishedAtMs = monotonicMs();
+        return artifact;
       });
       const result = await executeRepair(
         context.options,
         new AbortController().signal,
         (event) => events.push(event.type),
         { runtime, validate, build },
+        (observation) => observations.push(observation),
       );
       expect(order).toEqual(["runtime", "validate", "build"]);
       expect(events).toEqual(["turn.completed"]);
-      expect(result).toEqual(
+      const { timings, ...artifact } = result;
+      expect(artifact).toEqual(
         await bundleGame(join(ROOT, "packages/sim/src/index.ts")),
       );
+      expect(observations.map((observation) => observation.phase)).toEqual([
+        "thread-started",
+        "patch-ready",
+        "validation-started",
+        "validation-passed",
+      ]);
+      expect(timings).toEqual({
+        threadStartedAtMs: observations[0]?.atMs,
+        patchReadyAtMs: observations[1]?.atMs,
+        validationStartedAtMs: observations[2]?.atMs,
+        validationFinishedAtMs: observations[3]?.atMs,
+      });
+      if (!timings) throw new Error("Missing actual runtime boundary timings");
+      expect(timings.threadStartedAtMs).toBeLessThanOrEqual(runtimeEnteredAtMs);
+      expect(timings.patchReadyAtMs).toBeGreaterThanOrEqual(
+        runtimeFinishedAtMs,
+      );
+      expect(timings.validationStartedAtMs).toBeGreaterThanOrEqual(
+        timings.patchReadyAtMs,
+      );
+      expect(timings.validationStartedAtMs).toBeLessThanOrEqual(
+        validationEnteredAtMs,
+      );
+      expect(timings.validationFinishedAtMs).toBeGreaterThanOrEqual(
+        validationFinishedAtMs,
+      );
+      expect(timings.validationFinishedAtMs).toBeGreaterThanOrEqual(
+        bundleFinishedAtMs,
+      );
+      expect(
+        timings.validationFinishedAtMs - timings.validationStartedAtMs,
+      ).toBeGreaterThanOrEqual(8);
+      for (const observation of observations) {
+        expect(observation.type).toBe("runtime.phase");
+        expect(Number.isFinite(Date.parse(observation.wallTime))).toBe(true);
+      }
       const log = await readFile(context.options.logFile, "utf8");
       expect(log).toContain("runtime.event");
       expect(log).toContain("repair.verified");
+      for (const line of log.trim().split("\n")) {
+        const record = JSON.parse(line);
+        expect(record.atMs).toBeGreaterThan(0);
+        expect(record.wallTime).toBe(record.timestamp);
+        expect(Number.isFinite(Date.parse(record.wallTime))).toBe(true);
+      }
       expect(context.options.logFile.startsWith(context.workspace.parent)).toBe(
         false,
       );
@@ -143,6 +202,7 @@ describe("round runtime verification", () => {
     "refuses %s violations without creating a repaired artifact",
     async (kind) => {
       const context = await setup();
+      const observations: RuntimeObservation[] = [];
       const build = vi.fn(async () => ({
         id: "invalid",
         digest: "invalid",
@@ -188,9 +248,13 @@ describe("round runtime verification", () => {
             new AbortController().signal,
             () => {},
             { runtime, validate, build },
+            (observation) => observations.push(observation),
           ),
         ).rejects.toThrow();
         expect(build).not.toHaveBeenCalled();
+        expect(
+          observations.map((observation) => observation.phase),
+        ).not.toContain("validation-passed");
       } finally {
         await context.cleanup();
       }
@@ -228,6 +292,16 @@ describe("round runtime verification", () => {
           runtime,
           validate,
         }),
+      ).rejects.toThrow();
+      const controller = new AbortController();
+      await expect(
+        executeRepair(
+          context.options,
+          controller.signal,
+          () => {},
+          { runtime, validate },
+          () => controller.abort(),
+        ),
       ).rejects.toThrow();
       expect(runtime).toHaveBeenCalledTimes(1);
     } finally {
@@ -301,6 +375,68 @@ describe("round runtime verification", () => {
         ),
       ).rejects.toThrow("aborted");
       expect(event).toHaveBeenCalledTimes(1);
+    } finally {
+      await context.cleanup();
+    }
+  }, 30000);
+
+  it("forwards worker lifecycle stamps unchanged across IPC", async () => {
+    const context = await setup();
+    try {
+      const fake = join(context.logs, "observed.mjs");
+      const artifact = { id: "fixture", digest: "fixture", code: "fixture" };
+      await writeFile(
+        fake,
+        `process.once('message',()=>{const observation={type:'runtime.phase',phase:'thread-started',atMs:Number(process.hrtime.bigint())/1000000,wallTime:new Date().toISOString()};console.log('worker fixture');process.send({type:'observation',observation},()=>process.send({type:'result',artifact:${JSON.stringify(artifact)}},()=>process.exit(0)));});`,
+      );
+      const before = monotonicMs();
+      const observations: RuntimeObservation[] = [];
+      await expect(
+        superviseRepair(
+          context.options,
+          new AbortController().signal,
+          () => {},
+          pathToFileURL(fake),
+          (observation) => observations.push(observation),
+        ),
+      ).resolves.toEqual(artifact);
+      expect(observations).toHaveLength(1);
+      expect(observations[0]?.phase).toBe("thread-started");
+      expect(observations[0]?.atMs).toBeGreaterThanOrEqual(before);
+      expect(observations[0]?.atMs).toBeLessThanOrEqual(monotonicMs());
+      const log = JSON.parse(
+        (await readFile(context.options.logFile, "utf8")).trim(),
+      );
+      expect(log.kind).toBe("worker.stdout");
+      expect(log.atMs).toBeGreaterThanOrEqual(before);
+      expect(log.wallTime).toBe(log.timestamp);
+    } finally {
+      await context.cleanup();
+    }
+  }, 30000);
+
+  it("suppresses queued lifecycle and SDK events after an observation cancels the worker", async () => {
+    const context = await setup();
+    try {
+      const fake = join(context.logs, "stale-observation.mjs");
+      await writeFile(
+        fake,
+        "process.once('message',()=>{const observation={type:'runtime.phase',phase:'thread-started',atMs:Number(process.hrtime.bigint())/1000000,wallTime:new Date().toISOString()};process.send({type:'observation',observation});process.send({type:'observation',observation:{...observation,phase:'patch-ready'}});process.send({type:'event',event:{type:'thread.started',thread_id:'stale'}});setInterval(()=>{},1000);});",
+      );
+      const controller = new AbortController();
+      const observe = vi.fn(() => controller.abort());
+      const event = vi.fn();
+      await expect(
+        superviseRepair(
+          context.options,
+          controller.signal,
+          event,
+          pathToFileURL(fake),
+          observe,
+        ),
+      ).rejects.toThrow("aborted");
+      expect(observe).toHaveBeenCalledTimes(1);
+      expect(event).not.toHaveBeenCalled();
     } finally {
       await context.cleanup();
     }

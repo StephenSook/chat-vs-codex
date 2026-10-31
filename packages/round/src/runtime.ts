@@ -12,7 +12,12 @@ import {
   sourceDigest,
 } from "../../mutator/src/gate.js";
 import { BUG_FAMILIES, type BugFamily } from "../../twitch/src/events.js";
-import type { GameArtifact, RoundRuntime } from "./contracts.js";
+import { eventStamp } from "./clocks.js";
+import type {
+  GameArtifact,
+  RoundRuntime,
+  RuntimeObservation,
+} from "./contracts.js";
 import { bundleGame, type RepairExecution } from "./runtime-execution.js";
 
 export interface RoundRuntimeOptions {
@@ -29,6 +34,7 @@ export async function superviseRepair(
   signal: AbortSignal,
   event: (event: ThreadEvent) => void,
   worker = new URL("./runtime-worker.ts", import.meta.url),
+  observe?: (observation: RuntimeObservation) => void,
 ): Promise<GameArtifact> {
   signal.throwIfAborted();
   const child = fork(worker, [], {
@@ -43,10 +49,11 @@ export async function superviseRepair(
     ["worker.stderr", child.stderr],
   ] as const)
     stream?.on("data", (bytes: Buffer) => {
+      const stamp = eventStamp();
       writes.push(
         appendFile(
           options.logFile,
-          `${JSON.stringify({ timestamp: new Date().toISOString(), kind, text: bytes.toString() })}\n`,
+          `${JSON.stringify({ ...stamp, timestamp: stamp.wallTime, kind, text: bytes.toString() })}\n`,
         ),
       );
     });
@@ -55,6 +62,7 @@ export async function superviseRepair(
   let workerFailed = false;
   let failure = "Runtime worker exited without a verified build";
   let stopped = false;
+  let settled = false;
   const reap = () => {
     if (child.pid) {
       try {
@@ -82,12 +90,22 @@ export async function superviseRepair(
           event?: ThreadEvent;
           artifact?: GameArtifact;
           error?: string;
+          observation?: RuntimeObservation;
         }) => {
-          if (message.type === "event" && message.event && !stopped) {
+          if (stopped || signal.aborted || settled || workerFailed) return;
+          if (message.type === "event" && message.event) {
             try {
               event(message.event);
             } catch {
               failure = "Round event consumer failed";
+              kill();
+            }
+          }
+          if (message.type === "observation" && message.observation) {
+            try {
+              observe?.(message.observation);
+            } catch {
+              failure = "Round observation consumer failed";
               kill();
             }
           }
@@ -99,10 +117,12 @@ export async function superviseRepair(
         },
       );
       child.once("error", (error) => {
+        settled = true;
         failure = error.message;
         done();
       });
       child.once("exit", (code, signal) => {
+        settled = true;
         cleanExit = code === 0 && signal === null;
         done();
       });
@@ -156,9 +176,10 @@ export function createRoundRuntime(options: RoundRuntimeOptions): RoundRuntime {
         const profile = await loadProfile();
         const launcher = join(runs, `${randomUUID()}.launcher`);
         await createLauncher(launcher);
+        const stamp = eventStamp();
         await appendFile(
           logFile,
-          `${JSON.stringify({ timestamp: new Date().toISOString(), kind: "round.prepared", roundId, mutantId: mutant.id, family: mutant.family })}\n`,
+          `${JSON.stringify({ ...stamp, timestamp: stamp.wallTime, kind: "round.prepared", roundId, mutantId: mutant.id, family: mutant.family })}\n`,
           { mode: 0o600 },
         );
         signal.throwIfAborted();
@@ -191,6 +212,8 @@ export function createRoundRuntime(options: RoundRuntimeOptions): RoundRuntime {
               },
               combined,
               repair.event,
+              undefined,
+              repair.observe,
             );
             return active;
           },

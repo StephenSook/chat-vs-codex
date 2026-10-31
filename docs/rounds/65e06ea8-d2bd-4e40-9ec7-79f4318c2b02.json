@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "roundId": "65e06ea8-d2bd-4e40-9ec7-79f4318c2b02",
+  "mode": "local-fixture",
+  "fixture": "bare-break-then-wrong-enum-hint",
+  "model": "gpt-6.1-terra",
+  "effort": "low",
+  "breaker": "viewer-d998bed2f212aad2",
+  "firstCorrectGuesser": null,
+  "family": "gravity-sign",
+  "winner": "codex",
+  "scores": {
+    "chat": 0,
+    "codex": 1
+  },
+  "clock": "legacy-wall-clock-ms",
+  "durations": {
+    "headStartMs": 15004,
+    "repairMs": null,
+    "validationMs": null,
+    "swapMs": 2,
+    "timeToGreenMs": null
+  },
+  "timingNotes": [
+    "This verified round predates monotonic lifecycle stamps. Head start and swap are wall-clock differences; missing boundaries remain null.",
+    "The legacy validating event was emitted after validation finished and cannot measure validation duration.",
+    "The private runtime repair.verified elapsedMs includes SDK startup, the turn and verification; it is not the submitted patch time."
+  ],
+  "events": [
+    {
+      "sequence": 1,
+      "type": "round.state",
+      "phase": "preparing",
+      "atMs": null,
+      "wallTime": "2026-10-31T06:40:27.725Z"
+    },
+    {
+      "sequence": 2,
+      "type": "game.build",
+      "phase": "broken",
+      "atMs": null,
+      "wallTime": "2026-10-31T06:40:28.434Z"
+    },
+    {
+      "sequence": 3,
+      "type": "round.started",
+      "atMs": null,
+      "wallTime": "2026-10-31T06:40:28.434Z"
+    },
+    {
+      "sequence": 4,
+      "type": "bug.active",
+      "atMs": null,
+      "wallTime": "2026-10-31T06:40:28.434Z"
+    },
+    {
+      "sequence": 5,
+      "type": "round.state",
+      "phase": "head-start",
+      "atMs": null,
+      "wallTime": "2026-10-31T06:40:28.434Z"
+    },
+    {
+      "sequence": 6,
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": null,
+      "wallTime": "2026-10-31T06:40:43.438Z"
+    },
+    {
+      "sequence": 7,
+      "type": "codex.step",
+      "atMs": null,
+      "wallTime": "2026-10-31T06:40:50.040Z"
+    },
+    {
+      "sequence": 8,
+      "type": "codex.step",
+      "atMs": null,
+      "wallTime": "2026-10-31T06:40:50.041Z"
+    },
+    {
+      "sequence": 9,
+      "type": "round.state",
+      "phase": "validating",
+      "atMs": null,
+      "wallTime": "2026-10-31T06:40:57.662Z"
+    },
+    {
+      "sequence": 10,
+      "type": "round.state",
+      "phase": "swapping",
+      "atMs": null,
+      "wallTime": "2026-10-31T06:40:57.662Z"
+    },
+    {
+      "sequence": 11,
+      "type": "game.build",
+      "phase": "repaired",
+      "atMs": null,
+      "wallTime": "2026-10-31T06:40:57.664Z"
+    },
+    {
+      "sequence": 12,
+      "type": "score.changed",
+      "atMs": null,
+      "wallTime": "2026-10-31T06:40:57.664Z"
+    },
+    {
+      "sequence": 13,
+      "type": "bug.named",
+      "atMs": null,
+      "wallTime": "2026-10-31T06:40:57.664Z"
+    },
+    {
+      "sequence": 14,
+      "type": "tests.green",
+      "atMs": null,
+      "wallTime": "2026-10-31T06:40:57.664Z"
+    },
+    {
+      "sequence": 15,
+      "type": "round.state",
+      "phase": "resolved",
+      "atMs": null,
+      "wallTime": "2026-10-31T06:40:57.664Z"
+    }
+  ],
+  "verification": {
+    "fullReplaySuite": true,
+    "heldOutReplay": true,
+    "statePreserved": true,
+    "finalStateHash": "0d367b3a",
+    "builds": [
+      {
+        "digest": "9284d4f463cc418b54c4a70bfa159e0be421ae27f2aa8e870974586db50e2bbe",
+        "frame": 42,
+        "statePreserved": true
+      },
+      {
+        "digest": "4715351bcb89d1a766bac1607c4579201fd2d5c28e2a42227ead259d47d1b6ed",
+        "frame": 1796,
+        "statePreserved": true
+      }
+    ]
+  },
+  "privateEvidenceSha256": {
+    "events.jsonl": "966f99717db2843257368e34fa649464dd1439a1d590eafd8365c772b1868b26",
+    "result.json": "2dd6f563b1d1736010e03cc9d1fc0af76a6fce575e0080848f4770d019312146"
+  }
+}

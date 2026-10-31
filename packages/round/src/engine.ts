@@ -6,11 +6,15 @@ import {
   type PrivateIntent,
   type PublicIntent,
 } from "../../twitch/src/events.js";
+import { eventStamp, monotonicMs } from "./clocks.js";
 import type {
   GameArtifact,
   PreparedGame,
+  RoundDurations,
   RoundEvent,
   RoundRuntime,
+  RuntimeObservation,
+  RuntimeTimings,
 } from "./contracts.js";
 import { sdkOverlayEvent } from "./sdk-events.js";
 
@@ -32,6 +36,10 @@ interface ActiveRound {
   reason: string | null;
   timer: ReturnType<typeof setTimeout> | null;
   visible: boolean;
+  headStartFinishedAt: number | null;
+  timings: Partial<RuntimeTimings>;
+  swapStartedAt: number | null;
+  swapFinishedAt: number | null;
 }
 
 function abortable<T>(
@@ -98,7 +106,7 @@ export class RoundEngine {
       hardBudgetMs?: number;
     },
   ) {
-    this.now = options.now ?? Date.now;
+    this.now = options.now ?? monotonicMs;
     this.headStartMs = options.headStartMs ?? 15_000;
     this.roundLimitMs = options.roundLimitMs ?? 60_000;
     this.hardBudgetMs = options.hardBudgetMs ?? 240_000;
@@ -130,7 +138,7 @@ export class RoundEngine {
     if (intent.kind === "break-requested") {
       if (this.current) return;
       if (intent.bugCount !== 1) {
-        this.options.publish({
+        this.publish({
           ...this.state,
           reason: "unsupported-bug-count",
         });
@@ -146,6 +154,10 @@ export class RoundEngine {
         reason: null,
         timer: null,
         visible: false,
+        headStartFinishedAt: null,
+        timings: {},
+        swapStartedAt: null,
+        swapFinishedAt: null,
       };
       this.current = round;
       this.guessClosesAt = null;
@@ -195,7 +207,69 @@ export class RoundEngine {
   }
 
   private overlay(event: OverlayEvent): void {
-    this.options.publish({ type: "overlay", event });
+    this.publish({ type: "overlay", event });
+  }
+  private stamp() {
+    return { ...eventStamp(), atMs: this.now() };
+  }
+  private publish(event: RoundEvent): void {
+    this.options.publish({ ...event, ...this.stamp() });
+  }
+  private durations(round: ActiveRound): RoundDurations {
+    const elapsed = (
+      start: number | null | undefined,
+      end: number | null | undefined,
+    ) => (start == null || end == null || end < start ? null : end - start);
+    return {
+      headStartMs: elapsed(round.startedAt, round.headStartFinishedAt),
+      repairMs: elapsed(
+        round.timings.threadStartedAtMs,
+        round.timings.patchReadyAtMs,
+      ),
+      validationMs: elapsed(
+        round.timings.validationStartedAtMs,
+        round.timings.validationFinishedAtMs,
+      ),
+      swapMs: elapsed(round.swapStartedAt, round.swapFinishedAt),
+      timeToGreenMs: elapsed(
+        round.timings.threadStartedAtMs,
+        round.swapFinishedAt,
+      ),
+    };
+  }
+  private observe(round: ActiveRound, observation: RuntimeObservation): void {
+    if (
+      this.current !== round ||
+      round.abort.signal.aborted ||
+      !["repairing", "validating"].includes(this.state.phase) ||
+      !Number.isFinite(observation.atMs)
+    )
+      return;
+    const keys = {
+      "thread-started": "threadStartedAtMs",
+      "patch-ready": "patchReadyAtMs",
+      "validation-started": "validationStartedAtMs",
+      "validation-passed": "validationFinishedAtMs",
+    } as const;
+    const key = keys[observation.phase];
+    if (key === undefined) return;
+    const ordered = Object.values(keys);
+    const index = ordered.indexOf(key);
+    const previous = ordered[index - 1];
+    const prior = previous === undefined ? undefined : round.timings[previous];
+    if (
+      round.timings[key] !== undefined ||
+      (index > 0 && prior === undefined) ||
+      (prior !== undefined && observation.atMs < prior)
+    )
+      return;
+    round.timings[key] = observation.atMs;
+    this.phase(
+      round,
+      observation.phase === "validation-started"
+        ? "validating"
+        : this.state.phase,
+    );
   }
   private phase(round: ActiveRound, phase: PublicState["phase"]): void {
     this.state = {
@@ -206,6 +280,8 @@ export class RoundEngine {
         round.startedAt === null ? null : round.startedAt + this.headStartMs,
       winner: round.winner,
       reason: round.reason,
+      durations: this.durations(round),
+      ...this.stamp(),
     };
     this.options.publish({ ...this.state });
   }
@@ -332,12 +408,14 @@ export class RoundEngine {
       this.overlay({ type: "bug.active", roundId: round.id, intensity: 1 });
       this.phase(round, "head-start");
       await this.headStart(round);
+      round.headStartFinishedAt = this.now();
       stage = "repair";
       this.phase(round, "repairing");
       const repaired = await abortable(
         prepared.repair({
           hint: this.hint(round),
           signal: round.abort.signal,
+          observe: (observation) => this.observe(round, observation),
           event: (event) => {
             if (
               this.current !== round ||
@@ -353,10 +431,12 @@ export class RoundEngine {
       );
       round.abort.signal.throwIfAborted();
       // Runtime resolution guarantees full immutable visible + held-out validation.
-      this.phase(round, "validating");
+      if (repaired.timings) round.timings = { ...repaired.timings };
+      round.swapStartedAt = this.now();
       this.phase(round, "swapping");
       stage = "activation";
       await this.activate(round, repaired, "repaired");
+      round.swapFinishedAt = this.now();
       if (
         round.winner === null &&
         this.now() < (round.startedAt ?? 0) + this.roundLimitMs

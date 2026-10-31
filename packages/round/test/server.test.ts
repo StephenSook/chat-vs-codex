@@ -197,7 +197,12 @@ describe("local round HTTP and SSE boundary", () => {
     const delivered = await stream.next();
     expect(installed).toEqual([build]);
     expect(records).toHaveLength(1);
-    expect(delivered).toEqual(records[0]);
+    const { deliveryAtMs, ...original } = delivered;
+    expect(original).toEqual(records[0]);
+    expect(deliveryAtMs).toBe(10);
+    expect(delivered.atMs).toBe(10);
+    expect(delivered.event.atMs).toBe(10);
+    expect(delivered.wallTime).toBe(delivered.event.wallTime);
     expect(delivered.event).toMatchObject({
       type: "game.build",
       roundId: "r",
@@ -250,7 +255,9 @@ describe("local round HTTP and SSE boundary", () => {
     now = 14000;
     const stream = await sse(running.origin);
     const delivered = await stream.next();
-    expect(delivered.serverTimeMs).toBe(14000);
+    expect(delivered.serverTimeMs).toBe(10000);
+    expect(delivered.atMs).toBe(10000);
+    expect(delivered.deliveryAtMs).toBe(14000);
     expect(records[0]?.serverTimeMs).toBe(10000);
     if (
       delivered.event.type !== "overlay" ||
@@ -260,7 +267,8 @@ describe("local round HTTP and SSE boundary", () => {
     const event = delivered.event.event;
     const state = reduceBroadcast(initialBroadcast(), {
       ...event,
-      atMs: 5000 + event.atMs - delivered.serverTimeMs,
+      atMs:
+        5000 + event.atMs - (delivered.deliveryAtMs ?? delivered.serverTimeMs),
     });
     expect(headStartSeconds(state, 5000)).toBe(11);
   });
@@ -316,13 +324,13 @@ describe("local round HTTP and SSE boundary", () => {
     release();
     expect(await pending).toBeInstanceOf(Error);
     expect(records.map((entry) => entry.event)).toEqual([
-      {
+      expect.objectContaining({
         type: "game.build",
         roundId: "r",
         phase: "rollback",
         buildId: rollback.id,
         digest: rollback.digest,
-      },
+      }),
     ]);
     expect(
       (await http(running.origin, `/api/builds/${slow.id}.js`)).status,

@@ -5,8 +5,8 @@ real handler, installs a gated mutant, waits the real 15-second chat head start,
 then runs one `gpt-6.1-terra` low SDK repair. A fixture sends the wrong enum guess
 `!guess swapped-controls` during a gravity round to exercise hint-war input.
 This is a fixture round, not evidence of live Twitch event delivery.
-The [verification status](../../docs/LOCAL-ROUND-CHECK.md) records the first real
-attempt's nested-sandbox refusal. A full round with the real SDK is not yet verified.
+The [verification status](../../docs/LOCAL-ROUND-CHECK.md) links the first completed
+real SDK fixture round and retains the earlier nested-sandbox refusal.
 
 ```sh
 CI=true pnpm ci:local
@@ -68,5 +68,9 @@ The local proof client executes patched code only under the hotfix profile. Its
 VM module context adds a module boundary; the process sandbox is the filesystem
 and network guard. The proof records actual frame/hash, installed build IDs,
 preserved-state checks and received overlay events. Private logs and receipts
-live under `.local/round-runs/`. Browser pixels and OBS encoding still require
+live under `.local/round-runs/`. Verified rounds also write a sanitized receipt
+under `docs/rounds/`, with HMAC viewer labels and no raw viewer identities. Events
+carry host-monotonic `atMs` and ISO `wallTime`; receipts separate actual head start,
+SDK start to submitted patch, full validation, swap, and SDK start to installed
+green. Missing legacy boundaries remain null. Browser pixels and OBS encoding still require
 visual verification; the headless proof cannot establish either.

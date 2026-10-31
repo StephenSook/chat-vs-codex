@@ -1,5 +1,16 @@
 # Local round verification status
 
+Stephen completed a real fixture round outside the build sandbox on 2026-10-31.
+The [sanitized receipt](rounds/65e06ea8-d2bd-4e40-9ec7-79f4318c2b02.json)
+records the verified gravity fix despite a wrong enum hint, full replay and held-out
+validation, preserved game state during replacement, and CODEX 1. The private
+source evidence remains under `.local/round-runs/`. This round predates monotonic
+phase stamps: missing durations are unavailable, not reconstructed from the late
+legacy `validating` event. New rounds record actual runtime boundaries.
+
+The following earlier attempt records the build sandbox's refusal, not the
+subsequent successful round.
+
 Implementation commit: `e5c376f0e53bc01ccb4249655e5e006b62d7d2df`.
 Attempted on 2026-10-31 at 06:35 UTC with `pnpm round:fixture --run`.
 
@@ -37,4 +48,4 @@ CI=true pnpm ci:local && pnpm --filter @chat-vs-codex/overlay build && pnpm roun
 The runner prints its new private log directory and overlay URL. `--serve` keeps
 the local overlay available after the round; Ctrl+C closes it. It does not start
 a Twitch listener or send chat. Return the resulting private round logs and
-receipt for verification before claiming a completed real round.
+receipt for the next round's visual and timing verification.

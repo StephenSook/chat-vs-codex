@@ -110,6 +110,11 @@ export function parseRoundEnvelope(value: unknown): RoundEnvelope {
     !Number.isSafeInteger(e.sequence) ||
     e.sequence < 1 ||
     !Number.isFinite(e.serverTimeMs) ||
+    (e.atMs !== undefined && !Number.isFinite(e.atMs)) ||
+    (e.deliveryAtMs !== undefined && !Number.isFinite(e.deliveryAtMs)) ||
+    (e.wallTime !== undefined &&
+      (typeof e.wallTime !== "string" ||
+        !Number.isFinite(Date.parse(e.wallTime)))) ||
     !e.event ||
     typeof e.event !== "object"
   )
@@ -223,7 +228,12 @@ export class OrderedRoundBridge {
             event.event.type === "round.started"
               ? {
                   ...event.event,
-                  atMs: receivedAtMs + event.event.atMs - envelope.serverTimeMs,
+                  atMs:
+                    receivedAtMs +
+                    event.event.atMs -
+                    (envelope.deliveryAtMs ??
+                      envelope.atMs ??
+                      envelope.serverTimeMs),
                 }
               : event.event,
           );
