@@ -14,7 +14,7 @@ pnpm --filter @chat-vs-codex/twitch auth start
 
 After approval, resume polling with `auth resume`. The pending device grant is
 stored in the repository's ignored `.local/twitch-device.json` with mode 0600.
-Access and refresh tokens go to `~/.chat-vs-codex/tokens.json`, mode 0600,
+Access and refresh tokens go to `.local/twitch/tokens.json` inside the workspace, mode 0600,
 with a 0700 parent directory. Refreshes replace that file atomically.
 Device start, exchange and validation each have a 20-second request deadline.
 Polling also cancels an in-progress request when the device grant expires.

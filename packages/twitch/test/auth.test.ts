@@ -8,6 +8,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { AccessToken } from "@twurple/auth";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -20,6 +21,7 @@ import {
   readToken,
   requireClientId,
   SCOPES,
+  tokenPath,
 } from "../src/auth.js";
 import {
   createOAuthTransport,
@@ -47,6 +49,13 @@ const pending: PendingDevice = {
 };
 
 describe("public-client Twitch authorization", () => {
+  it("keeps the default token store inside the ignored workspace directory", () => {
+    expect(tokenPath()).toBe(
+      fileURLToPath(
+        new URL("../../../.local/twitch/tokens.json", import.meta.url),
+      ),
+    );
+  });
   it("requires a Client ID and never invents one", () => {
     expect(() => requireClientId({})).toThrow("TWITCH_CLIENT_ID");
     expect(requireClientId({ TWITCH_CLIENT_ID: " publicclient " })).toBe(

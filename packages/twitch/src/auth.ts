@@ -8,9 +8,9 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
+import { fileURLToPath } from "node:url";
 import {
   type AccessToken,
   type DeviceCodeInfo,
@@ -109,7 +109,8 @@ export interface PendingDevice {
   expiresAt: number;
   nextPollAt: number;
 }
-export const tokenPath = () => join(homedir(), ".chat-vs-codex", "tokens.json");
+export const tokenPath = () =>
+  fileURLToPath(new URL("../../../.local/twitch/tokens.json", import.meta.url));
 
 export function readToken(path = tokenPath()): StoredToken {
   const stat = lstatSync(path);
