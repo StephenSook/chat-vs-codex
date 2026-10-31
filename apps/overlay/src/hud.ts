@@ -1,0 +1,67 @@
+import { type BroadcastState, headStartSeconds } from "./events.js";
+
+export function element<T extends HTMLElement = HTMLElement>(id: string): T {
+  const found = document.getElementById(id);
+  if (!found) throw new Error(`Missing overlay element: ${id}`);
+  return found as T;
+}
+
+export function resizeStage(): void {
+  // Numeric JS scale also works in OBS Chromium versions without CSS division.
+  const scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  element("stage").style.transform = `translate(-50%, -50%) scale(${scale})`;
+}
+
+export function renderBroadcast(state: BroadcastState): void {
+  element("chat-score").textContent = String(state.chat);
+  element("codex-score").textContent = String(state.codex);
+  element("death-count").textContent = String(state.deaths);
+  element("round-label").textContent = state.roundId
+    ? `ROUND ${state.round}`
+    : "SIM REPLAY";
+  element("bug-name").textContent =
+    state.bug === "fixed"
+      ? "Fixed"
+      : (state.bugName ?? (state.bug === "active" ? "???" : "No active bug"));
+  element("bug-glyph").textContent =
+    state.bug === "fixed" ? "✓" : state.bug === "active" ? "ϟ" : "○";
+  element("bug-ticket").dataset.status = state.bug;
+  element("game").dataset.status = state.bug;
+  const list = element("steps");
+  list.replaceChildren();
+  if (!state.steps.length) {
+    const row = document.createElement("li");
+    row.className = "waiting";
+    row.textContent = "○ Waiting for Codex";
+    list.append(row);
+  }
+  for (const step of state.steps) {
+    const row = document.createElement("li");
+    row.dataset.status = step.status;
+    const glyph = document.createElement("span");
+    glyph.className = "step-glyph";
+    glyph.setAttribute("aria-hidden", "true");
+    glyph.textContent =
+      step.status === "done" ? "✓" : step.status === "failed" ? "ϟ" : "◌";
+    const label = document.createElement("span");
+    label.className = "step-label";
+    label.textContent =
+      step.status === "failed" ? `[FAILED] ${step.label}` : step.label;
+    label.title = label.textContent;
+    row.append(glyph, label);
+    list.append(row);
+  }
+  const attempt = element("attempt");
+  attempt.hidden = state.attempt === null;
+  attempt.textContent =
+    state.attempt === null ? "" : `Attempt ${state.attempt}/${state.total}`;
+}
+
+export function renderClock(state: BroadcastState, nowMs: number): void {
+  const seconds = headStartSeconds(state, nowMs);
+  const active = seconds !== null && seconds > 0 && state.bug !== "fixed";
+  element("countdown").hidden = !active;
+  element("fuse").hidden = !active;
+  element("seconds").textContent = `${seconds ?? 15}s`;
+  element("fuse-fill").style.width = `${((seconds ?? 0) / 15) * 100}%`;
+}

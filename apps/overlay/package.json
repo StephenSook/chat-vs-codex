@@ -1,0 +1,26 @@
+{
+  "name": "@chat-vs-codex/overlay",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "smoke": "playwright test --config playwright.config.ts"
+  },
+  "dependencies": {
+    "@chat-vs-codex/replay": "workspace:*",
+    "@chat-vs-codex/sim": "workspace:*",
+    "@fontsource/baloo-2": "5.3.0",
+    "@fontsource/bungee": "5.3.0",
+    "@fontsource/plus-jakarta-sans": "5.3.0",
+    "pixi-filters": "6.1.5",
+    "pixi.js": "8.22.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "vite": "6.4.1"
+  }
+}

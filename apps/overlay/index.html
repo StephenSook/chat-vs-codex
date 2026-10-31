@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#fffdf9" />
+    <title>Chat vs Codex | Broadcast</title>
+  </head>
+  <body>
+    <main id="stage" aria-label="Chat vs Codex broadcast">
+      <section class="scorebug" aria-label="Round scoreboard">
+        <div class="team chat">
+          <svg class="team-mark" viewBox="0 0 64 64" aria-hidden="true"><path d="M12 10h40a6 6 0 0 1 6 6v27a6 6 0 0 1-6 6H28L12 59V49a6 6 0 0 1-6-6V16a6 6 0 0 1 6-6Z"/><circle cx="21" cy="29" r="3"/><circle cx="42" cy="29" r="3"/></svg>
+          <span>CHAT</span><strong id="chat-score">0</strong>
+        </div>
+        <div class="deaths">
+          <span class="sr-only">Deaths:</span>
+          <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M16 47C3 37 8 8 32 8s29 29 16 39v9H16Z"/><circle cx="23" cy="31" r="5"/><circle cx="42" cy="31" r="5"/><path d="m29 43 3-5 3 5M26 49v7m12-7v7"/></svg>
+          <strong id="death-count">0</strong>
+        </div>
+        <div class="team codex">
+          <strong id="codex-score">0</strong><span>CODEX</span>
+          <svg class="team-mark" viewBox="0 0 64 64" aria-hidden="true"><path d="m32 3 26 15v28L32 61 6 46V18Z"/><path d="m17 24 9 8-9 8m15 1h15"/></svg>
+        </div>
+        <div class="fuse" id="fuse" hidden><span id="fuse-fill"></span></div>
+      </section>
+      <div class="round-meta" id="round-label">SIM REPLAY</div>
+      <section class="bug-ticket card" id="bug-ticket" aria-label="Bug status">
+        <span class="status-glyph" id="bug-glyph" aria-hidden="true">○</span>
+        <h1 id="bug-name">No active bug</h1>
+      </section>
+      <div class="countdown card" id="countdown" hidden><span>CHAT HEAD START</span><strong id="seconds">15s</strong></div>
+      <section class="ticker card" aria-label="Codex activity">
+        <h2><span class="crew-mark" aria-hidden="true">&gt;_</span> PIT CREW</h2>
+        <p id="attempt" hidden></p>
+        <ol id="steps"><li class="waiting"><span aria-hidden="true">○</span> Waiting for Codex</li></ol>
+      </section>
+      <section class="game-shell" aria-label="Simulation game">
+        <div id="game"></div>
+      </section>
+      <footer class="bottom-line">
+        <span id="playback-label">CLEAN REPLAY</span>
+        <span id="controls"></span>
+        <span id="run-status" aria-live="polite">RUNNING</span>
+      </footer>
+      <p class="sr-only" id="keyboard-help">Use left and right arrows to move, Space to jump, and R to restart. Replay mode follows the committed clean input track.</p>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

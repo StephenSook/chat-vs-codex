@@ -1,0 +1,370 @@
+:root {
+  --chat: #f7914e;
+  --codex: #0477bd;
+  --ink: #1f1d1b;
+  --cream: #fffdf9;
+  --broken: #e5644d;
+  --green: #389975;
+  color: var(--ink);
+  background: #f3ecdd;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-weight: 700;
+  font-synthesis: none;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  overflow: hidden;
+}
+#stage [hidden] {
+  display: none;
+}
+#stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: center;
+  background: radial-gradient(ellipse at 32% 56%, #fffbf1 0 38%, #f3ecdd 75%);
+  overflow: hidden;
+}
+.card,
+.scorebug {
+  border: 3px solid var(--ink);
+  background: var(--cream);
+  box-shadow: 0 9px 0 var(--ink);
+}
+.scorebug {
+  display: flex;
+  position: absolute;
+  top: 54px;
+  left: 300px;
+  width: 1320px;
+  height: 152px;
+  border-radius: 32px;
+  z-index: 3;
+}
+.team {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex: 1;
+  padding: 10px 32px;
+  font-family: "Baloo 2", sans-serif;
+  font-size: 56px;
+  font-weight: 800;
+}
+.team strong {
+  font-family: Bungee, sans-serif;
+  font-size: 88px;
+  font-weight: 400;
+  line-height: 1;
+}
+.chat {
+  background: var(--chat);
+  border-radius: 28px 0 0 28px;
+  box-shadow: inset 0 -8px 0 #a8460b30;
+}
+.chat strong {
+  margin-left: auto;
+}
+.codex {
+  background: var(--codex);
+  color: white;
+  border-radius: 0 28px 28px 0;
+  box-shadow: inset 0 -8px 0 #035384;
+}
+.codex strong {
+  margin-right: auto;
+}
+.team-mark {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+}
+.team-mark path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.team-mark circle {
+  fill: currentColor;
+}
+.deaths {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 210px;
+  flex-shrink: 0;
+  background: var(--cream);
+  border-inline: 3px solid var(--ink);
+}
+.deaths svg {
+  width: 49px;
+  height: 49px;
+}
+.deaths svg path {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+.deaths svg circle {
+  fill: var(--ink);
+}
+.deaths strong {
+  font-size: 64px;
+  font-family: Bungee, sans-serif;
+  font-weight: 400;
+}
+.fuse {
+  position: absolute;
+  bottom: -16px;
+  left: 18px;
+  right: 18px;
+  height: 14px;
+  background: var(--ink);
+  border: 3px solid var(--ink);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.fuse span {
+  display: block;
+  height: 100%;
+  background: var(--chat);
+}
+.round-meta {
+  position: absolute;
+  top: 230px;
+  left: 800px;
+  width: 320px;
+  text-align: center;
+  font-size: 26px;
+  letter-spacing: 4px;
+}
+.bug-ticket {
+  position: absolute;
+  top: 290px;
+  left: 96px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 15px 28px;
+  border-radius: 22px;
+  max-width: 680px;
+  z-index: 2;
+}
+.bug-ticket::before,
+.ticker::before,
+.ticker::after {
+  content: "";
+  position: absolute;
+  top: -38px;
+  width: 6px;
+  height: 35px;
+  background: var(--ink);
+}
+.bug-ticket::before {
+  left: 46px;
+}
+h1 {
+  font:
+    800 48px / 1.2 "Baloo 2",
+    sans-serif;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.status-glyph {
+  font:
+    800 56px / 1 "Baloo 2",
+    sans-serif;
+}
+.bug-ticket[data-status="active"] {
+  background: var(--broken);
+}
+.bug-ticket[data-status="active"]::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 18px;
+  right: 18px;
+  height: 7px;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--ink) 0 8px,
+    transparent 8px 16px
+  );
+}
+.bug-ticket[data-status="fixed"] {
+  background: var(--green);
+}
+.countdown {
+  position: absolute;
+  left: 96px;
+  top: 416px;
+  z-index: 2;
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  padding: 16px 24px;
+  border-radius: 20px;
+}
+.countdown span {
+  font-size: 33px;
+  max-width: 200px;
+}
+.countdown strong {
+  font:
+    400 64px / 1 Bungee,
+    sans-serif;
+}
+.ticker {
+  position: absolute;
+  top: 290px;
+  right: 96px;
+  width: 560px;
+  border-radius: 24px;
+  padding: 16px 24px;
+  z-index: 2;
+}
+.ticker::before {
+  left: 50px;
+}
+.ticker::after {
+  right: 50px;
+}
+h2 {
+  font:
+    800 40px / 1.2 "Baloo 2",
+    sans-serif;
+  color: #035384;
+  margin: 0 0 8px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.crew-mark {
+  font: 700 33px / 1 monospace;
+  padding: 10px;
+  background: var(--codex);
+  color: white;
+  clip-path: polygon(
+    25% 0,
+    75% 0,
+    100% 25%,
+    100% 75%,
+    75% 100%,
+    25% 100%,
+    0 75%,
+    0 25%
+  );
+}
+#attempt {
+  font-size: 33px;
+  line-height: 40px;
+  margin: 0 0 8px;
+}
+#steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+#steps li {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 33px;
+  line-height: 42px;
+  min-height: 50px;
+  padding: 4px 14px;
+  border-radius: 12px;
+  background: #f0eee8;
+  box-shadow: inset 0 2px 0 #1f1d1b20;
+}
+#steps li[data-status="done"] {
+  background: #d6eadf;
+}
+#steps li[data-status="failed"] {
+  background: #ffd8d8;
+}
+.step-glyph {
+  width: 30px;
+  flex-shrink: 0;
+}
+.step-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.game-shell {
+  position: absolute;
+  top: 430px;
+  left: 96px;
+  width: 1728px;
+  height: 518.4px;
+  border-radius: 24px;
+  box-shadow: 0 12px 0 #1f1d1b;
+}
+#game {
+  width: 100%;
+  height: 100%;
+  border-radius: 24px;
+  overflow: hidden;
+  outline: 3px solid var(--ink);
+}
+#game[data-status="active"] {
+  outline: 6px solid var(--ink);
+  box-shadow: 0 0 0 14px var(--broken);
+}
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+canvas:focus-visible {
+  outline: 5px solid var(--codex);
+  outline-offset: -8px;
+}
+.bottom-line {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 966px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  font-size: 33px;
+  line-height: 42px;
+}
+#playback-label {
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  padding: 4px 20px;
+  background: var(--cream);
+  box-shadow: 0 5px 0 var(--ink);
+}
+#run-status {
+  min-width: 290px;
+  text-align: right;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
