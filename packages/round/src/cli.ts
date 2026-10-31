@@ -9,6 +9,7 @@ import {
 import { type PooledMutant, ROOT } from "../../mutator/src/gate.js";
 import { TwitchHandler } from "../../twitch/src/events.js";
 import { parseFixture, replayFixtures } from "../../twitch/src/fixtures.js";
+import { ROUND_PORT } from "./address.js";
 import { startGameClient } from "./client.js";
 import type { RoundEnvelope } from "./contracts.js";
 import { RoundEngine } from "./engine.js";
@@ -91,7 +92,7 @@ async function main() {
       },
     });
     server = await startRoundServer({
-      port: 4317,
+      port: ROUND_PORT,
       overlayDirectory: join(ROOT, "apps/overlay/dist"),
       install: async (artifact, signal) => {
         await client.install(artifact, signal);

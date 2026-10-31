@@ -24,7 +24,7 @@ without failing the round. An accepted clip request does not prove publication.
 `pnpm round:live --dry-chat` logs outgoing lines and skips all Twitch writes;
 it still listens and starts real Codex repairs when viewers send commands.
 The live command and HTTP contracts are fixture-tested; live delivery and OBS
-pixels require streamer verification.
+pixels require streamer verification using [STREAMING.md](../../docs/STREAMING.md).
 
 ## Local fixture
 

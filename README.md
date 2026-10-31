@@ -12,9 +12,12 @@ alternate fixes and per-family timings. Raw [results](bench/results.jsonl) and
 The [broadcast overlay](apps/overlay/README.md) renders the shared simulation with
 a follow camera, keyboard play and a typed event contract. The
 [Twitch foundation](packages/twitch/README.md) provides device authorization,
-inbound EventSub routing and offline fixture replay. The [local round loop](packages/round/README.md)
-connects those fixtures to runtime Codex, enum-only hint voting, replay validation,
-state-preserving hot swap and rollback. Live-stream rounds remain unverified.
+inbound EventSub routing and offline fixture replay. The [round loop](packages/round/README.md)
+connects fixtures or `pnpm round:live` to runtime Codex, enum-only hint voting,
+replay validation, state-preserving hot swap and rollback. Real fixture rounds
+are verified; live-channel rounds still need the streamer's check.
+The [streaming guide](docs/STREAMING.md) covers the offline channel test, OBS scene
+import, keyboard play and Twitch account connection without a stored stream key.
 The real [Twitch authorization and subscription check](docs/TWITCH-VERIFICATION.md)
 verified the broadcaster and all nine subscriptions without sending chat.
 

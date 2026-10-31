@@ -13,6 +13,7 @@ import {
 } from "../../twitch/src/auth.js";
 import { createEventSub } from "../../twitch/src/eventsub.js";
 import { createLiveHelix } from "../../twitch/src/helix.js";
+import { ROUND_PORT } from "./address.js";
 import { startGameClient } from "./client.js";
 import { eventStamp } from "./clocks.js";
 import type { RoundEnvelope } from "./contracts.js";
@@ -263,7 +264,7 @@ export async function runLiveCli(
     });
     const live = controller;
     server = await startRoundServer({
-      port: 4317,
+      port: ROUND_PORT,
       overlayDirectory: join(ROOT, "apps/overlay/dist"),
       install: async (artifact, installSignal) => {
         await runningClient.install(artifact, installSignal);

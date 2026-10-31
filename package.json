@@ -20,6 +20,7 @@
     "bench:summary": "tsx scripts/bench.ts --summary",
     "round:fixture": "pnpm --filter @chat-vs-codex/round fixture",
     "round:live": "pnpm --filter @chat-vs-codex/round live",
+    "obs:scene": "tsx scripts/obs-scene.ts",
     "ci:local": "pnpm install --frozen-lockfile && pnpm typecheck && pnpm lint && pnpm test",
     "check": "pnpm typecheck && pnpm lint && pnpm test"
   },

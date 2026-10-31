@@ -1,0 +1,85 @@
+{
+  "name": "Chat vs Codex",
+  "current_scene": "Chat vs Codex",
+  "current_program_scene": "Chat vs Codex",
+  "scene_order": [
+    {
+      "name": "Chat vs Codex"
+    }
+  ],
+  "resolution": {
+    "x": 1920,
+    "y": 1080
+  },
+  "sources": [
+    {
+      "name": "Chat vs Codex Game",
+      "uuid": "3c03c6b0-5383-4c49-bb1d-ecf9d6ac56d0",
+      "id": "browser_source",
+      "versioned_id": "browser_source",
+      "settings": {
+        "url": "http://127.0.0.1:4317/?bridge=http%3A%2F%2F127.0.0.1%3A4317",
+        "is_local_file": false,
+        "width": 1920,
+        "height": 1080,
+        "fps_custom": true,
+        "fps": 60,
+        "shutdown": false,
+        "restart_when_active": false,
+        "reroute_audio": false
+      },
+      "enabled": true,
+      "muted": false,
+      "volume": 1,
+      "hotkeys": {}
+    },
+    {
+      "name": "Chat vs Codex",
+      "uuid": "adc07073-e3ec-4b84-a4dd-731df66dc9c8",
+      "id": "scene",
+      "versioned_id": "scene",
+      "settings": {
+        "custom_size": true,
+        "cx": 1920,
+        "cy": 1080,
+        "id_counter": 1,
+        "items": [
+          {
+            "name": "Chat vs Codex Game",
+            "source_uuid": "3c03c6b0-5383-4c49-bb1d-ecf9d6ac56d0",
+            "id": 1,
+            "visible": true,
+            "locked": true,
+            "pos": {
+              "x": 0,
+              "y": 0
+            },
+            "rot": 0,
+            "scale": {
+              "x": 1,
+              "y": 1
+            },
+            "align": 5,
+            "bounds_type": 0,
+            "bounds_align": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0
+            },
+            "crop_left": 0,
+            "crop_right": 0,
+            "crop_top": 0,
+            "crop_bottom": 0
+          }
+        ]
+      },
+      "enabled": true,
+      "hotkeys": {}
+    }
+  ],
+  "groups": [],
+  "transitions": [],
+  "quick_transitions": [],
+  "saved_projectors": [],
+  "modules": {}
+}
