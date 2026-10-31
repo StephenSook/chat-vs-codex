@@ -378,6 +378,47 @@ input[type="range"] {
 .proof-result[data-state="match"] {
   color: #035e96;
 }
+.comparison-view {
+  margin: 1.5rem 0 2rem;
+}
+.comparison-panes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+.comparison-panes figure {
+  min-width: 0;
+  margin: 0;
+}
+.comparison-panes figcaption {
+  display: inline-block;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  padding: 0.35rem 0.7rem;
+  background: var(--chat);
+  color: var(--ink);
+  font-weight: 800;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.comparison-panes figure:last-child figcaption {
+  background: var(--codex);
+  color: white;
+}
+.comparison-view canvas {
+  aspect-ratio: 16 / 9;
+  margin-top: 0.7rem;
+}
+.comparison-controls {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0 1rem;
+  align-items: center;
+}
+.comparison-controls p {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.85rem;
+}
 .canary-controls {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -393,6 +434,9 @@ footer {
   font-size: 0.8rem;
 }
 @media (max-width: 760px) {
+  .comparison-panes {
+    grid-template-columns: 1fr;
+  }
   .model-grid,
   .round-grid {
     grid-template-columns: 1fr;

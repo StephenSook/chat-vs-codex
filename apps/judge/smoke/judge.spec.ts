@@ -181,6 +181,126 @@ test("committed evidence recomputes in a static preview at desktop and phone wid
   await page.getByLabel("Validation replay frame").press("Home");
   await page.getByLabel("Validation replay frame").press("ArrowRight");
   await expect(page.locator(".mono")).toContainText("frame 2 of 600");
+  const comparison = page.getByTestId("comparison-view");
+  for (const id of [
+    "c81bdc19-304f-47d5-800e-5098b9a1b5e2",
+    "c37736fc-52d2-4ca0-9eee-dae78a5eff7b",
+  ]) {
+    const round = evidence.rounds.find((row) => row.receipt.roundId === id);
+    expect(round?.comparison?.status).toBe("available");
+    if (round?.comparison?.status !== "available")
+      throw new Error("Expected committed comparison fixture");
+    await page.getByLabel("Round to re-simulate").selectOption(id);
+    await page.getByTestId("recompute-replay").click();
+    await expect(page.getByTestId("proof-result")).toContainText("600 frames");
+    await expect(comparison).toHaveAttribute("data-state", "match");
+    await expect(comparison.getByText("BROKEN", { exact: true })).toBeVisible();
+    await expect(comparison.getByText("FIXED", { exact: true })).toBeVisible();
+    const original = page.getByTestId("broken-view");
+    const repaired = page.getByTestId("fixed-view");
+    const frame = Number(await original.getAttribute("data-frame"));
+    await expect(repaired).toHaveAttribute("data-frame", String(frame));
+    for (const axis of ["x", "y"])
+      expect(await original.getAttribute(`data-camera-${axis}`)).toBe(
+        await repaired.getAttribute(`data-camera-${axis}`),
+      );
+    expect(await original.getAttribute("data-hash")).not.toBe(
+      await repaired.getAttribute("data-hash"),
+    );
+    await expect(original).toHaveAttribute(
+      "data-focus",
+      id.startsWith("c377") ? "enemy" : "player",
+    );
+    expect(frame).toBe(round.comparison.display.visibleFrame);
+    const brokenResponse = await page.request.get(
+      round.comparison.brokenArtifactPath,
+    );
+    expect(brokenResponse.ok()).toBe(true);
+    const actualHash = await page.evaluate(
+      async ({ code, track, frame }) => {
+        const url = URL.createObjectURL(
+          new Blob([code], { type: "text/javascript" }),
+        );
+        try {
+          const game = await import(/* @vite-ignore */ url);
+          let state = game.createState(track.seed);
+          for (const input of track.inputs.slice(0, frame))
+            state = game.step(state, input);
+          return game.hashState(state) as string;
+        } finally {
+          URL.revokeObjectURL(url);
+        }
+      },
+      {
+        code: await brokenResponse.text(),
+        track: round.comparison.display.track,
+        frame,
+      },
+    );
+    await expect(original).toHaveAttribute("data-hash", actualHash);
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth > innerWidth,
+        ),
+      ).toBe(false);
+      await page.screenshot({
+        path: `../../.local/judge-smoke/comparison-${id.slice(0, 8)}-${width}.png`,
+        fullPage: true,
+      });
+    }
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await comparison.getByRole("button", { name: "Play", exact: true }).click();
+    await expect
+      .poll(async () => Number(await original.getAttribute("data-frame")))
+      .toBeGreaterThan(frame);
+    await comparison
+      .getByRole("button", { name: "Pause", exact: true })
+      .click();
+    await page.getByLabel("Comparison replay frame").focus();
+    await page.getByLabel("Comparison replay frame").press("Home");
+    await expect(original).toHaveAttribute("data-frame", "1");
+    await expect(repaired).toHaveAttribute("data-frame", "1");
+  }
+  // A card must not relabel an in-flight replay while its selector is disabled.
+  const pendingRound = evidence.rounds.find((row) =>
+    row.receipt.roundId.startsWith("c81bdc19"),
+  );
+  if (pendingRound?.comparison?.status !== "available")
+    throw new Error("Missing pending replay fixture");
+  let release!: () => void;
+  let entered = false;
+  const blocked = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const artifactUrl = new URL(
+    pendingRound.comparison.brokenArtifactPath,
+    page.url(),
+  ).href;
+  await page.route(artifactUrl, async (route) => {
+    entered = true;
+    await blocked;
+    await route.continue();
+  });
+  try {
+    await page
+      .getByLabel("Round to re-simulate")
+      .selectOption(pendingRound.receipt.roundId);
+    await page.getByTestId("recompute-replay").click();
+    await expect.poll(() => entered).toBe(true);
+    await page
+      .locator('[data-round-id="c37736fc-52d2-4ca0-9eee-dae78a5eff7b"]')
+      .getByRole("button", { name: "Recompute this round" })
+      .click();
+    await expect(page.getByLabel("Round to re-simulate")).toHaveValue(
+      pendingRound.receipt.roundId,
+    );
+  } finally {
+    release();
+  }
+  await expect(comparison).toHaveAttribute("data-state", "match");
+  await page.unroute(artifactUrl);
   await page
     .getByLabel("Round to re-simulate")
     .selectOption("65e06ea8-d2bd-4e40-9ec7-79f4318c2b02");
@@ -192,6 +312,9 @@ test("committed evidence recomputes in a static preview at desktop and phone wid
     "data-state",
     "unavailable",
   );
+  await expect(comparison).toHaveAttribute("data-state", "unavailable");
+  await expect(page.getByTestId("broken-view")).toBeHidden();
+  await expect(page.getByTestId("fixed-view")).toBeHidden();
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 1000 });
     expect(

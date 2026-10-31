@@ -16,7 +16,7 @@ and repair the real TypeScript bug, checked by deterministic replay tests.
 
 Terra median 14.5 s across green trials. Recompute: `pnpm bench:summary`.
 
-730 tests. Recompute: `pnpm test`.
+745 tests. Recompute: `pnpm test`.
 
 Sol high finished green trials in a 29.40 second median. Both pass the GO gate.
 [Results and limits](bench/SUMMARY.md) include the retained infrastructure loss,

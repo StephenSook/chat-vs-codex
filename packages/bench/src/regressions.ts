@@ -10,7 +10,17 @@ import {
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
+import {
+  mutationFingerprint,
+  sourceFingerprint,
+} from "../../mutator/src/fingerprints.js";
 import type { PooledMutant } from "../../mutator/src/gate.js";
+
+export {
+  mutationFingerprint,
+  sourceFingerprint,
+} from "../../mutator/src/fingerprints.js";
+
 import { applyCandidate, type Candidate } from "../../mutator/src/index.js";
 import { runBounded } from "../../mutator/src/process.js";
 import { trustedOriginalMutation } from "../../mutator/src/trust.js";
@@ -66,21 +76,6 @@ export interface NeutralRegression {
   routes: { track: Track; expected: RegressionRoute["expected"] }[];
 }
 
-export function sourceFingerprint(sources: Record<string, string>): string {
-  return sha(Object.entries(sources).sort(([a], [b]) => a.localeCompare(b)));
-}
-export function mutationFingerprint(
-  candidate: Candidate,
-  sourceDigest: string,
-): string {
-  return sha([
-    sourceDigest,
-    candidate.file,
-    candidate.location,
-    candidate.original,
-    candidate.replacement,
-  ]);
-}
 function candidateOnly(candidate: Candidate): Candidate {
   return {
     id: candidate.id,

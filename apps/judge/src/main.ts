@@ -5,6 +5,8 @@ import {
 } from "../../../packages/bench/src/statistics.js";
 import type { ValidatedReplayFrame } from "../../../packages/bench/src/validated-replay.js";
 import { deriveSeason } from "../../../packages/round/src/season.js";
+import { comparisonAvailability, replayComparison } from "./comparison.js";
+import { createComparisonView } from "./comparison-view.js";
 import {
   greenSplit,
   isEarlierTestRound,
@@ -426,10 +428,14 @@ async function start(): Promise<void> {
   const frameLabel = element("span", "No replay computed", "mono");
   const evidenceDetail = element("div");
   const controls = element("div", undefined, "replay-controls");
+  const comparisonView = createComparisonView();
+  comparisonView.element.dataset.state = "idle";
+  comparisonView.reset("Recompute replay to compare BROKEN / FIXED.");
   controls.append(select, run);
   replay.append(
     controls,
     result,
+    comparisonView.element,
     canvas,
     slider,
     frameLabel,
@@ -479,6 +485,8 @@ async function start(): Promise<void> {
   };
   slider.addEventListener("input", draw);
   select.addEventListener("change", () => {
+    comparisonView.reset("Recompute replay to compare BROKEN / FIXED.");
+    comparisonView.element.dataset.state = "idle";
     frames = [];
     slider.disabled = true;
     canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
@@ -500,6 +508,8 @@ async function start(): Promise<void> {
     if (!round) return;
     run.disabled = true;
     select.disabled = true;
+    comparisonView.reset("Verifying original and repaired builds...");
+    comparisonView.element.dataset.state = "idle";
     result.textContent = "Verifying artifact and re-simulating...";
     try {
       const unavailable = proofAvailability(
@@ -535,7 +545,57 @@ async function start(): Promise<void> {
         }),
         link("Download exact simulation module", evidence.replay.artifactPath),
       );
+      try {
+        const unavailable = comparisonAvailability(round, evidence.replay);
+        const comparison = round.comparison;
+        if (unavailable || comparison?.status !== "available")
+          throw new Error(unavailable ?? "Original comparison unavailable");
+        const [original, regression] = await Promise.all([
+          fetch(new URL(comparison.brokenArtifactPath, document.baseURI)),
+          fetch(new URL(comparison.regressionPath, document.baseURI)),
+        ]);
+        if (!original.ok || !regression.ok)
+          throw new Error("Original comparison artifacts unavailable");
+        const [bytes, text] = await Promise.all([
+          original.arrayBuffer(),
+          regression.text(),
+        ]);
+        if ((await sha256(text)) !== comparison.regressionDigest)
+          throw new Error("Comparison regression digest mismatch");
+        const broken = await loadVerifiedGame(
+          new Uint8Array(bytes),
+          comparison.brokenBuildDigest,
+        );
+        const compared = await replayComparison(
+          broken,
+          game,
+          comparison,
+          JSON.parse(text),
+          round.receipt,
+        );
+        comparisonView.show(broken, game, compared);
+        comparisonView.element.dataset.state = "match";
+        evidenceDetail.append(
+          json({
+            comparison: {
+              brokenBuildDigest: comparison.brokenBuildDigest,
+              fixedBuildDigest: comparison.fixedBuildDigest,
+              trackDigest: compared.trackDigest,
+              brokenFramesDigest: compared.brokenFramesDigest,
+              firstDivergence: compared.firstDivergence,
+            },
+          }),
+          link("Download exact original build", comparison.brokenArtifactPath),
+        );
+      } catch (error) {
+        comparisonView.reset(
+          error instanceof Error ? error.message : "Comparison unavailable",
+        );
+        comparisonView.element.dataset.state = "unavailable";
+      }
     } catch (error) {
+      comparisonView.reset("This round's exact comparison is unavailable.");
+      comparisonView.element.dataset.state = "unavailable";
       result.textContent =
         error instanceof Error ? error.message : "Proof unavailable";
       result.dataset.state = "unavailable";
@@ -638,6 +698,7 @@ async function start(): Promise<void> {
     const replayRound = element("button", "Recompute this round");
     replayRound.type = "button";
     replayRound.addEventListener("click", () => {
+      if (run.disabled) return;
       select.value = receipt.roundId;
       select.dispatchEvent(new Event("change"));
       location.hash = "replay";

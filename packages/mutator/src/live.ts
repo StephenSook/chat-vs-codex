@@ -1,13 +1,16 @@
 import { fork } from "node:child_process";
-import { createHash, randomInt } from "node:crypto";
+import { randomInt } from "node:crypto";
 import { mkdtemp, readdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { performance } from "node:perf_hooks";
 import type { RegressionRecord } from "../../bench/src/regressions.js";
 import { eligibleMutants } from "../../bench/src/regressions.js";
+import { candidateDigest } from "./fingerprints.js";
 import { FAMILIES, operatorFamily, type PooledMutant, ROOT } from "./gate.js";
 import { type Candidate, enumerate } from "./index.js";
+
+export { candidateDigest } from "./fingerprints.js";
 
 export const LIVE_GATE_BUDGET_MS = 10_000;
 export interface MutationProvenance {
@@ -29,20 +32,6 @@ export interface LiveGateProgress {
 export type LiveGateOutcome =
   | { status: "accepted"; mutant: PooledMutant; progress: LiveGateProgress }
   | { status: "timeout"; progress: LiveGateProgress };
-export const candidateDigest = (candidate: Candidate): string =>
-  createHash("sha256")
-    .update(
-      JSON.stringify([
-        candidate.id,
-        candidate.file,
-        candidate.site,
-        candidate.mutator,
-        candidate.location,
-        candidate.original,
-        candidate.replacement,
-      ]),
-    )
-    .digest("hex");
 
 /** Full Stryker operator x authorized-site enumeration, independent of the pool. */
 export async function enumerateCandidates(root = ROOT): Promise<Candidate[]> {

@@ -18,6 +18,26 @@ export interface CanaryReceipt {
   controls: Record<string, boolean | string>;
 }
 
+export type ComparisonEvidence =
+  | {
+      status: "available";
+      brokenArtifactPath: string;
+      brokenBuildDigest: string;
+      fixedBuildDigest: string;
+      regressionPath: string;
+      regressionDigest: string;
+      routeIndex: number;
+      display: {
+        track: Track;
+        trackDigest: string;
+        brokenFramesDigest: string;
+        fixedFramesDigest: string;
+        firstDivergence: number;
+        visibleFrame: number;
+      };
+    }
+  | { status: "unavailable"; reason: string };
+
 export interface JudgeEvidence {
   schemaVersion: 1;
   commit: string;
@@ -27,6 +47,7 @@ export interface JudgeEvidence {
   regressionCount: number;
   regressionCommits: string[];
   rounds: {
+    comparison?: ComparisonEvidence;
     path: string;
     digest: string;
     receipt: Receipt;
