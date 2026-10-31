@@ -4,12 +4,12 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "ios": { "simulator": false },
+      "ios": { "simulator": false, "credentialsSource": "local" },
       "android": { "buildType": "apk" }
     },
     "preview": {
       "distribution": "internal",
-      "ios": { "simulator": false },
+      "ios": { "simulator": false, "credentialsSource": "local" },
       "android": { "buildType": "apk" }
     }
   }

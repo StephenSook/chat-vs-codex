@@ -23,6 +23,9 @@ pnpm dlx eas-cli@latest build --profile development --platform ios
 pnpm dlx eas-cli@latest build --profile development --platform android
 ```
 
+Both iOS profiles use local signing credentials for the app and widget targets.
+Keep signing credentials untracked and available locally before an EAS build.
+
 EAS login, Apple signing and device registration belong to the streamer. EAS is
 not run by the sandbox. Install the resulting internal iOS build or Android APK
 on the phone. Start Metro from this directory with `pnpm exec expo start --dev-client`.
