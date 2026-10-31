@@ -13,6 +13,8 @@ export interface ClipRequest {
 }
 export interface LiveHelix {
   isLive(): Promise<boolean>;
+  channelTitle?(): Promise<string>;
+  setChannelTitle?(title: string): Promise<void>;
   chat(message: string): Promise<string>;
   marker(description: string): Promise<void>;
   clip(title?: string): Promise<ClipRequest> | Promise<void>;
@@ -43,7 +45,7 @@ export function createLiveHelix(options: {
   const fetcher = options.fetch ?? fetch;
   async function request(
     path: string,
-    method: "GET" | "POST" | "PUT",
+    method: "GET" | "POST" | "PUT" | "PATCH",
     query: Record<string, string> = {},
     body?: Record<string, unknown>,
   ): Promise<Record<string, unknown>> {
@@ -95,6 +97,30 @@ export function createLiveHelix(options: {
         await request("streams", "GET", { user_id: options.broadcasterId }),
       ).some(
         (row) => row.user_id === options.broadcasterId && row.type === "live",
+      );
+    },
+    // Official contracts: https://dev.twitch.tv/docs/api/reference/#get-channel-information
+    // https://dev.twitch.tv/docs/api/reference/#modify-channel-information
+    async channelTitle() {
+      const row = rows(
+        await request("channels", "GET", {
+          broadcaster_id: options.broadcasterId,
+        }),
+      ).find((entry) => entry.broadcaster_id === options.broadcasterId);
+      if (!row || typeof row.title !== "string")
+        throw new Error("Twitch did not return the channel title");
+      return row.title;
+    },
+    async setChannelTitle(title) {
+      if (!title || [...title].length > 140)
+        throw new Error(
+          "Twitch channel title must contain 1 to 140 characters",
+        );
+      await request(
+        "channels",
+        "PATCH",
+        { broadcaster_id: options.broadcasterId },
+        { title },
       );
     },
     async chat(message) {

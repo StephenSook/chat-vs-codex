@@ -174,3 +174,16 @@ set **Latency mode > Low latency**. Keep **OBS Settings > Advanced > Stream Dela
 disabled for the chat race. The visible 15 s head start is part of the product;
 neither latency mode nor the runner promises zero delivery delay. See Twitch's
 [low latency guide](https://help.twitch.tv/s/article/low-latency-video).
+
+## Optional title score
+
+`TITLE_SCOREBUG=1 pnpm round:live` opts into a 60-second score prefix after a
+verified round while Twitch reports the channel live. It is off by default.
+The exact original title returns after the interval or normal shutdown. A
+detached watcher restores it if the runner exits; a private 0600 journal supports
+startup recovery even with the flag off. Twitch refusal or a machine power loss
+can prevent immediate restoration: the journal stays and the runner reports the
+required recovery. Dry-chat never changes the title.
+
+Verify without Twitch writes:
+`pnpm exec vitest run packages/round/test/title-scorebug.test.ts packages/twitch/test/helix.test.ts`.

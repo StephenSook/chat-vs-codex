@@ -32,6 +32,7 @@ import {
 import { createRoundRuntime } from "./runtime.js";
 import { loadSeason } from "./season-store.js";
 import { startRoundServer } from "./server.js";
+import { installFatalCleanup, TitleScorebug } from "./title-scorebug.js";
 
 export function parseLiveArguments(args: readonly string[]): {
   dryChat: boolean;
@@ -216,7 +217,8 @@ export async function runLiveCli(
     throw new Error(
       "Stored Twitch authorization belongs to another Client ID.",
     );
-  const auth = createAuth(stored, undefined, { signal });
+  // Bounded refresh remains usable during abort cleanup to restore a title.
+  const auth = createAuth(stored);
   auth.onRefresh((_userId, token) =>
     console.log(
       `Twitch token refreshed: length ${token.accessToken.length}; expires in ${token.expiresIn ?? "unknown"} s.`,
@@ -266,8 +268,48 @@ export async function runLiveCli(
   let engine: RoundEngine | undefined;
   let gate: ReturnType<typeof createLiveRoundGate> | undefined;
   let controller: LiveRoundController | undefined;
+  let scorebug: TitleScorebug | undefined;
   let events: RoundEnvelope[] = [];
   try {
+    const helix = createLiveHelix({
+      clientId,
+      broadcasterId: account.userId,
+      senderId: account.userId,
+      accessToken,
+      record,
+    });
+    scorebug = new TitleScorebug({
+      enabled: process.env.TITLE_SCOREBUG === "1",
+      dryChat: flags.dryChat,
+      broadcasterId: account.userId,
+      journalPath: join(ROOT, ".local/twitch/title-scorebug.json"),
+      helix,
+      accessToken,
+      record,
+      report: (message) => console.error(message),
+      fallbackRestore: async (title) => {
+        // A watchdog may have rotated tokens before a transport failure. Reload
+        // after it exits instead of reusing the parent's cached refresh token.
+        const fresh = readToken();
+        const restoringAuth = createAuth(fresh);
+        const restoringHelix = createLiveHelix({
+          clientId,
+          broadcasterId: account.userId,
+          senderId: account.userId,
+          accessToken: async () => {
+            const token = await restoringAuth.getAccessTokenForUser(
+              account.userId,
+              [...SCOPES],
+            );
+            if (!token?.accessToken)
+              throw new Error("Title restoration authorization unavailable");
+            return token.accessToken;
+          },
+        });
+        await restoringHelix.setChannelTitle?.(title);
+      },
+    });
+    await scorebug.recover();
     const rewards = createLiveRewards({
       clientId,
       broadcasterId: account.userId,
@@ -298,13 +340,7 @@ export async function runLiveCli(
       dryChat: flags.dryChat,
       allowBroadcasterTest: flags.allowBroadcasterTest,
       ...(reward ? { rewards: { api: rewards, capability: reward } } : {}),
-      helix: createLiveHelix({
-        clientId,
-        broadcasterId: account.userId,
-        senderId: account.userId,
-        accessToken,
-        record,
-      }),
+      helix,
     });
     const live = controller;
     server = await startRoundServer({
@@ -389,6 +425,13 @@ export async function runLiveCli(
           server?.updateSeason(
             (await loadSeason(join(ROOT, "docs/rounds"))).viewers,
           );
+          try {
+            await scorebug?.show(result.scores);
+          } catch {
+            console.error(
+              "Twitch title update failed; private recovery evidence retained.",
+            );
+          }
           console.log(
             `Verified round ${result.roundId}; public receipt: ${path}`,
           );
@@ -437,6 +480,7 @@ export async function runLiveCli(
       () => engine?.stop(),
       () => gate?.drain(),
       () => controller?.close(),
+      () => scorebug?.close(),
       () => deliveries,
       () => writes,
       () => server?.close(),
@@ -457,6 +501,12 @@ if (
   const stop = () => shutdown.abort();
   process.once("SIGINT", stop);
   process.once("SIGTERM", stop);
+  const removeFatalCleanup = installFatalCleanup(stop, () => {
+    console.error(
+      "Fatal live runner error; restoring the title and closing resources.",
+    );
+    process.exitCode = 1;
+  });
   runLiveCli(process.argv.slice(2), shutdown.signal)
     .catch(() => {
       console.error(
@@ -465,6 +515,7 @@ if (
       process.exitCode = 1;
     })
     .finally(() => {
+      removeFatalCleanup();
       process.removeListener("SIGINT", stop);
       process.removeListener("SIGTERM", stop);
     });

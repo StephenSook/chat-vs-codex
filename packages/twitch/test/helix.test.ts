@@ -193,3 +193,32 @@ describe("raw authenticated Helix actions", () => {
     expect(String(failure)).not.toContain("private-test-token");
   });
 });
+
+it("reads and changes only the broadcaster's title through the real channel API contract", async () => {
+  const { helix, calls } = setup([
+    { body: { data: [{ broadcaster_id: "channel", title: "Exact  title!" }] } },
+    { status: 204 },
+  ]);
+  expect(await helix.channelTitle?.()).toBe("Exact  title!");
+  await helix.setChannelTitle?.("[CHAT 0 : CODEX 1] Exact  title!");
+  expect(calls.map((call) => call.url.pathname)).toEqual([
+    "/helix/channels",
+    "/helix/channels",
+  ]);
+  expect(calls.map((call) => call.init.method)).toEqual(["GET", "PATCH"]);
+  expect(calls[1]?.url.searchParams.get("broadcaster_id")).toBe("channel");
+  expect(JSON.parse(String(calls[1]?.init.body))).toEqual({
+    title: "[CHAT 0 : CODEX 1] Exact  title!",
+  });
+});
+it("refuses title lookup mismatches and invalid writes without exposing credentials", async () => {
+  const { helix, calls } = setup([
+    { body: { data: [{ broadcaster_id: "other", title: "Wrong" }] } },
+  ]);
+  await expect(helix.channelTitle?.()).rejects.toThrow("channel title");
+  await expect(helix.setChannelTitle?.("")).rejects.toThrow("1 to 140");
+  await expect(helix.setChannelTitle?.("x".repeat(141))).rejects.toThrow(
+    "1 to 140",
+  );
+  expect(calls).toHaveLength(1);
+});
