@@ -39,6 +39,7 @@ function setup(
   options: { dashboard?: boolean; dryChat?: boolean; reject?: boolean } = {},
 ) {
   const logs: Record<string, unknown>[] = [];
+  const lines: string[] = [];
   const api: LiveRewards = {
     setup: async () => owned,
     settle: vi.fn(async () => {}),
@@ -59,7 +60,10 @@ function setup(
     dryChat: options.dryChat ?? false,
     helix: {
       isLive: async () => false,
-      chat: async () => "reply",
+      chat: async (line) => {
+        lines.push(line);
+        return "reply";
+      },
       marker: async () => {},
       clip: async () => {},
       pin: async () => {},
@@ -92,6 +96,7 @@ function setup(
     engine,
     api,
     logs,
+    lines,
     breakInstalled() {
       controller.observe({
         type: "game.build",
@@ -220,6 +225,55 @@ describe("fixture-driven Channel Points rounds", () => {
       ["cooldown", "CANCELED"],
     ]);
   });
+  it("records busy/cooldown refunds and replies only after Twitch accepts cancellation", async () => {
+    const test = setup();
+    replayFixtures(
+      [redemption(), redemption("busy"), redemption("busy")],
+      test.controller.handler,
+    );
+    await test.controller.flush();
+    expect(test.lines).toEqual([
+      "Round busy. Your Channel Points were returned.",
+    ]);
+    expect(test.logs).toContainEqual(
+      expect.objectContaining({
+        type: "twitch.reward-refunded",
+        redemptionId: "busy",
+        status: "CANCELED",
+        reason: "busy",
+      }),
+    );
+    test.breakInstalled();
+    test.finish();
+    replayFixtures([redemption("cooldown")], test.controller.handler);
+    await test.controller.flush();
+    expect(test.lines).toContain(
+      "Still cooling down. Your Channel Points were returned.",
+    );
+    expect(test.logs).toContainEqual(
+      expect.objectContaining({
+        type: "twitch.reward-refunded",
+        redemptionId: "cooldown",
+        reason: "cooldown",
+      }),
+    );
+  });
+  it("does not claim a refund if Twitch rejects the cancellation", async () => {
+    const test = setup();
+    vi.mocked(test.api.settle).mockRejectedValue(new Error("refused"));
+    replayFixtures([redemption(), redemption("busy")], test.controller.handler);
+    await test.controller.flush();
+    expect(test.lines).toEqual([]);
+    expect(test.logs).toContainEqual(
+      expect.objectContaining({
+        type: "twitch.refused",
+        action: "redemption:busy",
+      }),
+    );
+    expect(test.logs.some((e) => e.type === "twitch.reward-refunded")).toBe(
+      false,
+    );
+  });
   it("refunds an owned start when the engine does not admit a round", async () => {
     const test = setup({ reject: true });
     replayFixtures([redemption()], test.controller.handler);
@@ -242,6 +296,12 @@ describe("fixture-driven Channel Points rounds", () => {
         .filter((event) => event.type === "twitch.reward-manual-settlement")
         .map((event) => event.requestedStatus),
     ).toEqual(["CANCELED", "FULFILLED"]);
+    expect(test.lines).toContain(
+      "Round busy. Broadcaster: refund this reward in the request queue.",
+    );
+    expect(test.lines.some((line) => line.includes("were returned"))).toBe(
+      false,
+    );
   });
   it("does not call a pre-fulfilled redemption manually pending or send another update", async () => {
     const test = setup({ dashboard: true });

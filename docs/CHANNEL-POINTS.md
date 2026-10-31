@@ -51,3 +51,10 @@ Fixture-driven checks make no live Twitch calls:
 ```sh
 pnpm exec vitest run packages/twitch/test/rewards.test.ts packages/round/test/rewards-live.test.ts
 ```
+
+Busy or per-user cooldown redemptions of an app-owned reward are canceled before
+the reply confirms the points were returned. The event log records the redemption
+ID, reason and accepted status. Duplicate notifications cannot refund twice.
+For a dashboard-owned reward, Twitch only permits the creating app to update
+redemptions; the reply directs the broadcaster to refund in the request queue.
+A refused cancellation is logged and never announced as a successful refund.

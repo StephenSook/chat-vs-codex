@@ -22,6 +22,9 @@ export const BOT_REPLY_PREFIXES = [
   "Codex failed.",
   "Welcome raiders!",
   "Clip:",
+  "Round busy.",
+  "Still cooling down.",
+  "Round unavailable.",
 ] as const;
 
 export interface LiveEngine {
@@ -236,8 +239,18 @@ export class LiveRoundController {
       },
     };
   }
+  private refusalReason(
+    actor: string,
+  ): "busy" | "cooldown" | "unavailable" | null {
+    if (!this.engine) return "unavailable";
+    if (this.engine.snapshot().active) return "busy";
+    return (this.cooldowns.get(actor) ?? 0) >
+      (this.options.now ?? monotonicMs)()
+      ? "cooldown"
+      : null;
+  }
   private eligible(actor: string): boolean {
-    if (!this.engine || this.engine.snapshot().active) return false;
+    if (this.refusalReason(actor)) return false;
     const now = (this.options.now ?? monotonicMs)();
     for (const [id, until] of this.cooldowns)
       if (until <= now) this.cooldowns.delete(id);
@@ -247,7 +260,12 @@ export class LiveRoundController {
   }
   private publicIntent(intent: PublicIntent): void {
     if (intent.kind === "break-requested" && !this.eligible(intent.actor)) {
-      if (this.redemption) this.settleRedemption(this.redemption, false);
+      if (this.redemption)
+        this.settleRedemption(
+          this.redemption,
+          false,
+          this.refusalReason(intent.actor) ?? "unavailable",
+        );
       return;
     }
     if (intent.kind !== "break-requested" && intent.kind !== "guess-submitted")
@@ -272,6 +290,7 @@ export class LiveRoundController {
   private settleRedemption(
     redemption: { id: string; fulfilled: boolean },
     ran: boolean,
+    rejection?: "busy" | "cooldown" | "unavailable",
   ): void {
     const rewards = this.options.rewards;
     if (!rewards) return;
@@ -292,14 +311,37 @@ export class LiveRoundController {
           redemptionId: redemption.id,
           rewardId: rewards.capability.rewardId,
           requestedStatus: status,
+          ...(rejection ? { rejection } : {}),
           reason: this.options.dryChat
             ? "All Twitch writes disabled."
             : "Only the creating app can update this dashboard reward. Broadcaster must settle it in the request queue.",
         });
+        if (rejection) await this.refundReply(rejection, false);
         return;
       }
       await rewards.api.settle(rewards.capability, redemption.id, status);
+      this.log({
+        type: ran ? "twitch.reward-fulfilled" : "twitch.reward-refunded",
+        redemptionId: redemption.id,
+        rewardId: rewards.capability.rewardId,
+        status,
+        ...(rejection ? { reason: rejection } : {}),
+      });
+      if (rejection) await this.refundReply(rejection, true);
     });
+  }
+  private refundReply(
+    reason: "busy" | "cooldown" | "unavailable",
+    refunded: boolean,
+  ): Promise<string | null> {
+    const prefix = {
+      busy: "Round busy.",
+      cooldown: "Still cooling down.",
+      unavailable: "Round unavailable.",
+    }[reason];
+    return this.chat(
+      `${prefix} ${refunded ? "Your Channel Points were returned." : "Broadcaster: refund this reward in the request queue."}`,
+    );
   }
   private privateIntent(intent: PrivateIntent): void {
     if (this.eligible(intent.actor)) this.engine?.handlePrivate(intent);
