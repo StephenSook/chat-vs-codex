@@ -3,6 +3,7 @@ import "@fontsource/plus-jakarta-sans/latin-700.css";
 import "@fontsource/bungee/latin-400.css";
 import "./style.css";
 import { INPUT } from "@chat-vs-codex/sim";
+import { type AudioStatus, OverlayAudio } from "./audio.js";
 import { connectRoundBridge } from "./bridge.js";
 import {
   createEventBus,
@@ -49,6 +50,41 @@ async function start(): Promise<void> {
     params.get("camera") === "overview" ? "overview" : "follow";
   const simulation = new SimulationPlayer(mode);
   const events = createEventBus();
+  const audioButton = element("audio-toggle") as HTMLButtonElement;
+  const audioVolume = element("audio-volume") as HTMLInputElement;
+  function renderAudio(status: AudioStatus): void {
+    audioButton.textContent =
+      !status.unlocked || status.blocked
+        ? "ENABLE SOUND"
+        : status.muted
+          ? "UNMUTE"
+          : "MUTE";
+    audioButton.setAttribute(
+      "aria-pressed",
+      String(status.unlocked && !status.muted),
+    );
+    audioVolume.value = String(Math.round(status.volume * 100));
+  }
+  let storage: Storage | undefined;
+  try {
+    storage = window.localStorage;
+  } catch {
+    /* OBS storage can be disabled. */
+  }
+  const audio = new OverlayAudio({
+    createClip: (url) => new Audio(url),
+    ...(storage ? { storage } : {}),
+    onChange: renderAudio,
+  });
+  renderAudio(audio.snapshot());
+  audioButton.addEventListener("click", () => {
+    const status = audio.snapshot();
+    if (!status.unlocked || status.blocked) void audio.unlock();
+    else audio.setMuted(!status.muted);
+  });
+  audioVolume.addEventListener("input", () =>
+    audio.setVolume(Number(audioVolume.value) / 100),
+  );
   const ghost = new RecordedGhost();
   let broadcast = initialBroadcast();
   let input = 0;
@@ -70,6 +106,7 @@ async function start(): Promise<void> {
   if (mode === "play") element("round-label").textContent = "FREE PLAY";
 
   const unsubscribe = events.subscribe((event) => {
+    audio.observe(event);
     broadcast = reduceBroadcast(broadcast, event);
     ghost.observe(event);
     renderBroadcast(broadcast);
@@ -115,11 +152,13 @@ async function start(): Promise<void> {
             bridgeError = null;
         },
         onState(state) {
+          audio.observeState(state);
           validating = state.phase === "validating";
           if (state.phase === "preparing") bridgeError = null;
           if (state.phase === "rolled-back") ghost.clear();
         },
         onBuild(build) {
+          audio.observeBuild(build);
           if (build.phase === "rollback") ghost.clear();
         },
       })
@@ -127,6 +166,13 @@ async function start(): Promise<void> {
 
   function key(event: KeyboardEvent): void {
     if (mode !== "play") return;
+    if (
+      event.target instanceof HTMLElement &&
+      event.target.closest("button,input,select,textarea,[contenteditable]")
+    ) {
+      input = 0;
+      return;
+    }
     const mask =
       event.code === "ArrowLeft"
         ? INPUT.LEFT
@@ -148,6 +194,7 @@ async function start(): Promise<void> {
     input = 0;
   };
   window.addEventListener("blur", clearInput);
+  element("audio-controls").addEventListener("focusin", clearInput);
   const visibility = () => {
     if (document.hidden) clearInput();
   };
@@ -186,6 +233,7 @@ async function start(): Promise<void> {
     "pagehide",
     () => {
       unsubscribe();
+      audio.stop();
       disconnectBridge();
       window.removeEventListener("resize", resizeStage);
       window.removeEventListener("keydown", key);

@@ -19,6 +19,18 @@ the 24 px character about 43 screen pixels of height at 720p. `?camera=overview`
 the whole level visible for inspection.
 The bug ticket sits above the playfield; the head start and Pit Crew use a right-hand dock.
 
+## Sound
+
+Click **ENABLE SOUND** once in the browser, or use OBS's browser-source **Interact**
+window. Four original short WAVs accompany an installed bug, the first correct
+chat guess, a verified fix and a failed round. Volume starts at 15%; mute and volume
+preferences persist locally. Sounds follow real round events and old events never
+queue for later playback. Focused sound controls do not move the player.
+
+`pnpm sound:generate --check` reproduces all four assets and their hashes from
+`scripts/sound-synth.ts`. `pnpm sound:generate` deliberately regenerates them.
+The deterministic integer synth uses no third-party samples.
+
 The renderer reads `LEVEL`, player dimensions and `platformAt` from the sim's public API.
 The purple enemy uses `state.enemy` position so its ledge turns and falls are visible.
 The clock calls the public `step` at 60 Hz; no physics are duplicated here. Unit tests
@@ -50,7 +62,8 @@ The SSE bridge validates external events before publishing them. `snapshot()` ex
 current sim frame and hash for smoke verification, not an asserted result from a stored log.
 
 Use `?bridge=http://127.0.0.1:4317` to connect to the local round server. This switches
-to keyboard play labelled "LOCAL ROUND". `GET /api/events` supplies sequenced `round` SSE
+to keyboard play labelled "LOCAL ROUND" for fixtures or "TWITCH CHAT ROUND" for
+live mode, with "TEST" for broadcaster tests. `GET /api/events` supplies sequenced `round` SSE
 messages; the bridge installs each `game.build` before publishing later HUD activity.
 Artifact bytes from `/api/builds/<sha256>.js` must match their SHA-256 id before import.
 `SimulationPlayer.install()` validates the module against a frozen clone of the live

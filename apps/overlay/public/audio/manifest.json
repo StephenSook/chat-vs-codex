@@ -1,0 +1,28 @@
+{
+  "provenance": "Original Chat vs Codex integer synth; scripts/sound-synth.ts",
+  "format": "mono PCM16 WAV",
+  "sampleRate": 22050,
+  "peakLimit": 8000,
+  "assets": [
+    {
+      "file": "bug-in.wav",
+      "bytes": 11948,
+      "sha256": "d37e56afcf5805c77b2066ac7e6bae775e39f37ad64f4af4a0c324718757e4c8"
+    },
+    {
+      "file": "chat-correct.wav",
+      "bytes": 11948,
+      "sha256": "b4e6e6f9fdb8b63f17728fda89ac9264bb25adcc4251070fa6dfb9380443c11a"
+    },
+    {
+      "file": "codex-fix.wav",
+      "bytes": 15916,
+      "sha256": "b61a75ec18b00f1fbf13e1fd465119e8732df94dad2c5e1b2792b9a743e43a79"
+    },
+    {
+      "file": "codex-fail.wav",
+      "bytes": 11948,
+      "sha256": "cc96c64acb6385a4796f71855f7030a7c8b283c81993a21a12e08418fb6eb4ff"
+    }
+  ]
+}

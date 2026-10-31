@@ -29,6 +29,7 @@
     "breakout:build": "pnpm --filter @chat-vs-codex/breakout build",
     "breakout:pool": "tsx packages/hotfix-ready/src/cli.ts gate games/breakout",
     "breakout:bench": "tsx games/breakout/bench.ts",
+    "sound:generate": "tsx scripts/sound-synth.ts",
     "ci:local": "pnpm install --frozen-lockfile && pnpm typecheck && pnpm lint && pnpm test",
     "check": "pnpm typecheck && pnpm lint && pnpm test"
   },

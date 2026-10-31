@@ -11,6 +11,34 @@
   font-weight: 700;
   font-synthesis: none;
 }
+.audio-controls {
+  position: absolute;
+  right: 34px;
+  top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 5;
+  font-size: 16px;
+}
+.audio-controls button {
+  border: 2px solid var(--ink);
+  border-radius: 9px;
+  background: var(--cream);
+  color: var(--ink);
+  box-shadow: 0 3px 0 var(--ink);
+  padding: 7px 10px;
+  font: inherit;
+  cursor: pointer;
+}
+.audio-controls input {
+  width: 90px;
+  accent-color: var(--codex);
+}
+.audio-controls :focus-visible {
+  outline: 3px solid var(--codex);
+  outline-offset: 4px;
+}
 * {
   box-sizing: border-box;
 }
