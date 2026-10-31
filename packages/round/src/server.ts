@@ -11,6 +11,10 @@ import type {
   RoundEvent,
   RoundSession,
 } from "./contracts.js";
+import {
+  PublicRoundProjection,
+  type PublicRoundState,
+} from "./public-state.js";
 import { parseViewerSeason, type SeasonTotals } from "./season.js";
 
 export async function startRoundServer(
@@ -21,6 +25,7 @@ export async function startRoundServer(
     session?: RoundSession;
     season?: SeasonTotals;
     commentary?: ReturnType<typeof createCommentary>;
+    publicState?: (state: PublicRoundState) => void;
     record?: (envelope: RoundEnvelope) => void;
     /** Presentation only. Recorded evidence and sandbox client retain canonical hashes. */
     present?: (event: RoundEvent) => RoundEvent;
@@ -36,6 +41,7 @@ export async function startRoundServer(
   let closing = false;
   let activation = 0;
   let season = options.season ? parseViewerSeason(options.season) : undefined;
+  const publicState = new PublicRoundProjection(options.session, season);
   let trigger: RoundEvent["trigger"];
   let input: RoundEvent["input"];
   const send = (client: ServerResponse, envelope: RoundEnvelope) => {
@@ -63,6 +69,16 @@ export async function startRoundServer(
         response.setHeader("Vary", "Origin");
       }
       const path = new URL(request.url ?? "/", "http://localhost").pathname;
+      if (path === "/api/public-state") {
+        response
+          .writeHead(200, {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+          })
+          .end(JSON.stringify(publicState.snapshot()));
+        return;
+      }
       if (path === "/health") {
         response
           .writeHead(200, { "Content-Type": "application/json" })
@@ -202,6 +218,8 @@ export async function startRoundServer(
     ring.push(envelope);
     if (ring.length > 2000)
       throw new Error("Round event retention budget exceeded");
+    publicState.observe(envelope);
+    options.publicState?.(publicState.snapshot(stamp.wallTime));
     options.record?.(envelope);
     for (const client of clients) send(client, envelope);
     // Voice is presentation only and never replayed to reconnecting clients.
@@ -213,11 +231,14 @@ export async function startRoundServer(
         );
     });
   };
+  options.publicState?.(publicState.snapshot());
   return {
     origin,
     publish,
     updateSeason(value: SeasonTotals) {
       season = parseViewerSeason(value);
+      publicState.updateSeason(season);
+      options.publicState?.(publicState.snapshot());
       for (const client of clients)
         client.write(`event: season\ndata: ${JSON.stringify(season)}\n\n`);
     },

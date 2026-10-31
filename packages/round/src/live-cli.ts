@@ -21,6 +21,10 @@ import { eventStamp } from "./clocks.js";
 import { createCommentary } from "./commentary.js";
 import type { RoundEnvelope } from "./contracts.js";
 import { RoundEngine, type RoundSnapshot } from "./engine.js";
+import {
+  ExtensionPublisher,
+  extensionCredentials,
+} from "./extension-publisher.js";
 import { type LiveEngine, LiveRoundController } from "./live.js";
 import {
   loadPreviousVerifiedRound,
@@ -273,8 +277,21 @@ export async function runLiveCli(
   let gate: ReturnType<typeof createLiveRoundGate> | undefined;
   let controller: LiveRoundController | undefined;
   let scorebug: TitleScorebug | undefined;
+  let extension: ExtensionPublisher | undefined;
   let events: RoundEnvelope[] = [];
   try {
+    const credentials = extensionCredentials(process.env, account.userId);
+    if (credentials) {
+      extension = new ExtensionPublisher({
+        credentials,
+        report: (entry) => {
+          record(entry);
+          if (entry.status !== 204)
+            console.error(`Extension state delivery: ${entry.status}`);
+        },
+      });
+      extension.start();
+    }
     const helix = createLiveHelix({
       clientId,
       broadcasterId: account.userId,
@@ -348,6 +365,7 @@ export async function runLiveCli(
     });
     const live = controller;
     server = await startRoundServer({
+      publicState: (state) => extension?.update(state),
       season: (await loadSeason(join(ROOT, "docs/rounds"))).viewers,
       commentary: createCommentary({
         cacheDirectory: join(ROOT, ".local/polly"),
@@ -492,6 +510,7 @@ export async function runLiveCli(
     signal.removeEventListener("abort", stop);
     await closeLiveResources([
       () => listener?.stop(),
+      () => extension?.close(),
       () => engine?.stop(),
       () => gate?.drain(),
       () => controller?.close(),

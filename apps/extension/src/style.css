@@ -1,0 +1,70 @@
+* {
+  box-sizing: border-box;
+}
+:root {
+  font:
+    16px / 1.3 system-ui,
+    sans-serif;
+  color: #1f1d1b;
+  background: #f6efe3;
+}
+body {
+  margin: 0;
+}
+main {
+  padding: 14px;
+  max-width: 440px;
+  margin: auto;
+}
+header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 900;
+  font-size: 22px;
+}
+.chat,
+.codex {
+  border: 2px solid #1f1d1b;
+  padding: 7px 9px;
+  box-shadow: 3px 3px #1f1d1b;
+  white-space: nowrap;
+}
+.chat {
+  background: #f7914e;
+}
+.codex {
+  background: #0477bd;
+  color: white;
+}
+.versus {
+  font-size: 16px;
+}
+h1 {
+  font-size: 26px;
+  margin: 16px 0;
+}
+p {
+  margin: 8px 0;
+}
+#connection {
+  font-size: 12px;
+}
+#round-label {
+  font-size: 13px;
+  font-weight: 800;
+}
+#phase {
+  font-weight: 800;
+  font-size: 23px;
+}
+#step {
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+footer {
+  border-top: 2px solid #1f1d1b;
+  padding-top: 12px;
+  font-size: 15px;
+  font-weight: 800;
+}
