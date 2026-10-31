@@ -18,6 +18,7 @@ export const ROUND_TIMING_DEFINITION =
 /** Select the last verified round, including legacy rounds with unavailable timing. */
 export async function loadPreviousVerifiedRound(
   directory: string,
+  trigger?: "broadcaster-test",
 ): Promise<PreviousVerifiedRound | null> {
   const files = await readdir(directory).catch(
     (error: NodeJS.ErrnoException) => {
@@ -34,6 +35,15 @@ export async function loadPreviousVerifiedRound(
     const row = JSON.parse(await readFile(file, "utf8"));
     if (row.schemaVersion !== 1 || row.roundId !== name.slice(0, -5))
       throw new Error(`Invalid prior round receipt: ${name}`);
+    const testRound =
+      row.trigger === "broadcaster-test" ||
+      row.autopsy?.trigger === "broadcaster-test" ||
+      (Array.isArray(row.events) &&
+        row.events.some(
+          (event: { trigger?: unknown }) =>
+            event.trigger === "broadcaster-test",
+        ));
+    if (testRound !== (trigger === "broadcaster-test")) continue;
     if (
       row.verification?.fullReplaySuite !== true ||
       row.verification?.heldOutReplay !== true ||
@@ -117,6 +127,17 @@ export function publicReceipt(input: {
 }) {
   const { result, client } = input;
   const autopsy = result.autopsy ?? null;
+  // Any retained test marker taints the entire receipt, even if another producer
+  // accidentally omitted it on the terminal state. Never publish it as a viewer run.
+  const provenance =
+    result.trigger === "broadcaster-test" ||
+    autopsy?.trigger === "broadcaster-test" ||
+    input.events.some(
+      ({ event, trigger }) =>
+        trigger === "broadcaster-test" || event.trigger === "broadcaster-test",
+    )
+      ? { trigger: "broadcaster-test" as const }
+      : {};
   const lastGhost = [...input.events]
     .reverse()
     .find(
@@ -177,6 +198,7 @@ export function publicReceipt(input: {
   return {
     schemaVersion: 1,
     roundId: result.roundId,
+    ...provenance,
     mode: input.mode ?? "local-fixture",
     ...(input.mode === "live-twitch"
       ? {}
@@ -202,6 +224,7 @@ export function publicReceipt(input: {
         ? null
         : {
             roundId: autopsy.roundId,
+            ...provenance,
             status: autopsy.status,
             reason: autopsy.reason,
             breaker: autopsy.breaker,
@@ -249,6 +272,7 @@ export function publicReceipt(input: {
         )?.wallTime ?? new Date().toISOString(),
     events: input.events.map(({ sequence, event, atMs, wallTime }) => ({
       sequence,
+      ...provenance,
       type: event.type === "overlay" ? event.event.type : event.type,
       ...(event.type === "round.state" || event.type === "game.build"
         ? { phase: event.phase }

@@ -138,6 +138,7 @@ function validAutopsy(value: unknown): value is RoundAutopsy {
     /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
   return (
     typeof record.roundId === "string" &&
+    (record.trigger === undefined || record.trigger === "broadcaster-test") &&
     ["verified", "rolled-back"].includes(record.status) &&
     nullableText(record.reason) &&
     alias(record.breaker) &&
@@ -227,7 +228,21 @@ export function parseRoundEnvelope(value: unknown): RoundEnvelope {
   )
     throw new Error("Invalid round sequence or server clock");
   const event = e.event;
-  if (event.type === "overlay" && validateOverlay(event.event)) return e;
+  if (
+    (e.trigger !== undefined && e.trigger !== "broadcaster-test") ||
+    (event.trigger !== undefined && event.trigger !== "broadcaster-test")
+  )
+    throw new Error("Invalid round trigger");
+  if (event.type === "overlay" && validateOverlay(event.event)) {
+    if (
+      (e.trigger === "broadcaster-test" ||
+        event.trigger === "broadcaster-test") &&
+      event.event.type === "round.autopsy" &&
+      event.event.autopsy.trigger !== "broadcaster-test"
+    )
+      throw new Error("Missing broadcaster-test autopsy label");
+    return e;
+  }
   if (
     event.type === "game.build" &&
     typeof event.roundId === "string" &&

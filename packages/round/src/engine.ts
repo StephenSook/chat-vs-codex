@@ -118,6 +118,8 @@ export class RoundEngine {
       roundLimitMs?: number;
       hardBudgetMs?: number;
       identify?: (actor: string) => string | null;
+      /** An explicitly opted-in session must never produce viewer-round evidence. */
+      trigger?: "broadcaster-test";
       previousRound?: PreviousVerifiedRound | null;
     },
   ) {
@@ -272,6 +274,7 @@ export class RoundEngine {
       .trim();
     this.autopsy = {
       roundId: round.id,
+      ...(this.options.trigger ? { trigger: this.options.trigger } : {}),
       status: verified ? "verified" : "rolled-back",
       reason: round.reason,
       breaker: round.breaker,
@@ -343,7 +346,11 @@ export class RoundEngine {
     return { ...eventStamp(), atMs: this.now() };
   }
   private publish(event: RoundEvent): void {
-    this.options.publish({ ...event, ...this.stamp() });
+    this.options.publish({
+      ...event,
+      ...(this.options.trigger ? { trigger: this.options.trigger } : {}),
+      ...this.stamp(),
+    });
   }
   private durations(round: ActiveRound): RoundDurations {
     const elapsed = (
@@ -440,6 +447,7 @@ export class RoundEngine {
     this.state = {
       type: "round.state",
       roundId: round.id,
+      ...(this.options.trigger ? { trigger: this.options.trigger } : {}),
       phase,
       headStartEndsAt:
         round.startedAt === null ? null : round.startedAt + this.headStartMs,

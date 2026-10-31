@@ -155,6 +155,28 @@ async function sse(origin: string, after?: number) {
 }
 
 describe("local round HTTP and SSE boundary", () => {
+  it("labels every test-session envelope and build event, then clears the label on a normal round", async () => {
+    const records: RoundEnvelope[] = [];
+    const running = await server({ record: (entry) => records.push(entry) });
+    running.publish({ ...preparing("test"), trigger: "broadcaster-test" });
+    await running.activate(artifact(), "broken", "test");
+    running.publish({
+      type: "overlay",
+      event: { type: "tests.green", roundId: "test" },
+    });
+    const stream = await sse(running.origin);
+    for (let i = 0; i < 3; i++) {
+      const row = await stream.next();
+      expect(row.trigger).toBe("broadcaster-test");
+      expect(row.event.trigger).toBe("broadcaster-test");
+      expect(records[i]?.trigger).toBe("broadcaster-test");
+      expect(records[i]?.event.trigger).toBe("broadcaster-test");
+    }
+    running.publish(preparing("normal"));
+    const normal = await stream.next();
+    expect(normal).not.toHaveProperty("trigger");
+    expect(normal.event).not.toHaveProperty("trigger");
+  });
   it("enriches live SSE presentation without changing canonical recorded events or reconnect evidence", async () => {
     const records: RoundEnvelope[] = [];
     const running = await server({

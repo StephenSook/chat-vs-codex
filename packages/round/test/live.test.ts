@@ -11,7 +11,7 @@ import type {
   RoundEvent,
 } from "../src/contracts.js";
 import { RoundEngine } from "../src/engine.js";
-import { LiveRoundController } from "../src/live.js";
+import { BOT_REPLY_PREFIXES, LiveRoundController } from "../src/live.js";
 
 const fixtures = JSON.parse(
   readFileSync(
@@ -34,7 +34,12 @@ function chat(text: string, actor = "fixture-viewer", id = text): TwitchEvent {
   };
 }
 function setup(
-  options: { live?: boolean; dryChat?: boolean; refusal?: boolean } = {},
+  options: {
+    live?: boolean;
+    dryChat?: boolean;
+    refusal?: boolean;
+    allowBroadcasterTest?: boolean;
+  } = {},
 ) {
   let now = 0;
   let active = false;
@@ -55,6 +60,9 @@ function setup(
     identify: () => "viewer-1234567890abcdef",
     record: (event) => logs.push(event),
     now: () => now,
+    ...(options.allowBroadcasterTest === undefined
+      ? {}
+      : { allowBroadcasterTest: options.allowBroadcasterTest }),
     ...(options.dryChat === undefined ? {} : { dryChat: options.dryChat }),
   });
   const engine = {
@@ -115,6 +123,63 @@ function autopsy(verified = true): RoundEvent {
   };
 }
 describe("live Twitch fixture entry point", () => {
+  it.each([false, true])(
+    "accepts broadcaster commands only with explicit opt-in=%s",
+    (allowBroadcasterTest) => {
+      const { controller, engine } = setup({ allowBroadcasterTest });
+      replayFixtures(
+        [
+          chat("!break", "fixture-channel"),
+          chat("!guess gravity-sign", "fixture-channel"),
+          chat("!guess wrong-family", "fixture-channel"),
+          chat("!break gravity-sign", "fixture-channel"),
+        ],
+        controller.handler,
+      );
+      expect(
+        engine.handlePublic.mock.calls.map(([intent]) => intent.kind),
+      ).toEqual(
+        allowBroadcasterTest ? ["break-requested", "guess-submitted"] : [],
+      );
+    },
+  );
+  it("rejects early prefix echoes and returned message IDs, including shared-chat copies, in broadcaster test mode", async () => {
+    const { controller, engine, helix } = setup({ allowBroadcasterTest: true });
+    vi.mocked(helix.chat).mockImplementation(async (line) => {
+      // EventSub may deliver the app's reply before the HTTP response returns its ID.
+      replayFixtures(
+        [chat(line, "fixture-channel", "early-echo")],
+        controller.handler,
+      );
+      return "app-reply-id";
+    });
+    controller.observe(broken);
+    await controller.flush();
+    const shared = chat(
+      "!guess gravity-sign",
+      "fixture-channel",
+      "shared-copy",
+    );
+    if (shared.type !== "channel.chat.message")
+      throw new Error("Expected chat");
+    shared.event.source_message_id = "app-reply-id";
+    replayFixtures(
+      [
+        chat("!break", "fixture-channel", "app-reply-id"),
+        shared,
+        ...BOT_REPLY_PREFIXES.map((prefix, index) =>
+          chat(`${prefix} !break`, "fixture-channel", `prefix-${index}`),
+        ),
+      ],
+      controller.handler,
+    );
+    expect(engine.handlePublic).not.toHaveBeenCalled();
+    replayFixtures(
+      [chat("!break", "fixture-channel", "human-command")],
+      controller.handler,
+    );
+    expect(engine.handlePublic).toHaveBeenCalledOnce();
+  });
   it("accepts only bare break and enum guesses, never forwards free chat, own messages or malformed commands", () => {
     const { controller, engine } = setup();
     replayFixtures(
@@ -191,7 +256,7 @@ describe("live Twitch fixture entry point", () => {
     replayFixtures([chat("!guess gravity-sign")], controller.handler);
     await controller.flush();
     expect(helix.chat).toHaveBeenCalledWith(
-      "Fixture Viewer named it: gravity-sign. Chat wins!",
+      "Correct guess: Fixture Viewer named it: gravity-sign. Chat wins!",
     );
     expect(controller.displayName("viewer-1234567890abcdef")).toBe(
       "Fixture Viewer",
@@ -343,12 +408,18 @@ describe("live Twitch fixture entry point", () => {
 });
 
 describe("fixture controller and real round engine integration", () => {
-  it.each([false, true])(
-    "completes the causal round with correct guess=%s and enum-only hint war",
-    async (correct) => {
+  it.each([
+    { correct: false, allowBroadcasterTest: false },
+    { correct: true, allowBroadcasterTest: false },
+    { correct: false, allowBroadcasterTest: true },
+    { correct: true, allowBroadcasterTest: true },
+  ])(
+    "completes the causal round with correct guess=$correct and broadcaster test=$allowBroadcasterTest",
+    async ({ correct, allowBroadcasterTest }) => {
       vi.useFakeTimers();
       vi.setSystemTime(1000);
-      const { controller, helix } = setup();
+      const { controller, helix } = setup({ allowBroadcasterTest });
+      const actor = allowBroadcasterTest ? "fixture-channel" : "fixture-viewer";
       const events: RoundEvent[] = [];
       // This is an explicit fake of the runtime's verified-build contract. No SDK,
       // network, source edit or OS-profile validation is represented as a real run.
@@ -399,6 +470,9 @@ describe("fixture controller and real round engine integration", () => {
         }),
       };
       const engine = new RoundEngine({
+        ...(allowBroadcasterTest
+          ? { trigger: "broadcaster-test" as const }
+          : {}),
         now: () => Date.now(),
         identify: () => "viewer-1234567890abcdef",
         runtime: { prepare: async () => game },
@@ -420,7 +494,7 @@ describe("fixture controller and real round engine integration", () => {
       });
       controller.attach(engine);
       try {
-        replayFixtures([chat("!break")], controller.handler);
+        replayFixtures([chat("!break", actor)], controller.handler);
         await vi.advanceTimersByTimeAsync(0);
         expect(engine.snapshot().phase).toBe("head-start");
         expect(game.repair).not.toHaveBeenCalled();
@@ -429,12 +503,10 @@ describe("fixture controller and real round engine integration", () => {
             chat("Free text must never become a hint", "noise"),
             chat(
               `!guess ${correct ? "gravity-sign" : "swapped-controls"}`,
-              "fixture-viewer",
+              actor,
               "guess-1",
             ),
-            ...(correct
-              ? [chat("!guess gravity-sign", "fixture-viewer", "guess-2")]
-              : []),
+            ...(correct ? [chat("!guess gravity-sign", actor, "guess-2")] : []),
           ],
           controller.handler,
         );
@@ -450,6 +522,15 @@ describe("fixture controller and real round engine integration", () => {
         const result = await engine.waitForRound();
         await controller.flush();
         expect(result.phase).toBe("resolved");
+        expect(result.trigger).toBe(
+          allowBroadcasterTest ? "broadcaster-test" : undefined,
+        );
+        expect(result.autopsy?.trigger).toBe(result.trigger);
+        expect(
+          events
+            .filter((event) => event.type !== "game.build")
+            .every((event) => event.trigger === result.trigger),
+        ).toBe(true);
         expect(result.scores).toEqual(
           correct ? { chat: 1, codex: 0 } : { chat: 0, codex: 1 },
         );
@@ -477,6 +558,13 @@ describe("fixture controller and real round engine integration", () => {
             .map((event) => event.phase),
         ).toEqual(["broken", "repaired"]);
         expect(game.close).toHaveBeenCalledTimes(1);
+        expect(
+          vi
+            .mocked(helix.chat)
+            .mock.calls.every(([line]) =>
+              BOT_REPLY_PREFIXES.some((prefix) => line.startsWith(prefix)),
+            ),
+        ).toBe(true);
       } finally {
         await engine.stop();
         await controller.close();

@@ -122,13 +122,42 @@ it("offers help without credential, listener, validator or model operations", as
     request.mockRestore();
   }
 });
-it("accepts only the explicit dry-chat flag, rejecting accidental fixture/batch flags", () => {
-  expect(parseLiveArguments([])).toEqual({ dryChat: false, help: false });
+it("keeps broadcaster testing off unless the exact flag is supplied", () => {
+  expect(parseLiveArguments([])).toEqual({
+    dryChat: false,
+    help: false,
+    allowBroadcasterTest: false,
+  });
   expect(parseLiveArguments(["--dry-chat"])).toEqual({
     dryChat: true,
     help: false,
+    allowBroadcasterTest: false,
   });
+  expect(
+    parseLiveArguments(["--allow-broadcaster-test", "--dry-chat"]),
+  ).toEqual({ dryChat: true, help: false, allowBroadcasterTest: true });
   expect(() => parseLiveArguments(["--run"])).toThrow("round:live");
+});
+it("prints the broadcaster-test warning without starting any runtime when requesting help", async () => {
+  const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
+  const output = vi.spyOn(console, "log").mockImplementation(() => {});
+  const request = vi.spyOn(globalThis, "fetch");
+  try {
+    await runLiveCli(
+      ["--allow-broadcaster-test", "--help"],
+      new AbortController().signal,
+    );
+    expect(warning).toHaveBeenCalledExactlyOnceWith(
+      expect.stringContaining(
+        "ALL rounds in this session are labelled broadcaster-test",
+      ),
+    );
+    expect(request).not.toHaveBeenCalled();
+  } finally {
+    warning.mockRestore();
+    output.mockRestore();
+    request.mockRestore();
+  }
 });
 it("attempts every shutdown operation even when stopping a worker or socket fails", async () => {
   const order: number[] = [];

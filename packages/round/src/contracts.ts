@@ -83,6 +83,7 @@ export interface RegressionTest {
 /** Terminal evidence. Missing runtime metadata remains unavailable, never inferred. */
 export interface RoundAutopsy {
   roundId: string;
+  trigger?: "broadcaster-test";
   status: "verified" | "rolled-back";
   reason: string | null;
   breaker: string | null;
@@ -166,12 +167,14 @@ type RoundEventPayload =
     };
 
 export type RoundEvent = RoundEventPayload & {
+  trigger?: "broadcaster-test";
   atMs?: number;
   wallTime?: string;
 };
 
 export interface RoundEnvelope {
   sequence: number;
+  trigger?: "broadcaster-test";
   serverTimeMs: number;
   atMs?: number;
   wallTime?: string;

@@ -201,6 +201,47 @@ it("keeps viewer labels stable with a private mode-0600 key and receipts append-
   expect(JSON.parse(await readFile(file, "utf8"))).toEqual(receipt);
 });
 
+it.each(["state", "event", "envelope"] as const)(
+  "retains broadcaster-test provenance from %s on every receipt event",
+  (source) => {
+    const input = verified();
+    const event: RoundEnvelope = {
+      sequence: 1,
+      serverTimeMs: 1,
+      event: { ...input.result },
+    };
+    if (source === "state") input.result.trigger = "broadcaster-test";
+    if (source === "event") event.event.trigger = "broadcaster-test";
+    if (source === "envelope") event.trigger = "broadcaster-test";
+    const receipt = publicReceipt({
+      ...input,
+      mode: "live-twitch",
+      events: [event],
+    });
+    expect(receipt.trigger).toBe("broadcaster-test");
+    expect(receipt.events[0]?.trigger).toBe("broadcaster-test");
+    expect(JSON.stringify(receipt)).not.toContain("private-name");
+  },
+);
+
+it("keeps test-session split comparisons separate from normal verified rounds", async () => {
+  const path = await directory();
+  const normal = publicReceipt(verified());
+  await saveReceipt(path, {
+    ...normal,
+    completedAt: "2026-10-31T10:00:00.000Z",
+  });
+  const input = verified();
+  input.result.roundId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
+  input.result.trigger = "broadcaster-test";
+  const test = publicReceipt(input);
+  await saveReceipt(path, { ...test, completedAt: "2026-10-31T11:00:00.000Z" });
+  expect((await loadPreviousVerifiedRound(path))?.roundId).toBe(normal.roundId);
+  expect(
+    (await loadPreviousVerifiedRound(path, "broadcaster-test"))?.roundId,
+  ).toBe(test.roundId);
+});
+
 it("loads the most recent verified receipt across invocations and never skips an unavailable legacy timing", async () => {
   const path = await directory();
   const receipt = publicReceipt(verified());
@@ -278,6 +319,7 @@ it("retains terminal autopsy evidence without copying unrelated fields or raw vi
   };
   input.result.autopsy = {
     roundId: input.result.roundId ?? "",
+    trigger: "broadcaster-test",
     status: "verified",
     reason: null,
     breaker: input.breaker,
@@ -304,6 +346,8 @@ it("retains terminal autopsy evidence without copying unrelated fields or raw vi
   };
   Object.assign(input.result.autopsy, { privateNote: "private-name" });
   const receipt = publicReceipt(input);
+  expect(receipt.trigger).toBe("broadcaster-test");
+  expect(receipt.autopsy?.trigger).toBe("broadcaster-test");
   expect(receipt.firstCorrectGuesser).toBe("viewer-aaaaaaaaaaaaaaaa");
   expect(receipt.autopsy?.patch).toEqual({
     added: 1,

@@ -71,6 +71,7 @@ export function renderBroadcast(state: BroadcastState): void {
       "family",
       "breaker",
       "guesser",
+      "trigger",
       "patch",
       "explanation",
       "green",
@@ -80,6 +81,7 @@ export function renderBroadcast(state: BroadcastState): void {
       item.textContent = view[key];
       item.title = view[key];
     }
+    element("autopsy-trigger").hidden = !view.trigger;
     const diff = element("autopsy-diff");
     diff.replaceChildren();
     for (const { text, source } of view.diffLines) {

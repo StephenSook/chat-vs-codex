@@ -15,6 +15,16 @@ accepted only for `gravity-sign`, `collision-off-by-one`, `swapped-controls`,
 per-user cooldown. One round, including recording, must finish before another
 starts. Chat and whisper text are never passed through to Codex.
 
+For a single-account offline check, explicitly run
+`pnpm round:live --allow-broadcaster-test`. This flag defaults off. It accepts the
+broadcaster's typed `!break` and enum `!guess` commands while rejecting IDs returned
+by Send Chat Message (including shared-chat source IDs) and every bot reply prefix.
+Prefix checks also catch echoes delivered before the send response returns its ID.
+Startup prints a warning; every round in the opted-in session carries
+`trigger: "broadcaster-test"` in events, receipts and the autopsy's small row.
+These receipts are excluded from normal previous-round comparisons. This flag
+does not allow self-whispers or disable any sandbox, replay or hot-swap gate.
+
 Live overlay attribution uses display names; public receipts and credited replay
 files keep HMAC labels. Send Chat Message announces the start, first correct
 guess and verified result. Markers at bug-in and fix-landed, the fix clip request,

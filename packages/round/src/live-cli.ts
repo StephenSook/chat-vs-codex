@@ -31,12 +31,21 @@ import { startRoundServer } from "./server.js";
 
 export function parseLiveArguments(args: readonly string[]): {
   dryChat: boolean;
+  allowBroadcasterTest: boolean;
   help: boolean;
 } {
-  if (args.some((arg) => arg !== "--dry-chat" && arg !== "--help"))
-    throw new Error("Use pnpm round:live [--dry-chat].");
+  if (
+    args.some(
+      (arg) =>
+        !["--dry-chat", "--help", "--allow-broadcaster-test"].includes(arg),
+    )
+  )
+    throw new Error(
+      "Use pnpm round:live [--dry-chat] [--allow-broadcaster-test].",
+    );
   return {
     dryChat: args.includes("--dry-chat"),
+    allowBroadcasterTest: args.includes("--allow-broadcaster-test"),
     help: args.includes("--help"),
   };
 }
@@ -174,9 +183,13 @@ export async function runLiveCli(
   signal: AbortSignal,
 ): Promise<void> {
   const flags = parseLiveArguments(args);
+  if (flags.allowBroadcasterTest)
+    console.warn(
+      "WARNING: BROADCASTER TEST MODE. Broadcaster !break and enum !guess are accepted. ALL rounds in this session are labelled broadcaster-test, never viewer rounds. Bot replies remain ignored.",
+    );
   if (flags.help) {
     console.log(
-      "pnpm round:live [--dry-chat]: listen on steve_sociall, including while offline. Another viewer sends !break or whispers one enum family. Only commands start Codex; --dry-chat logs replies and skips markers, clips and pins.",
+      "pnpm round:live [--dry-chat] [--allow-broadcaster-test]: listen on steve_sociall, including while offline. Another viewer sends !break or whispers one enum family. Only commands start Codex; --dry-chat logs replies and skips markers, clips and pins. The explicit test flag also accepts broadcaster chat commands and labels all session rounds broadcaster-test.",
     );
     return;
   }
@@ -255,6 +268,7 @@ export async function runLiveCli(
       identify: (actor) => viewerLabel(actor, key),
       record,
       dryChat: flags.dryChat,
+      allowBroadcasterTest: flags.allowBroadcasterTest,
       helix: createLiveHelix({
         clientId,
         broadcasterId: account.userId,
@@ -295,8 +309,14 @@ export async function runLiveCli(
       },
     });
     engine = new RoundEngine({
+      ...(flags.allowBroadcasterTest
+        ? { trigger: "broadcaster-test" as const }
+        : {}),
       identify: (actor) => viewerLabel(actor, key),
-      previousRound: await loadPreviousVerifiedRound(join(ROOT, "docs/rounds")),
+      previousRound: await loadPreviousVerifiedRound(
+        join(ROOT, "docs/rounds"),
+        flags.allowBroadcasterTest ? "broadcaster-test" : undefined,
+      ),
       runtime: createRoundRuntime({ runsDirectory: directory }),
       publish: server.publish,
       activate: server.activate,
@@ -352,7 +372,9 @@ export async function runLiveCli(
       `Overlay: ${server.origin}/?bridge=${encodeURIComponent(server.origin)}`,
     );
     console.log(
-      "Listening on steve_sociall while online or offline. One round at a time, 15 s chat head start, 60 s race, 240 s repair backstop. Bot-authored messages are ignored; use another viewer account for commands.",
+      flags.allowBroadcasterTest
+        ? "Listening on steve_sociall in broadcaster-test mode. One round at a time, 15 s chat head start, 60 s race, 240 s repair backstop. Broadcaster chat commands accepted; bot replies ignored."
+        : "Listening on steve_sociall while online or offline. One round at a time, 15 s chat head start, 60 s race, 240 s repair backstop. Bot-authored messages are ignored; use another viewer account for commands.",
     );
     if (flags.dryChat)
       console.log(

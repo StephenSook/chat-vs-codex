@@ -63,6 +63,30 @@ const wire = (autopsy: RoundAutopsy) => ({
 afterEach(() => vi.unstubAllGlobals());
 
 describe("observed round autopsy", () => {
+  it("retains the explicit broadcaster-test label through the bridge and small-row presentation", () => {
+    const record = autopsyFixture({ trigger: "broadcaster-test" });
+    const parsed = parseRoundEnvelope(wire(record));
+    if (
+      parsed.event.type !== "overlay" ||
+      parsed.event.event.type !== "round.autopsy"
+    )
+      throw new Error("Missing card");
+    expect(autopsyView(parsed.event.event.autopsy).trigger).toBe(
+      "broadcaster-test",
+    );
+    expect(autopsyView(autopsyFixture()).trigger).toBe("");
+    expect(() =>
+      parseRoundEnvelope({
+        ...wire(autopsyFixture()),
+        trigger: "broadcaster-test",
+      }),
+    ).toThrow("Missing broadcaster-test autopsy label");
+    expect(() =>
+      parseRoundEnvelope(
+        wire({ ...record, trigger: "viewer" } as unknown as RoundAutopsy),
+      ),
+    ).toThrow("Invalid round event");
+  });
   it("uses live display names without replacing the canonical hashed identities", () => {
     const record = autopsyFixture({
       displayNames: { breaker: "ViewerName", firstCorrectGuesser: null },
@@ -464,6 +488,7 @@ describe("observed round autopsy", () => {
     const payload = '<img src=x onerror="bad()">';
     const record = autopsyFixture({
       explanation: payload,
+      trigger: "broadcaster-test",
       headline: payload,
       patch: { added: 1, removed: 1, preview: [`- ${payload}`, "+ safe"] },
     });
@@ -475,6 +500,10 @@ describe("observed round autopsy", () => {
     renderBroadcast(state);
     renderClock(state, 1000);
     expect(elements.get("autopsy-explanation")?.textContent).toBe(payload);
+    expect(elements.get("autopsy-trigger")?.textContent).toBe(
+      "broadcaster-test",
+    );
+    expect(elements.get("autopsy-trigger")?.hidden).toBe(false);
     expect(elements.get("autopsy-diff")?.children[0]?.title).toContain(payload);
     expect(
       elements.get("autopsy-diff")?.children[0]?.textContent?.length,

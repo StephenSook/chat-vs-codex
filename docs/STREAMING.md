@@ -44,6 +44,21 @@ jump-buffer
 enemy-ledge-turn
 ```
 
+If no second account is available, stop the runner and explicitly opt into the
+single-account test mode:
+
+```sh
+pnpm round:live --allow-broadcaster-test
+```
+
+Use `steve_sociall` to type `!break` and optionally `!guess gravity-sign`. The
+flag is off by default. It prints a warning and labels **all session rounds**
+`trigger: "broadcaster-test"` in events, public receipts and the autopsy's small
+row, so they cannot be presented as viewer rounds. Bot replies remain ignored by
+returned message ID, shared-chat source ID and reply prefix, including early
+echoes before Send Chat Message returns. Test receipts use a separate previous
+split baseline. Return to plain `pnpm round:live` for viewer participation.
+
 A bare break keeps the selected family secret. For a known secret test, whisper
 exactly `gravity-sign` to `steve_sociall` from that other account instead of sending
 `!break`. Whispers depend on Twitch's sender verification and delivery rules.

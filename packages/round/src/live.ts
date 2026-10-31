@@ -10,6 +10,14 @@ import { TwitchRefusal } from "../../twitch/src/helix.js";
 import { eventStamp, monotonicMs } from "./clocks.js";
 import type { RoundAutopsy, RoundEvent } from "./contracts.js";
 
+/** Covers early echoes that arrive before Send Chat Message returns its ID. */
+export const BOT_REPLY_PREFIXES = [
+  "Something broke.",
+  "Correct guess:",
+  "Codex fixed ",
+  "Codex failed.",
+] as const;
+
 export interface LiveEngine {
   snapshot(): { active: boolean };
   handlePublic(intent: PublicIntent): void;
@@ -25,6 +33,7 @@ export class LiveRoundController {
   private readonly cooldowns = new Map<string, number>();
   private readonly seenEffects = new Set<string>();
   private readonly pending = new Set<Promise<void>>();
+  private readonly sentMessageIds = new Set<string>();
   private outgoing = Promise.resolve();
   private stopped = false;
   constructor(
@@ -35,6 +44,7 @@ export class LiveRoundController {
       identify(actor: string): string;
       record(event: Record<string, unknown>): void;
       dryChat?: boolean;
+      allowBroadcasterTest?: boolean;
       cooldownMs?: number;
       now?: () => number;
     },
@@ -51,9 +61,26 @@ export class LiveRoundController {
       if (this.stopped) return;
       if (message.type === "channel.chat.message") {
         const data = message.event;
-        if (data.chatter_user_id === options.botUserId) return;
         if (data.broadcaster_user_id !== options.broadcasterId) return;
         const text = data.message.text.trim();
+        if (
+          this.sentMessageIds.has(data.message_id) ||
+          (data.source_message_id &&
+            this.sentMessageIds.has(data.source_message_id)) ||
+          BOT_REPLY_PREFIXES.some((prefix) =>
+            text.toLowerCase().startsWith(prefix.toLowerCase()),
+          )
+        )
+          return;
+        const broadcasterTest =
+          options.allowBroadcasterTest === true &&
+          data.chatter_user_id === options.broadcasterId;
+        if (
+          (data.chatter_user_id === options.botUserId ||
+            data.chatter_user_id === options.broadcasterId) &&
+          !broadcasterTest
+        )
+          return;
         const guess = /^!guess\s+([a-z-]+)$/i.exec(text);
         if (
           guess &&
@@ -162,7 +189,10 @@ export class LiveRoundController {
           : "twitch.chat-requested",
         line,
       });
-      if (!this.options.dryChat) id = await this.options.helix.chat(line);
+      if (!this.options.dryChat) {
+        id = await this.options.helix.chat(line);
+        this.sentMessageIds.add(id);
+      }
     });
     this.outgoing = operation.catch(() => {});
     return operation.then(() => id);
@@ -221,7 +251,9 @@ export class LiveRoundController {
         "A viewer";
       const family = event.event.name;
       this.schedule(`${id}:correct`, async () => {
-        await this.chat(`${name} named it: ${family}. Chat wins!`);
+        await this.chat(
+          `Correct guess: ${name} named it: ${family}. Chat wins!`,
+        );
       });
     }
     if (event.type === "overlay" && event.event.type === "round.autopsy") {
