@@ -6,6 +6,7 @@ import { runPreflight } from "../../bench/src/preflight.js";
 import { ROOT } from "../../mutator/src/gate.js";
 import {
   createAuth,
+  REAUTHORIZE,
   readToken,
   requireClientId,
   SCOPES,
@@ -105,7 +106,7 @@ export async function verifyLiveAuthorization(options: {
   } catch {
     // OAuth failures can contain credentials. Never forward their remote bodies.
     throw new Error(
-      "Twitch validation failed: require steve_sociall, this Client ID, and exactly the 11 requested scopes.",
+      `Twitch validation failed: require steve_sociall, this Client ID, and exactly the 11 requested scopes. ${REAUTHORIZE}`,
     );
   }
 }
@@ -212,7 +213,12 @@ export async function runLiveCli(
     throw new Error(
       "Stored Twitch authorization belongs to another Client ID.",
     );
-  const auth = createAuth(stored);
+  const auth = createAuth(stored, undefined, { signal });
+  auth.onRefresh((_userId, token) =>
+    console.log(
+      `Twitch token refreshed: length ${token.accessToken.length}; expires in ${token.expiresIn ?? "unknown"} s.`,
+    ),
+  );
   const accessToken = async () => {
     const value = await auth.getAccessTokenForUser(stored.userId, [...SCOPES]);
     if (!value?.accessToken) throw new Error("Twitch token is unavailable.");
@@ -237,6 +243,7 @@ export async function runLiveCli(
     failure ??= error;
     abort.abort();
   };
+  auth.onRefreshFailure((_userId, error) => fatal(error));
   let writes = Promise.resolve();
   let deliveries = Promise.resolve();
   const record = (entry: Record<string, unknown>) => {

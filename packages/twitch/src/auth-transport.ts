@@ -19,6 +19,11 @@ export interface OAuthTransport {
     signal: AbortSignal,
   ): Promise<AccessToken>;
   validate(accessToken: string, signal: AbortSignal): Promise<ValidatedToken>;
+  refresh(
+    clientId: string,
+    refreshToken: string,
+    signal: AbortSignal,
+  ): Promise<AccessToken>;
 }
 
 function object(value: unknown): Record<string, unknown> {
@@ -89,6 +94,24 @@ export function createOAuthTransport(
     return data;
   }
   return {
+    async refresh(clientId, refreshToken, signal) {
+      const data = await request(
+        "token",
+        signal,
+        new URLSearchParams({
+          client_id: clientId,
+          refresh_token: refreshToken,
+          grant_type: "refresh_token",
+        }),
+      );
+      return {
+        accessToken: text(data, "access_token"),
+        refreshToken: text(data, "refresh_token"),
+        scope: scopes(data, "scope"),
+        expiresIn: positive(data, "expires_in"),
+        obtainmentTimestamp: now(),
+      };
+    },
     async start(clientId, requestedScopes, signal) {
       const data = await request(
         "device",

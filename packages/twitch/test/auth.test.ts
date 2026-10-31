@@ -295,6 +295,7 @@ describe("bounded device grant transport", () => {
       obtainmentTimestamp: 10,
     };
     const transport: OAuthTransport = {
+      refresh: vi.fn(),
       start: vi.fn(),
       exchange: vi.fn().mockResolvedValue(fresh),
       validate: vi.fn().mockResolvedValue({
@@ -356,6 +357,7 @@ describe("bounded device grant transport", () => {
         const path = join(dir, "tokens.json");
         privateJson(pendingPath, { ...pending, nextPollAt: 0 });
         const transport: OAuthTransport = {
+          refresh: vi.fn(),
           start: vi.fn(),
           exchange: vi.fn().mockResolvedValue(token),
           validate: vi.fn().mockResolvedValue(validation),
@@ -380,6 +382,7 @@ describe("bounded device grant transport", () => {
     try {
       privateJson(pendingPath, { ...pending, nextPollAt: 0 });
       const transport: OAuthTransport = {
+        refresh: vi.fn(),
         start: vi.fn(),
         exchange: vi.fn().mockResolvedValue(token),
         validate: async (_accessToken, signal) =>

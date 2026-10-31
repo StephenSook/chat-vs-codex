@@ -13,9 +13,11 @@ import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import {
   type AccessToken,
+  type AccessTokenWithUserId,
   type DeviceCodeInfo,
   RefreshingAuthProvider,
 } from "@twurple/auth";
+import { extractUserId, type UserIdResolvable } from "@twurple/common";
 import { createOAuthTransport, type OAuthTransport } from "./auth-transport.js";
 
 const REQUEST_TIMEOUT_MS = 20_000;
@@ -137,15 +139,100 @@ export function readToken(path = tokenPath()): StoredToken {
   return data as StoredToken;
 }
 
+export const REAUTHORIZE =
+  "Re-authorize: pnpm --filter @chat-vs-codex/twitch auth start, then auth resume after approval.";
+
+/** Public device-flow refresh tokens rotate once. Share one refresh across all callers. */
+class PublicDeviceAuth extends RefreshingAuthProvider {
+  private pending: Promise<AccessTokenWithUserId> | undefined;
+  private failure: Error | undefined;
+  private current: AccessToken;
+
+  constructor(
+    private readonly stored: StoredToken,
+    private readonly path: string,
+    private readonly dependencies: AuthDependencies,
+  ) {
+    super({ clientId: stored.clientId });
+    if (!stored.token.refreshToken)
+      throw new Error(`Twitch refresh token is unavailable. ${REAUTHORIZE}`);
+    this.current = stored.token;
+    this.addUser(stored.userId, stored.token, ["chat"]);
+  }
+
+  override refreshAccessTokenForUser(
+    user: UserIdResolvable,
+  ): Promise<AccessTokenWithUserId> {
+    const userId = extractUserId(user);
+    if (userId !== this.stored.userId)
+      return Promise.reject(new Error("Unknown Twitch refresh user."));
+    if (this.failure) return Promise.reject(this.failure);
+    if (this.pending) return this.pending;
+    this.pending = this.refresh(userId)
+      .catch(() => {
+        // Neither remote error bodies nor underlying fetch errors are safe to log.
+        const error = new Error(`Twitch token refresh failed. ${REAUTHORIZE}`);
+        this.failure = error;
+        this.emit(this.onRefreshFailure, userId, error);
+        throw error;
+      })
+      .finally(() => {
+        this.pending = undefined;
+      });
+    return this.pending;
+  }
+
+  private async refresh(userId: string): Promise<AccessTokenWithUserId> {
+    const transport = this.dependencies.transport ?? createOAuthTransport();
+    const previous = this.current;
+    if (!previous.refreshToken) throw new Error("Missing refresh token");
+    const fresh = await bounded(
+      (signal) =>
+        transport.refresh(
+          this.clientId,
+          previous.refreshToken as string,
+          signal,
+        ),
+      this.dependencies,
+    );
+    if (
+      !fresh.refreshToken ||
+      fresh.scope.length !== previous.scope.length ||
+      new Set(fresh.scope).size !== previous.scope.length ||
+      !previous.scope.every((scope) => fresh.scope.includes(scope))
+    )
+      throw new Error("Unexpected refresh scopes");
+    // Save rotation before validation I/O. A temporary validation failure must
+    // not lose the new single-use refresh token after Twitch consumed the old one.
+    privateJson(this.path, { clientId: this.clientId, userId, token: fresh });
+    this.current = fresh;
+    const valid = await bounded(
+      (signal) => transport.validate(fresh.accessToken, signal),
+      this.dependencies,
+    );
+    if (
+      valid.clientId !== this.clientId ||
+      valid.userId !== userId ||
+      valid.scopes.length !== fresh.scope.length ||
+      new Set(valid.scopes).size !== fresh.scope.length ||
+      !fresh.scope.every((scope) => valid.scopes.includes(scope))
+    )
+      throw new Error("Unexpected refreshed identity");
+    this.addUser(userId, fresh, ["chat"]);
+    this.emit(this.onRefresh, userId, fresh);
+    return { ...fresh, userId };
+  }
+}
+
 export function createAuth(
   stored: StoredToken,
   path = tokenPath(),
+  dependencies: AuthDependencies = {},
 ): RefreshingAuthProvider {
-  const auth = new RefreshingAuthProvider({ clientId: stored.clientId });
+  const auth = new PublicDeviceAuth(stored, path, dependencies);
   auth.onRefresh((userId, token) =>
     privateJson(path, { clientId: stored.clientId, userId, token }),
   );
-  auth.addUser(stored.userId, stored.token, ["chat"]);
   return auth;
 }
 

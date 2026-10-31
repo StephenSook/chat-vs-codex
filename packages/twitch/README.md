@@ -22,7 +22,20 @@ Polling also cancels an in-progress request when the device grant expires.
 Twurple's high-level OAuth helpers do not expose an AbortSignal, so a small Node 22
 fetch helper supplies cancellation through response body reads. The exchanged
 token is validated against the Client ID, user and granted scopes before saving.
-Runtime token refresh still uses Twurple's RefreshingAuthProvider.
+Runtime token refresh uses Twurple's provider with a bounded public-client
+device-flow refresh transport. The form sends the Client ID, refresh token and
+`grant_type=refresh_token`, with no client secret. Concurrent callers share one
+refresh. Rotation is saved atomically at 0600 before validation I/O, so a temporary
+validation failure cannot discard a newly issued single-use refresh token.
+Identity and scopes must still match before the provider returns it. A rejected
+refresh stops live mode with `auth start` / `auth resume` instructions, without
+logging remote errors or credentials. Successful live refreshes print only the
+access token's length and expiry. Do not run two live processes sharing the token file.
+See [Twitch's public-client refresh rules](https://dev.twitch.tv/docs/authentication/refresh-tokens/).
+
+Verify expiry from a normal terminal with `pnpm round:live --allow-broadcaster-test`.
+After expiry it should print the refreshed length/expiry and connect normally;
+`.local/twitch/tokens.json` must remain mode 0600. No expiry edit is needed.
 `listen` starts inbound subscriptions only. It prints public intents and withholds
 private selections. `listen --record .local/twitch-recording.jsonl` records
 anonymized payloads with a random HMAC key per recording session.
