@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { summarizeSecondGameTrials } from "../src/second-game.js";
 
 test("committed evidence recomputes in a static preview at desktop and phone widths", async ({
   page,
@@ -71,6 +72,36 @@ test("committed evidence recomputes in a static preview at desktop and phone wid
     );
     if (!evidence.secondGame.benchmark)
       await expect(second).toContainText("Runtime benchmark pending.");
+    else {
+      const results = await page.request.get(
+        evidence.secondGame.benchmark.path,
+      );
+      expect(results.ok()).toBe(true);
+      const summary = summarizeSecondGameTrials(
+        await results.text(),
+        evidence.secondGame.pool.sourceDigest,
+      );
+      expect(summary.models.length).toBeGreaterThan(0);
+      for (const model of summary.models) {
+        const metrics = second.locator(
+          `[data-testid="second-game-metrics"][data-model="${model.model}"]`,
+        );
+        await expect(metrics).toContainText(
+          `${model.overall.green}/${model.overall.trials} fixed`,
+        );
+        await expect(metrics).toContainText(
+          `${((model.overall.medianGreenMs ?? 0) / 1000).toFixed(2)} s`,
+        );
+        await expect(second.getByTestId("second-game-sample")).toBeVisible();
+        await expect(second.getByTestId("second-game-sample")).toContainText(
+          `n=${model.overall.trials};`,
+        );
+        if (model.families.every((family) => family.metrics.trials === 1))
+          await expect(second.getByTestId("second-game-sample")).toContainText(
+            "one trial per site",
+          );
+      }
+    }
     await second
       .getByText("Pool, replay gates + commands", { exact: true })
       .click();

@@ -323,15 +323,22 @@ async function start(): Promise<void> {
     else {
       for (const model of measured.models) {
         const row = element("div", undefined, "mini-stats");
+        row.dataset.testid = "second-game-metrics";
+        row.dataset.model = model.model;
         row.append(
           stat(
             `${model.model} / ${model.effort}`,
-            `${model.overall.green}/${model.overall.trials} green`,
+            `${model.overall.green}/${model.overall.trials} fixed`,
           ),
           stat("Median", seconds(model.overall.medianGreenMs)),
           stat("p90", seconds(model.overall.p90GreenMs)),
         );
-        card.append(row);
+        const sample = element(
+          "p",
+          `n=${model.overall.trials}; ${model.families.every((family) => family.metrics.trials === 1) ? "one trial per site" : `${model.families.length} sites`}. Exploratory sample.`,
+        );
+        sample.dataset.testid = "second-game-sample";
+        card.append(row, sample);
       }
       more.append(details("Recomputed trial statistics", json(measured)));
     }

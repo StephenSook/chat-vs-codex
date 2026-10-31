@@ -19,6 +19,31 @@ const poolText = readFileSync(
 const pool = JSON.parse(poolText) as GatePool;
 const poolPath = "games/breakout/pool.json";
 const resultsPath = "games/breakout/bench/results.jsonl";
+
+it("recomputes the retained Terra repairs as a small sample with one observation per site", () => {
+  const text = readFileSync(
+    new URL(`../../../${resultsPath}`, import.meta.url),
+    "utf8",
+  );
+  const summary = summarizeSecondGameTrials(text, pool.sourceDigest);
+  expect(summary.batchId).toBe("a1ea9419-27f4-4b23-8892-2e8d1d7ddebb");
+  const model = summary.models[0];
+  expect(summary.models).toHaveLength(1);
+  expect(model).toMatchObject({
+    model: "gpt-6.1-terra",
+    effort: "low",
+    overall: { trials: 3, green: 3, exactReverts: 3 },
+  });
+  expect((model?.overall.medianGreenMs ?? 0) / 1000).toBeCloseTo(17.07, 2);
+  expect((model?.overall.p90GreenMs ?? 0) / 1000).toBeCloseTo(24.61, 2);
+  expect(
+    model?.families.map((family) => [family.family, family.metrics.trials]),
+  ).toEqual([
+    ["createState", 1],
+    ["paddleBounce", 1],
+    ["wallBounce", 1],
+  ]);
+});
 function source(files: Map<string, string>): CommittedSource {
   return {
     commit: "a".repeat(40),
