@@ -123,6 +123,34 @@ function autopsy(verified = true): RoundEvent {
   };
 }
 describe("live Twitch fixture entry point", () => {
+  it("creates a titled clip from the measured verified autopsy and posts only its returned URL", async () => {
+    const { controller, helix, logs } = setup({ live: true });
+    vi.mocked(helix.clip).mockResolvedValue({
+      id: "clip-1",
+      url: "https://clips.twitch.tv/clip-1",
+      titlePath: "fallback",
+      titleRefusal: "Twitch 400: title unsupported",
+    });
+    controller.observe({ ...broken, phase: "repaired" });
+    expect(helix.clip).not.toHaveBeenCalled();
+    controller.observe(autopsy());
+    controller.observe(autopsy());
+    await controller.flush();
+    expect(helix.clip).toHaveBeenCalledExactlyOnceWith(
+      "Codex fixed gravity-sign in 17.7 s",
+    );
+    expect(helix.chat).toHaveBeenCalledWith(
+      "Clip: https://clips.twitch.tv/clip-1",
+    );
+    expect(logs).toContainEqual(
+      expect.objectContaining({
+        type: "twitch.clip-requested",
+        roundId: "round-1",
+        titlePath: "fallback",
+        titleRefusal: "Twitch 400: title unsupported",
+      }),
+    );
+  });
   it.each([false, true])(
     "accepts broadcaster commands only with explicit opt-in=%s",
     (allowBroadcasterTest) => {

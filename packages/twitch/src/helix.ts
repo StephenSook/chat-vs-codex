@@ -5,11 +5,17 @@
  * https://dev.twitch.tv/docs/api/reference/#create-stream-marker
  * https://dev.twitch.tv/docs/api/reference/#create-clip
  */
+export interface ClipRequest {
+  id: string;
+  url: string;
+  titlePath: "accepted" | "fallback" | "not-requested";
+  titleRefusal?: string;
+}
 export interface LiveHelix {
   isLive(): Promise<boolean>;
   chat(message: string): Promise<string>;
   marker(description: string): Promise<void>;
-  clip(): Promise<void>;
+  clip(title?: string): Promise<ClipRequest> | Promise<void>;
   pin(messageId: string): Promise<void>;
   /** Read only; custom Power-ups are created in the broadcaster dashboard. */
   powerUp?(
@@ -32,6 +38,7 @@ export function createLiveHelix(options: {
   senderId: string;
   accessToken(): Promise<string>;
   fetch?: typeof fetch;
+  record?(event: Record<string, unknown>): void;
 }): LiveHelix {
   const fetcher = options.fetch ?? fetch;
   async function request(
@@ -128,14 +135,45 @@ export function createLiveHelix(options: {
         { user_id: options.broadcasterId, description },
       );
     },
-    async clip() {
-      const row = rows(
-        await request("clips", "POST", {
+    async clip(title) {
+      let titlePath: ClipRequest["titlePath"] = title
+        ? "accepted"
+        : "not-requested";
+      let titleRefusal: string | undefined;
+      let response: Record<string, unknown>;
+      try {
+        response = await request("clips", "POST", {
           broadcaster_id: options.broadcasterId,
-        }),
-      )[0];
-      if (!row || typeof row.id !== "string" || !row.id)
+          ...(title ? { title } : {}),
+        });
+      } catch (error) {
+        if (!title || !(error instanceof TwitchRefusal) || error.status !== 400)
+          throw error;
+        titlePath = "fallback";
+        titleRefusal = error.message;
+        options.record?.({
+          type: "twitch.clip-title-rejected",
+          status: error.status,
+          reason: error.reason,
+        });
+        response = await request("clips", "POST", {
+          broadcaster_id: options.broadcasterId,
+        });
+      }
+      const row = rows(response)[0];
+      if (
+        !row ||
+        typeof row.id !== "string" ||
+        !/^[a-zA-Z0-9_-]+$/.test(row.id)
+      )
         throw new Error("Twitch did not accept a clip request");
+      // 202 acknowledges a request. Posting its public URL does not assert publication.
+      return {
+        id: row.id,
+        url: `https://clips.twitch.tv/${encodeURIComponent(row.id)}`,
+        titlePath,
+        ...(titleRefusal ? { titleRefusal } : {}),
+      };
     },
     async powerUp(id) {
       const row = rows(

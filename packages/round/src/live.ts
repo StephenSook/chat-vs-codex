@@ -21,6 +21,7 @@ export const BOT_REPLY_PREFIXES = [
   "Codex fixed ",
   "Codex failed.",
   "Welcome raiders!",
+  "Clip:",
 ] as const;
 
 export interface LiveEngine {
@@ -402,9 +403,6 @@ export class LiveRoundController {
           this.options.helix.marker("Chat vs Codex: fix-landed"),
         ),
       );
-      this.schedule(`${id}:clip`, () =>
-        this.liveOnly("fix-landed clip", () => this.options.helix.clip()),
-      );
     }
     if (
       event.type === "overlay" &&
@@ -442,6 +440,23 @@ export class LiveRoundController {
     const total = Math.round((card.durations.timeToGreenMs as number) / 10);
     const split = `${Math.floor(total / 6000)}:${String(Math.floor(total / 100) % 60).padStart(2, "0")}.${String(total % 100).padStart(2, "0")}`;
     const line = `Codex fixed ${card.family}. GREEN ${split}${card.regressionTest ? " | +1 test" : ""}`;
+    this.schedule(`${card.roundId}:clip`, () =>
+      this.liveOnly("fix-landed clip", async () => {
+        const title = `Codex fixed ${card.family} in ${((card.durations.timeToGreenMs as number) / 1000).toFixed(1)} s`;
+        const clip = await this.options.helix.clip(title);
+        if (!clip) return;
+        this.log({
+          type: "twitch.clip-requested",
+          roundId: card.roundId,
+          title,
+          clipId: clip.id,
+          url: clip.url,
+          titlePath: clip.titlePath,
+          ...(clip.titleRefusal ? { titleRefusal: clip.titleRefusal } : {}),
+        });
+        await this.chat(`Clip: ${clip.url}`);
+      }),
+    );
     this.schedule(`${card.roundId}:fixed`, async () => {
       const messageId = await this.chat(line);
       if (messageId)

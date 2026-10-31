@@ -24,6 +24,42 @@ function setup(responses: { status?: number; body?: unknown }[]) {
   return { helix, calls };
 }
 describe("raw authenticated Helix actions", () => {
+  it("sets the real Create Clip title query and returns the public URL with accepted status", async () => {
+    const { helix, calls } = setup([
+      { status: 202, body: { data: [{ id: "real-clip" }] } },
+    ]);
+    expect(await helix.clip("Codex fixed gravity-sign in 16.7 s")).toEqual({
+      id: "real-clip",
+      url: "https://clips.twitch.tv/real-clip",
+      titlePath: "accepted",
+    });
+    expect(calls[0]?.url.searchParams.get("title")).toBe(
+      "Codex fixed gravity-sign in 16.7 s",
+    );
+  });
+  it("falls back without a title on HTTP400 and retains the title refusal", async () => {
+    const { helix, calls } = setup([
+      { status: 400, body: { message: "Unknown title parameter" } },
+      { status: 202, body: { data: [{ id: "fallback-clip" }] } },
+    ]);
+    expect(await helix.clip("Codex fixed jump-buffer in 12.0 s")).toEqual({
+      id: "fallback-clip",
+      url: "https://clips.twitch.tv/fallback-clip",
+      titlePath: "fallback",
+      titleRefusal: "Twitch 400: Unknown title parameter",
+    });
+    expect(calls[0]?.url.searchParams.has("title")).toBe(true);
+    expect(calls[1]?.url.searchParams.has("title")).toBe(false);
+  });
+  it("does not retry titleless or non400 clip failures", async () => {
+    for (const title of [undefined, "Requested title"]) {
+      const { helix, calls } = setup([
+        { status: title ? 403 : 400, body: { message: "Refused" } },
+      ]);
+      await expect(helix.clip(title)).rejects.toThrow("Refused");
+      expect(calls).toHaveLength(1);
+    }
+  });
   it("gets custom Power-up metadata by broadcaster and exact redemption id", async () => {
     const { helix, calls } = setup([
       {

@@ -302,6 +302,7 @@ export async function runLiveCli(
         broadcasterId: account.userId,
         senderId: account.userId,
         accessToken,
+        record,
       }),
     });
     const live = controller;
