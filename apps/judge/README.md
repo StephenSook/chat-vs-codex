@@ -27,6 +27,15 @@ SHA-256 with the recorded receipt. A missing patched artifact or legacy frame
 digest is reported as unavailable. Matching a final outcome alone never counts
 as a proof. This verifies deterministic playback, not Twitch delivery or timing.
 
+The small BROKEN / FIXED comparison uses identical committed replay inputs for
+both exact build artifacts and one shared camera. Before rendering, it verifies
+the original recorded regression trace, repaired checkpoints and both displayed
+frame digests. It opens at actual position or survival separation within 600
+frames; a hash difference alone is insufficient. Play and scrub select real
+60 Hz frames. This re-simulation is separate from the recorded held-out MATCH
+and is unavailable when either original artifact cannot be reproduced exactly.
+See the [outside feedback note](../../docs/USER-FEEDBACK.md).
+
 The sandbox card derives a sanitized receipt from matching successful SDK and
 kernel probe output, including positive controls and the in-workspace temporary
 directory. Runtime logs and private round data are never scanned or bundled.
