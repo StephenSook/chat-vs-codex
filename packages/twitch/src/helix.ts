@@ -11,6 +11,10 @@ export interface LiveHelix {
   marker(description: string): Promise<void>;
   clip(): Promise<void>;
   pin(messageId: string): Promise<void>;
+  /** Read only; custom Power-ups are created in the broadcaster dashboard. */
+  powerUp?(
+    id: string,
+  ): Promise<{ id: string; broadcasterId: string; title: string }>;
 }
 
 export class TwitchRefusal extends Error {
@@ -132,6 +136,20 @@ export function createLiveHelix(options: {
       )[0];
       if (!row || typeof row.id !== "string" || !row.id)
         throw new Error("Twitch did not accept a clip request");
+    },
+    async powerUp(id) {
+      const row = rows(
+        await request("bits/custom_power_ups", "GET", {
+          broadcaster_id: options.broadcasterId,
+          id,
+        }),
+      ).find(
+        (entry) =>
+          entry.id === id && entry.broadcaster_id === options.broadcasterId,
+      );
+      if (!row || typeof row.title !== "string")
+        throw new Error("Twitch did not return the requested custom Power-up");
+      return { id, broadcasterId: options.broadcasterId, title: row.title };
     },
     async pin(messageId) {
       // The GA endpoint uses QUERY parameters, not a JSON body. Twurple has no pin helper.

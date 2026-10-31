@@ -16,6 +16,26 @@ const started = () =>
   });
 
 describe("broadcast event contract", () => {
+  it("shows the real raid count through preparation and head start", () => {
+    const raid = reduceBroadcast(initialBroadcast(), {
+      type: "twitch.raid",
+      viewers: 42,
+    });
+    expect(raid.raidViewers).toBe(42);
+    const preparing = reduceBroadcast(raid, {
+      type: "round.preparing",
+      id: "r1",
+    });
+    expect(preparing.raidViewers).toBe(42);
+    expect(
+      reduceBroadcast(preparing, {
+        type: "round.started",
+        id: "r1",
+        number: 1,
+        atMs: 1,
+      }).raidViewers,
+    ).toBe(42);
+  });
   it("orders SDK rows by original start rather than completion or patch observation", () => {
     let state = started();
     const event = (

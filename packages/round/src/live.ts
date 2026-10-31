@@ -20,6 +20,7 @@ export const BOT_REPLY_PREFIXES = [
   "Correct guess:",
   "Codex fixed ",
   "Codex failed.",
+  "Welcome raiders!",
 ] as const;
 
 export interface LiveEngine {
@@ -38,6 +39,8 @@ export class LiveRoundController {
   private readonly seenEffects = new Set<string>();
   private readonly pending = new Set<Promise<void>>();
   private readonly sentMessageIds = new Set<string>();
+  private raidArmed = false;
+  private raidSequence = 0;
   private outgoing = Promise.resolve();
   private stopped = false;
   private redemption: {
@@ -56,6 +59,7 @@ export class LiveRoundController {
       helix: LiveHelix;
       identify(actor: string): string;
       record(event: Record<string, unknown>): void;
+      publish?(event: RoundEvent): void;
       dryChat?: boolean;
       allowBroadcasterTest?: boolean;
       cooldownMs?: number;
@@ -133,7 +137,64 @@ export class LiveRoundController {
           this.redemption = null;
         }
         return;
-      } else return; // Other monetization and raids remain disabled.
+      } else if (message.type === "channel.raid") {
+        const data = message.event;
+        if (
+          data.to_broadcaster_user_id !== options.broadcasterId ||
+          !Number.isSafeInteger(data.viewers) ||
+          data.viewers < 0
+        )
+          return;
+        this.raidArmed = true;
+        const stamp = eventStamp();
+        this.options.publish?.({
+          ...stamp,
+          type: "overlay",
+          event: {
+            type: "twitch.raid",
+            viewers: data.viewers,
+          },
+        });
+        this.log({ type: "twitch.raid-armed", viewers: data.viewers });
+        this.schedule(`raid:${++this.raidSequence}:welcome`, async () => {
+          await this.chat(
+            "Welcome raiders! Type !break to break the game, then !guess <family>. Chat gets 15 s.",
+          );
+        });
+        return;
+      } else if (message.type === "channel.custom_power_up_redemption.add") {
+        const data = message.event;
+        if (
+          data.broadcaster_user_id !== options.broadcasterId ||
+          data.status === "canceled"
+        )
+          return;
+        this.remember(data.user_id, data.user_name);
+        this.schedule(`power-up:${data.id}`, async () => {
+          if (!this.options.helix.powerUp)
+            throw new Error("Custom Power-up lookup unavailable");
+          const power = await this.options.helix.powerUp(
+            data.custom_power_up.id,
+          );
+          if (
+            power.id !== data.custom_power_up.id ||
+            power.broadcasterId !== options.broadcasterId
+          )
+            throw new Error(
+              "Custom Power-up lookup did not match the redemption",
+            );
+          if (this.stopped) return;
+          this.log({ type: "twitch.power-up-read", powerUpId: power.id });
+          this.publicIntent({
+            kind: "break-requested",
+            source: "power-up",
+            actor: data.user_id,
+            bugCount: 1,
+            severity: 1,
+          });
+        });
+        return;
+      } else return;
       accept(message);
     };
   }
@@ -190,6 +251,14 @@ export class LiveRoundController {
     }
     if (intent.kind !== "break-requested" && intent.kind !== "guess-submitted")
       return;
+    if (
+      intent.kind === "break-requested" &&
+      intent.source === "chat" &&
+      this.raidArmed
+    ) {
+      intent = { ...intent, source: "raid" };
+      this.raidArmed = false;
+    }
     this.currentActor = intent.actor;
     try {
       this.engine?.handlePublic(intent);

@@ -293,6 +293,7 @@ export async function runLiveCli(
       botUserId: account.userId,
       identify: (actor) => viewerLabel(actor, key),
       record,
+      publish: (event) => server?.publish(event),
       dryChat: flags.dryChat,
       allowBroadcasterTest: flags.allowBroadcasterTest,
       ...(reward ? { rewards: { api: rewards, capability: reward } } : {}),

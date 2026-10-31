@@ -70,6 +70,8 @@ function validateOverlay(event: unknown): event is OverlayEvent {
   const integer = (key: string) =>
     Number.isSafeInteger(e[key]) && Number(e[key]) >= 0;
   switch (e.type) {
+    case "twitch.raid":
+      return integer("viewers");
     case "round.preparing":
       return typeof e.id === "string";
     case "round.started":

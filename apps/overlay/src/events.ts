@@ -29,6 +29,7 @@ export type CodexStep =
   | { kind: "activity"; action: CodexAction };
 
 export type OverlayEvent =
+  | { type: "twitch.raid"; viewers: number }
   | { type: "round.preparing"; id: string }
   | {
       type: "round.started";
@@ -98,6 +99,7 @@ export interface BroadcastState {
   total: number | null;
   autopsy: RoundAutopsy | null;
   ghost: RoundValidationReplay | null;
+  raidViewers: number | null;
 }
 
 export function initialBroadcast(): BroadcastState {
@@ -118,6 +120,7 @@ export function initialBroadcast(): BroadcastState {
     total: null,
     autopsy: null,
     ghost: null,
+    raidViewers: null,
   };
 }
 
@@ -153,10 +156,13 @@ export function reduceBroadcast(
 ): BroadcastState {
   if ("roundId" in event && event.roundId !== state.roundId) return state;
   switch (event.type) {
+    case "twitch.raid":
+      return { ...state, raidViewers: event.viewers };
     case "round.preparing":
       return {
         ...initialBroadcast(),
         roundId: event.id,
+        raidViewers: state.raidViewers,
         chat: state.chat,
         codex: state.codex,
       };
@@ -167,6 +173,7 @@ export function reduceBroadcast(
         codex: state.codex,
         roundId: event.id,
         round: event.number,
+        raidViewers: state.raidViewers,
         startedAtMs: event.atMs,
         headStartMs:
           event.headStartMs === undefined
@@ -209,6 +216,7 @@ export function reduceBroadcast(
         ? {
             ...state,
             autopsy: event.autopsy,
+            raidViewers: null,
             ghost: event.autopsy.status === "rolled-back" ? null : state.ghost,
           }
         : state;

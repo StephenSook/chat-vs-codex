@@ -538,3 +538,26 @@ describe("artifact integrity", () => {
     expect(() => bridgeOrigin("https://evil.example")).toThrow("loopback");
   });
 });
+
+it("accepts only nonnegative integer raid counts from the real bridge", () => {
+  expect(
+    parseRoundEnvelope(
+      envelope(1, {
+        type: "overlay",
+        event: { type: "twitch.raid", viewers: 42 },
+      }),
+    ).event,
+  ).toMatchObject({
+    type: "overlay",
+    event: { type: "twitch.raid", viewers: 42 },
+  });
+  for (const viewers of [-1, 1.5, "42", NaN])
+    expect(() =>
+      parseRoundEnvelope(
+        envelope(1, {
+          type: "overlay",
+          event: { type: "twitch.raid", viewers },
+        } as unknown as RoundEvent),
+      ),
+    ).toThrow();
+});

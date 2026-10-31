@@ -555,3 +555,17 @@ canvas:focus-visible {
   font-size: 18px;
   line-height: 23px;
 }
+
+.raid-banner {
+  position: absolute;
+  top: 178px;
+  left: 690px;
+  min-width: 320px;
+  padding: 10px 24px;
+  text-align: center;
+  font-family: "Bungee", sans-serif;
+  font-size: 36px;
+  color: #1f1d1b;
+  background: #f7914e;
+  z-index: 8;
+}

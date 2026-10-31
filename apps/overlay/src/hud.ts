@@ -14,6 +14,9 @@ export function resizeStage(): void {
 }
 
 export function renderBroadcast(state: BroadcastState): void {
+  element("raid-banner").hidden = state.raidViewers === null;
+  element("raid-banner").textContent =
+    state.raidViewers === null ? "" : `RAID · ${state.raidViewers}`;
   element("chat-score").textContent = String(state.chat);
   element("codex-score").textContent = String(state.codex);
   element("death-count").textContent = String(state.deaths);

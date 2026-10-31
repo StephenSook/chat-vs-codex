@@ -24,6 +24,42 @@ function setup(responses: { status?: number; body?: unknown }[]) {
   return { helix, calls };
 }
 describe("raw authenticated Helix actions", () => {
+  it("gets custom Power-up metadata by broadcaster and exact redemption id", async () => {
+    const { helix, calls } = setup([
+      {
+        body: {
+          data: [
+            { id: "power", broadcaster_id: "channel", title: "Break the game" },
+          ],
+        },
+      },
+    ]);
+    expect(await helix.powerUp?.("power")).toEqual({
+      id: "power",
+      broadcasterId: "channel",
+      title: "Break the game",
+    });
+    expect(calls[0]?.init.method).toBe("GET");
+    expect(calls[0]?.url.pathname).toBe("/helix/bits/custom_power_ups");
+    expect(Object.fromEntries(calls[0]?.url.searchParams ?? [])).toEqual({
+      broadcaster_id: "channel",
+      id: "power",
+    });
+  });
+  it("refuses custom Power-up metadata for another broadcaster or id", async () => {
+    const { helix } = setup([
+      {
+        body: {
+          data: [
+            { id: "power", broadcaster_id: "another", title: "Break the game" },
+          ],
+        },
+      },
+    ]);
+    await expect(helix.powerUp?.("power")).rejects.toThrow(
+      "requested custom Power-up",
+    );
+  });
   it("detects live only from the channel's Get Streams result", async () => {
     const { helix, calls } = setup([
       { body: { data: [] } },
