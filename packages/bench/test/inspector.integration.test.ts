@@ -6,6 +6,7 @@ import { build } from "esbuild";
 import { expect, it, vi } from "vitest";
 import { parseInspectorData } from "../../inspector-mcp/src/index.js";
 import { type PooledMutant, ROOT } from "../../mutator/src/gate.js";
+import { enumerateCandidates } from "../../mutator/src/live.js";
 import { HELD_OUT, TRACKS } from "../../replay/src/index.js";
 import { executeRepair } from "../../round/src/runtime-execution.js";
 import { materializeInspector } from "../src/inspector.js";
@@ -206,3 +207,33 @@ it("streams a real Inspector stdio call before a fake CLI repair, then passes th
     await rm(logs, { recursive: true, force: true });
   }
 }, 30000);
+
+it("records an exact newly enumerated original absent from the static pool while preserving byte guards", async () => {
+  const pool = JSON.parse(
+    await readFile(join(ROOT, "packages/mutator/pool.json"), "utf8"),
+  ) as { mutants: PooledMutant[] };
+  const base = pool.mutants.find((row) => row.family === "gravity-sign");
+  const candidate = (await enumerateCandidates()).find(
+    (row) =>
+      row.site === "collision" &&
+      row.replacement === "false" &&
+      !pool.mutants.some((item) => item.id === row.id),
+  );
+  if (!base || !candidate) throw new Error("Missing nonpool original fixture");
+  const mutant = { ...base, ...candidate };
+  const workspace = await prepareWorkspace(mutant, undefined, true);
+  try {
+    const data = parseInspectorData(
+      JSON.parse(
+        await readFile(
+          join(workspace.game, "fixtures/inspector/traces.json"),
+          "utf8",
+        ),
+      ),
+    );
+    expect(data.tracks).toHaveLength(TRACKS.length);
+    expect(git(workspace.game, ["rev-list", "--count", "HEAD"])).toBe("1");
+  } finally {
+    await workspace.cleanup();
+  }
+});

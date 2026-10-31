@@ -6,6 +6,18 @@ login, app, user and all 11 scopes, runs the clean sandbox gate, then opens one
 EventSub WebSocket on `steve_sociall`, including while offline. Build the overlay
 first. No command means no Codex call. Ctrl+C stops the listener and active round.
 
+At each live start, Stryker enumerates the full operator x authorized-site space.
+The server shuffles candidates in the six enum families, excluding credited
+regressions, and checks them in an isolated worker for up to 10 seconds. Live and
+offline generation share typecheck, minified difference, failing replay,
+visibility within 600 frames, 20-second canary survival and replay frame/process
+limits. Only an exhausted generation deadline selects a pre-gated pool fallback;
+setup errors or exhausting the candidate space fail the round. Worker descendants
+are killed and scratch data removed before fallback. Explicit fixture IDs use the
+pool directly. Receipts record `live-gated`, `pool-timeout` or `fixture-pool`,
+source and candidate hashes, enumeration/attempt counts, gates and elapsed time.
+No candidate source, operator or family reaches the overlay before the reveal.
+
 Runtime rounds register the [Game Inspector](../inspector-mcp/README.md) stdio
 tools before repair. Immutable recordings cover only the original buggy visible
 replays. The Inspector runs with read-only workspace access, no network and the

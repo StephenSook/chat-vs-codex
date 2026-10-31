@@ -1093,6 +1093,35 @@ describe("abort and failure boundaries", () => {
   });
 });
 
+it("publishes generation provenance before bug installation without revealing a family", async () => {
+  const mutation = {
+    path: "live-gated" as const,
+    sourceDigest: "a".repeat(64),
+    candidateDigest: "b".repeat(64),
+    enumerated: 160,
+    eligible: 60,
+    attempted: 1,
+    budgetMs: 10000,
+    elapsedMs: 1200,
+    gates: {
+      typecheck: true as const,
+      differentMinifiedOutput: true as const,
+      killed: true as const,
+      visible: true as const,
+      frameBudget: 3600,
+      processBudgetMs: 3000,
+      canaryFrames: 1200,
+    },
+  };
+  const context = setup();
+  context.game.mutation = mutation;
+  breakGame(context.engine);
+  await vi.advanceTimersByTimeAsync(0);
+  const generated = context.events.find((row) => row.type === "round.mutation");
+  expect(generated).toMatchObject({ type: "round.mutation", mutation });
+  expect(JSON.stringify(generated)).not.toContain("gravity-sign");
+});
+
 describe("SDK presentation honesty", () => {
   it("maps observed read/test commands without leaking outputs or claiming shell success proves green", () => {
     expect(

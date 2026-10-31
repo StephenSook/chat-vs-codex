@@ -572,6 +572,12 @@ export class RoundEngine {
         },
       );
       round.prepared = prepared;
+      if (prepared.mutation)
+        this.publish({
+          type: "round.mutation",
+          roundId: round.id,
+          mutation: prepared.mutation,
+        });
       stage = "activation";
       // The callback installs code without replacing the browser's world state.
       // It also publishes game.build. Presentation time begins only after install.

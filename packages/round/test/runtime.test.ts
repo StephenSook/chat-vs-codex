@@ -849,6 +849,8 @@ describe("round runtime verification", () => {
       );
       const roundId = "00000000-0000-0000-0000-000000000003";
       prepared = await runtime.prepare(roundId, new AbortController().signal);
+      expect(prepared.mutation?.path).toBe("fixture-pool");
+      expect(prepared.mutation?.candidateDigest).toMatch(/^[a-f0-9]{64}$/);
       const recordRegression = prepared.recordRegression;
       if (!recordRegression) throw new Error("Missing regression hook");
       const credit = { roundId, viewer: "viewer-dddddddddddddddd" };

@@ -13,7 +13,9 @@ No tool executes source, reads a caller-selected file, or exposes the held-out
 track, clean TypeScript, viewer identity or mutation metadata.
 
 Before the trial's single initial commit, the host captures only its byte-verified
-trusted pool candidate in a three-second bounded worker. It writes telemetry
+trusted Stryker candidate in a three-second bounded worker. Candidates must match
+the pool or exact current-source enumeration; arbitrary replacement text is refused.
+It writes telemetry
 and the dependency-free bundled stdio server into fixtures/inspector. Those files
 are read-protected by the existing hotfix profile and included in the immutable
 source guard. Runtime SDK configuration starts the server through an explicit

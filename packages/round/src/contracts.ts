@@ -1,6 +1,7 @@
 import type { ThreadEvent } from "@openai/codex-sdk";
 import type { OverlayEvent } from "../../../apps/overlay/src/events.js";
 import type { ValidatedReplay } from "../../bench/src/validated-replay.js";
+import type { MutationProvenance } from "../../mutator/src/live.js";
 import type { BugFamily } from "../../twitch/src/events.js";
 
 /** Host-owned session identity, sent on each SSE connection before round events. */
@@ -117,6 +118,7 @@ export interface PreviousVerifiedRound {
 }
 
 export interface PreparedGame {
+  mutation?: MutationProvenance;
   family: BugFamily;
   clean: GameArtifact;
   broken: GameArtifact;
@@ -145,6 +147,7 @@ export interface RoundRuntime {
 }
 
 type RoundEventPayload =
+  | { type: "round.mutation"; roundId: string; mutation: MutationProvenance }
   | { type: "overlay"; event: OverlayEvent }
   | {
       type: "game.build";

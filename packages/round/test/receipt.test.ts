@@ -387,3 +387,48 @@ it("retains terminal autopsy evidence without copying unrelated fields or raw vi
   input.result.autopsy.firstCorrectGuesser = "raw-user";
   expect(() => publicReceipt(input)).toThrow("verified");
 });
+
+it("retains live mutation gate provenance without leaking candidate bytes or arbitrary metadata", () => {
+  const input = verified();
+  const mutation = {
+    path: "live-gated" as const,
+    sourceDigest: "a".repeat(64),
+    candidateDigest: "b".repeat(64),
+    enumerated: 160,
+    eligible: 60,
+    attempted: 2,
+    budgetMs: 10000,
+    elapsedMs: 3200,
+    gates: {
+      typecheck: true as const,
+      differentMinifiedOutput: true as const,
+      killed: true as const,
+      visible: true as const,
+      frameBudget: 3600,
+      processBudgetMs: 3000,
+      canaryFrames: 1200,
+    },
+    replacement: "secret replacement",
+  };
+  const receipt = publicReceipt({
+    ...input,
+    events: [
+      {
+        sequence: 1,
+        serverTimeMs: 1,
+        event: {
+          type: "round.mutation",
+          roundId: input.result.roundId ?? "",
+          mutation,
+        },
+      },
+    ],
+  });
+  expect(receipt.mutation).toMatchObject({
+    path: "live-gated",
+    attempted: 2,
+    elapsedMs: 3200,
+  });
+  expect(JSON.stringify(receipt)).not.toContain("secret replacement");
+  expect(publicReceipt(input).mutation).toBeNull();
+});

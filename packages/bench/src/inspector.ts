@@ -11,6 +11,7 @@ import {
 } from "../../inspector-mcp/src/index.js";
 import { type PooledMutant, ROOT } from "../../mutator/src/gate.js";
 import { applyCandidate } from "../../mutator/src/index.js";
+import { trustedOriginalMutation } from "../../mutator/src/trust.js";
 import { TRACKS } from "../../replay/src/index.js";
 import { createState, step } from "../../sim/src/index.js";
 import { confinedBundlePlugin } from "./confined-bundle.js";
@@ -21,17 +22,10 @@ export async function materializeInspector(
   game: string,
   mutant: PooledMutant | null,
 ): Promise<void> {
-  if (mutant) {
-    const pool = JSON.parse(
-      await readFile(join(ROOT, "packages/mutator/pool.json"), "utf8"),
-    ) as { mutants: PooledMutant[] };
-    if (
-      !pool.mutants.some(
-        (candidate) => JSON.stringify(candidate) === JSON.stringify(mutant),
-      )
-    )
-      throw new Error("Inspector requires a trusted pooled original mutant");
-  }
+  if (mutant && !(await trustedOriginalMutation(mutant)))
+    throw new Error(
+      "Inspector requires a trusted pooled original or enumerated original mutant",
+    );
   for (const file of ["index.ts", "world.ts"]) {
     const clean = await readFile(join(ROOT, "packages/sim/src", file), "utf8");
     const expected =

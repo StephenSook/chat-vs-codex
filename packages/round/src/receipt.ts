@@ -195,8 +195,38 @@ export function publicReceipt(input: {
     throw new Error(
       "Public receipts require a verified state-preserving round",
     );
+  const mutationEvent = [...input.events]
+    .reverse()
+    .find(
+      ({ event }) =>
+        event.type === "round.mutation" && event.roundId === result.roundId,
+    )?.event;
+  const mutation =
+    mutationEvent?.type === "round.mutation" ? mutationEvent.mutation : null;
   return {
     schemaVersion: 1,
+    mutation:
+      mutation === null
+        ? null
+        : {
+            path: mutation.path,
+            sourceDigest: mutation.sourceDigest,
+            candidateDigest: mutation.candidateDigest,
+            enumerated: mutation.enumerated,
+            eligible: mutation.eligible,
+            attempted: mutation.attempted,
+            budgetMs: mutation.budgetMs,
+            elapsedMs: mutation.elapsedMs,
+            gates: {
+              typecheck: mutation.gates.typecheck,
+              differentMinifiedOutput: mutation.gates.differentMinifiedOutput,
+              killed: mutation.gates.killed,
+              visible: mutation.gates.visible,
+              frameBudget: mutation.gates.frameBudget,
+              processBudgetMs: mutation.gates.processBudgetMs,
+              canaryFrames: mutation.gates.canaryFrames,
+            },
+          },
     roundId: result.roundId,
     ...provenance,
     mode: input.mode ?? "local-fixture",

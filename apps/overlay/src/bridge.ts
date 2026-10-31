@@ -234,6 +234,37 @@ export function parseRoundEnvelope(value: unknown): RoundEnvelope {
     (event.trigger !== undefined && event.trigger !== "broadcaster-test")
   )
     throw new Error("Invalid round trigger");
+  if (event.type === "round.mutation") {
+    const mutation = event.mutation;
+    const gates = mutation?.gates;
+    if (
+      typeof event.roundId !== "string" ||
+      !mutation ||
+      !gates ||
+      !["live-gated", "pool-timeout", "fixture-pool"].includes(mutation.path) ||
+      ![mutation.sourceDigest, mutation.candidateDigest].every(
+        (value) => typeof value === "string" && /^[a-f0-9]{64}$/.test(value),
+      ) ||
+      ![
+        mutation.enumerated,
+        mutation.eligible,
+        mutation.attempted,
+        mutation.budgetMs,
+      ].every((value) => Number.isSafeInteger(value) && value >= 0) ||
+      !Number.isFinite(mutation.elapsedMs) ||
+      mutation.elapsedMs < 0 ||
+      gates.typecheck !== true ||
+      gates.differentMinifiedOutput !== true ||
+      gates.killed !== true ||
+      gates.visible !== true ||
+      gates.frameBudget !== 3600 ||
+      gates.processBudgetMs !== 3000 ||
+      !Number.isSafeInteger(gates.canaryFrames) ||
+      gates.canaryFrames < 1200
+    )
+      throw new Error("Invalid mutation provenance");
+    return e;
+  }
   if (event.type === "overlay" && validateOverlay(event.event)) {
     if (
       (e.trigger === "broadcaster-test" ||
@@ -383,7 +414,7 @@ export class OrderedRoundBridge {
                 }
               : event.event,
           );
-        } else {
+        } else if (event.type === "round.state") {
           if (event.phase === "preparing" && event.roundId !== null)
             this.options.events.publish({
               type: "round.preparing",

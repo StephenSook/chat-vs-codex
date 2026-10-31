@@ -113,7 +113,7 @@ export function operatorFamily(candidate: Candidate): string {
   return "other";
 }
 
-async function minified(root: string): Promise<string> {
+export async function minified(root: string): Promise<string> {
   const result = await build({
     entryPoints: [join(root, "packages/sim/src/index.ts")],
     bundle: true,
@@ -128,12 +128,15 @@ async function minified(root: string): Promise<string> {
   return code;
 }
 
-interface Execution {
+export interface Execution {
   tracks: { name: string; result: ReplayResult }[];
   canary: ReplayResult;
 }
 
-async function execute(root: string, scratch: string): Promise<Execution> {
+export async function execute(
+  root: string,
+  scratch: string,
+): Promise<Execution> {
   const entry = join(scratch, "runner.ts");
   await writeFile(
     entry,
@@ -166,6 +169,74 @@ async function execute(root: string, scratch: string): Promise<Execution> {
     runBounded(process.execPath, [outfile, "canary"], scratch, 3000),
   ) as ReplayResult;
   return { tracks, canary };
+}
+
+export type CandidateGateResult =
+  | { accepted: PooledMutant }
+  | { rejected: { stage: string; detail: string } };
+
+/** The offline pool and round-time generator share every candidate acceptance gate. */
+export async function gateCandidate(
+  workspace: string,
+  scratch: string,
+  cleanCode: string,
+  clean: Execution,
+  candidate: Candidate,
+  checkTypes: () => void,
+): Promise<CandidateGateResult> {
+  const path = join(workspace, candidate.file);
+  const original = await readFile(path, "utf8");
+  let stage = "typecheck";
+  try {
+    stage = "typecheck";
+    await writeFile(path, applyCandidate(original, candidate));
+    checkTypes();
+    stage = "equivalent";
+    if ((await minified(workspace)) === cleanCode)
+      throw new Error("Minified code equals clean build");
+    stage = "replay-budget";
+    const bugged = await execute(workspace, scratch);
+    const evidence = clean.tracks.map((track, i) => {
+      const other = bugged.tracks[i];
+      if (!other || other.name !== track.name)
+        throw new Error("Missing replay");
+      return compareReplay(track.name, track.result, other.result);
+    });
+    stage = "survived";
+    if (!evidence.some((e) => e.failed)) throw new Error("All replays pass");
+    stage = "invisible";
+    if (!evidence.some((e) => e.visibleFrame !== null))
+      throw new Error("No visible effect within 600 frames");
+    stage = "unsurvivable";
+    if (
+      !bugged.canary.outcome.alive ||
+      bugged.canary.outcome.won ||
+      bugged.canary.outcome.frame < 1200 ||
+      bugged.canary.samples.some((s) => !s.alive || s.won)
+    )
+      throw new Error("Canary did not survive 1200 active frames");
+    return {
+      accepted: {
+        ...candidate,
+        family: operatorFamily(candidate),
+        failedReplays: evidence.filter((e) => e.failed).map((e) => e.name),
+        evidence,
+        gates: {
+          typecheck: true,
+          differentMinifiedOutput: true,
+          killed: true,
+          visible: true,
+          frameBudget: 3600,
+          processBudgetMs: 3000,
+          canaryFrames: bugged.canary.outcome.frame,
+        },
+      },
+    };
+  } catch (error) {
+    return { rejected: { stage, detail: String(error) } };
+  } finally {
+    await writeFile(path, original);
+  }
 }
 
 /** All generated and executed code stays in disposable offline workspaces. */
@@ -264,49 +335,16 @@ export async function generatePool(): Promise<void> {
           throw new Error(
             "Original mutation is already killed by a credited regression",
           );
-        stage = "typecheck";
-        await writeFile(path, applyCandidate(original, candidate));
-        checkTypes();
-        stage = "equivalent";
-        if ((await minified(workspace)) === cleanCode)
-          throw new Error("Minified code equals clean build");
-        stage = "replay-budget";
-        const bugged = await execute(workspace, parent);
-        const evidence = clean.tracks.map((track, i) => {
-          const other = bugged.tracks[i];
-          if (!other || other.name !== track.name)
-            throw new Error("Missing replay");
-          return compareReplay(track.name, track.result, other.result);
-        });
-        stage = "survived";
-        if (!evidence.some((e) => e.failed))
-          throw new Error("All replays pass");
-        stage = "invisible";
-        if (!evidence.some((e) => e.visibleFrame !== null))
-          throw new Error("No visible effect within 600 frames");
-        stage = "unsurvivable";
-        if (
-          !bugged.canary.outcome.alive ||
-          bugged.canary.outcome.won ||
-          bugged.canary.outcome.frame < 1200 ||
-          bugged.canary.samples.some((s) => !s.alive || s.won)
-        )
-          throw new Error("Canary did not survive 1200 active frames");
-        accepted.push({
-          ...candidate,
-          family: operatorFamily(candidate),
-          failedReplays: evidence.filter((e) => e.failed).map((e) => e.name),
-          evidence,
-          gates: {
-            typecheck: true,
-            differentMinifiedOutput: true,
-            killed: true,
-            visible: true,
-            frameBudget: 3600,
-            processBudgetMs: 3000,
-            canaryFrames: bugged.canary.outcome.frame,
-          },
-        });
+        const gated = await gateCandidate(
+          workspace,
+          parent,
+          cleanCode,
+          clean,
+          candidate,
+          checkTypes,
+        );
+        if ("accepted" in gated) accepted.push(gated.accepted);
+        else rejected.push({ id: candidate.id, ...gated.rejected });
       } catch (error) {
         rejected.push({ id: candidate.id, stage, detail: String(error) });
       } finally {

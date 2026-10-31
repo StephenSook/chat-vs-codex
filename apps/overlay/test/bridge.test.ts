@@ -96,6 +96,48 @@ function fixture(
 }
 
 describe("ordered round bridge", () => {
+  it("accepts actual mutation provenance without creating ticker activity or a sequence gap", async () => {
+    const f = fixture();
+    await f.bridge.receive(envelope(1, preparing("r")));
+    const count = f.received.length;
+    const event: RoundEvent = {
+      type: "round.mutation",
+      roundId: "r",
+      mutation: {
+        path: "live-gated",
+        sourceDigest: "a".repeat(64),
+        candidateDigest: "b".repeat(64),
+        enumerated: 160,
+        eligible: 30,
+        attempted: 1,
+        budgetMs: 10000,
+        elapsedMs: 2400,
+        gates: {
+          typecheck: true,
+          differentMinifiedOutput: true,
+          killed: true,
+          visible: true,
+          frameBudget: 3600,
+          processBudgetMs: 3000,
+          canaryFrames: 1200,
+        },
+      },
+    };
+    await f.bridge.receive(envelope(2, event));
+    expect(f.received).toHaveLength(count);
+    await f.bridge.receive(envelope(3, build("r")));
+    expect(f.loadBuild).toHaveBeenCalledOnce();
+    expect(() =>
+      parseRoundEnvelope(
+        envelope(4, {
+          ...event,
+          mutation: { ...event.mutation, candidateDigest: "bad" },
+        }),
+      ),
+    ).toThrow("Invalid mutation provenance");
+    expect(f.onError).not.toHaveBeenCalled();
+  });
+
   it("installs only repaired source matching the observed validated replay, with no delay for playback", async () => {
     const f = fixture();
     await f.bridge.receive(envelope(1, started("r")));

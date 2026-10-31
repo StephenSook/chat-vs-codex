@@ -13,6 +13,7 @@ import { build } from "esbuild";
 import type { PooledMutant } from "../../mutator/src/gate.js";
 import { applyCandidate, type Candidate } from "../../mutator/src/index.js";
 import { runBounded } from "../../mutator/src/process.js";
+import { trustedOriginalMutation } from "../../mutator/src/trust.js";
 import {
   CANARY,
   MAX_FRAMES,
@@ -356,18 +357,9 @@ export async function captureRegression(
   mutant: PooledMutant,
   sourceDigest: string,
 ): Promise<RegressionProof> {
-  const pool = JSON.parse(
-    await readFile(join(ROOT, "packages/mutator/pool.json"), "utf8"),
-  ) as { sourceDigest: string; mutants: PooledMutant[] };
-  const pooled = pool.mutants.find((candidate) => candidate.id === mutant.id);
-  if (
-    pool.sourceDigest !== sourceDigest ||
-    !pooled ||
-    JSON.stringify(candidateOnly(pooled)) !==
-      JSON.stringify(candidateOnly(mutant))
-  )
+  if (!(await trustedOriginalMutation(mutant, sourceDigest)))
     throw new Error(
-      "Regression worker requires a trusted pooled original mutant",
+      "Regression worker requires a trusted pooled original or enumerated original mutant",
     );
   const sources: Record<string, string> = {};
   const local = mutant.file.replace(/^packages\/sim\//, "");

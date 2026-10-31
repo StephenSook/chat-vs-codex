@@ -1,11 +1,10 @@
 import { fork } from "node:child_process";
-import { randomInt, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 import { appendFile, mkdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import type { ThreadEvent } from "@openai/codex-sdk";
 import {
   captureRegression,
-  eligibleMutants,
   loadRegressions,
   persistRegression,
   REGRESSIONS_DIRECTORY,
@@ -18,6 +17,7 @@ import {
   ROOT,
   sourceDigest,
 } from "../../mutator/src/gate.js";
+import { selectRoundMutation } from "../../mutator/src/live.js";
 import { BUG_FAMILIES, type BugFamily } from "../../twitch/src/events.js";
 import { eventStamp } from "./clocks.js";
 import type {
@@ -34,6 +34,7 @@ export interface RoundRuntimeOptions {
   /** Offline fixture selection only. Never included in the SDK ticket or workspace. */
   fixtureMutantId?: string;
   regressionsDirectory?: string;
+  liveGateBudgetMs?: number;
 }
 
 /** A detached worker bounds SDK hangs, validation loops and bundling independently. */
@@ -150,7 +151,10 @@ export async function superviseRepair(
 
 export function createRoundRuntime(
   options: RoundRuntimeOptions,
-  dependencies: { repair?: typeof superviseRepair } = {},
+  dependencies: {
+    repair?: typeof superviseRepair;
+    selectMutation?: typeof selectRoundMutation;
+  } = {},
 ): RoundRuntime {
   const runs = resolve(options.runsDirectory);
   const regressionsDirectory =
@@ -165,19 +169,21 @@ export function createRoundRuntime(
       ) as { sourceDigest: string; mutants: PooledMutant[] };
       if (pool.sourceDigest !== (await sourceDigest()))
         throw new Error("Mutation pool is stale");
-      const eligible = eligibleMutants(
-        pool.mutants,
-        pool.sourceDigest,
-        await loadRegressions(regressionsDirectory),
-      ).filter(
-        (mutant) =>
-          BUG_FAMILIES.includes(mutant.family as BugFamily) &&
-          (family === undefined || mutant.family === family),
-      );
-      const mutant = options.fixtureMutantId
-        ? eligible.find((item) => item.id === options.fixtureMutantId)
-        : eligible[randomInt(eligible.length || 1)];
-      if (!mutant) throw new Error("No eligible pooled mutant");
+      const { mutant, provenance } = await (
+        dependencies.selectMutation ?? selectRoundMutation
+      )({
+        sourceDigest: pool.sourceDigest,
+        pool: pool.mutants,
+        regressions: await loadRegressions(regressionsDirectory),
+        signal,
+        ...(family === undefined ? {} : { family }),
+        ...(options.fixtureMutantId === undefined
+          ? {}
+          : { fixtureMutantId: options.fixtureMutantId }),
+        ...(options.liveGateBudgetMs === undefined
+          ? {}
+          : { budgetMs: options.liveGateBudgetMs }),
+      });
       await mkdir(runs, { recursive: true, mode: 0o700 });
       const logFile = join(runs, `${randomUUID()}.jsonl`);
       const workspace = await prepareWorkspace(
@@ -211,12 +217,13 @@ export function createRoundRuntime(
         const stamp = eventStamp();
         await appendFile(
           logFile,
-          `${JSON.stringify({ ...stamp, timestamp: stamp.wallTime, kind: "round.prepared", roundId, mutantId: mutant.id, family: mutant.family, sourceDigest: pool.sourceDigest, cleanSourceDigest: proof.cleanSourceDigest, brokenSourceDigest: proof.brokenSourceDigest, cleanBuildDigest: clean.digest, brokenBuildDigest: broken.digest })}\n`,
+          `${JSON.stringify({ ...stamp, timestamp: stamp.wallTime, kind: "round.prepared", mutation: provenance, roundId, mutantId: mutant.id, family: mutant.family, sourceDigest: pool.sourceDigest, cleanSourceDigest: proof.cleanSourceDigest, brokenSourceDigest: proof.brokenSourceDigest, cleanBuildDigest: clean.digest, brokenBuildDigest: broken.digest })}\n`,
           { mode: 0o600 },
         );
         signal.throwIfAborted();
         return {
           family: mutant.family as BugFamily,
+          mutation: provenance,
           clean,
           broken,
           repair(repair) {
