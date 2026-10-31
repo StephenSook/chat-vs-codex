@@ -68,6 +68,12 @@ equality against the clean build is recorded separately as exact-revert rate.
 Events, validation stdout/stderr and run manifests go to `bench/runs/*.jsonl`;
 each trial appends to `bench/results.jsonl`. Return these files for committing
 after an outside-sandbox run. No measured timing or fix-rate claim exists yet.
+The single sandbox dry run exited before a model thread started: a PATH-alias
+permission warning preceded a fatal permission-profile parsing error. Its raw
+record says `sandbox-blocked`; the accompanying diagnosis identifies the fatal
+config error. Quoted path keys now stay inside inline TOML override values,
+verified against the unchanged profile offline. No second trial was attempted;
+actual runtime enforcement still requires the outside-sandbox canary.
 Recompute with `pnpm bench --summary` (add `--batch <id>` for multiple batches).
 Use `--head-start 15` to select the chat head start in seconds.
 

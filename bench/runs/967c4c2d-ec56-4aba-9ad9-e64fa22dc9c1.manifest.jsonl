@@ -1,0 +1,1 @@
+{"batchId":"967c4c2d-ec56-4aba-9ad9-e64fa22dc9c1","sourceDigest":"18003dafdbc232283bfcd918431f4aa20772c31414df5af5d28153b5aba0810c","dryRun":true,"schedule":[{"mutantId":"87496ad157291936","family":"gravity-sign","model":"gpt-6.1-terra","effort":"low"}]}
