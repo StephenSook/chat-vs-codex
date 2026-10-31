@@ -56,3 +56,11 @@ export function greenSplit(value: number | null | undefined): string {
   const centiseconds = Math.round(value / 10);
   return `GREEN ${Math.floor(centiseconds / 6000)}:${((centiseconds % 6000) / 100).toFixed(2).padStart(5, "0")}`;
 }
+
+/** Early runs predate the measured autopsy. Keep their evidence, not a blank card. */
+export function isEarlierTestRound(receipt: Receipt): boolean {
+  return (
+    receipt.durations?.timeToGreenMs == null &&
+    !receipt.autopsy?.patch?.preview.length
+  );
+}

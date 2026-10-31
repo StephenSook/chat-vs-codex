@@ -9,11 +9,57 @@ test("committed evidence recomputes in a static preview at desktop and phone wid
   page.on("request", (request) => requests.push(request.url()));
   await page.goto("/");
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
-  await expect(page.locator("h1")).toHaveText("CHAT / VS / CODEX");
+  await expect(page.locator("h1")).toHaveAccessibleName("CHAT vs CODEX");
+  await expect(page.locator(".brand-chat")).toHaveCSS(
+    "background-color",
+    "rgb(247, 145, 78)",
+  );
+  await expect(page.locator(".brand-chat")).toHaveCSS(
+    "color",
+    "rgb(31, 29, 27)",
+  );
+  await expect(page.locator(".brand-codex")).toHaveCSS(
+    "background-color",
+    "rgb(4, 119, 189)",
+  );
+  await expect(page.locator(".brand-codex")).toHaveCSS(
+    "color",
+    "rgb(255, 255, 255)",
+  );
+  await expect(page.locator(".brand-mark path")).toHaveCount(2);
+  const faviconPath = await page
+    .locator('link[rel="icon"]')
+    .getAttribute("href");
+  expect(faviconPath).toBeTruthy();
+  const favicon = await page.request.get(faviconPath ?? "/favicon.svg");
+  expect(favicon.ok()).toBe(true);
+  expect(favicon.headers()["content-type"]).toContain("image/svg+xml");
+  expect(await favicon.text()).toContain("#F7914E");
+  await expect(
+    page.getByText("Earlier test rounds", { exact: true }),
+  ).toBeVisible();
+  const earlier = page.locator("details.earlier-tests");
+  await expect(earlier).not.toHaveAttribute("open", "");
+  await expect(earlier.locator(".round-card")).toHaveCount(1);
+  await expect(earlier.locator(".round-card")).toBeHidden();
+  await earlier.locator(":scope > summary").click();
+  await expect(earlier.locator(".round-card")).toBeVisible();
+  await earlier.locator(":scope > summary").click();
   const evidence = await (
     await page.request.get("/evidence/index.json")
   ).json();
   await expect(page.locator(".round-card")).toHaveCount(evidence.rounds.length);
+  await page.getByText("Session + commit graph", { exact: true }).click();
+  await expect(
+    page.getByText(`Main session ${evidence.sessionId}`, { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(`git rev-list --count ${evidence.commit}`, { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("#build .stat strong").first()).toHaveText(
+    String(evidence.commitCount),
+  );
+  await page.getByText("Session + commit graph", { exact: true }).click();
   await expect(
     page
       .locator(".round-card .eyebrow")

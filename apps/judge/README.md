@@ -15,7 +15,11 @@ reachable commit graph; use a full clone for the complete count.
 
 The browser recomputes benchmark metrics with the benchmark's shared statistics
 module, retaining infrastructure losses. Each round keeps its fixture, viewer or
-broadcaster-test label. Raw receipts and credited regressions are downloadable.
+broadcaster-test label. Early receipts without a measured GREEN split and captured
+diff stay under the closed "Earlier test rounds" disclosure. Raw receipts and
+credited regressions are downloadable. The build story recomputes its reachable
+commit count with `git rev-list --count` at build time and retains the main
+session ID. The orange CHAT / blue CODEX marks match the overlay.
 
 Re-simulation verifies the bundled simulation's SHA-256 before importing its exact
 bytes, runs the committed held-out track and compares every frame's combined

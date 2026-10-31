@@ -1,12 +1,16 @@
 @import "@fontsource/bungee/latin-400.css";
 :root {
-  color-scheme: dark;
+  color-scheme: light;
+  --chat: #f7914e;
+  --codex: #0477bd;
+  --ink: #1f1d1b;
+  --cream: #fffdf9;
+  --muted: #655b50;
+  color: var(--ink);
+  background: #f3ecdd;
   font-family: "Trebuchet MS", sans-serif;
-  color: #f0eadc;
-  background: #121614;
-  --lime: #d4f683;
-  --orange: #ff965e;
-  --muted: #b6beb4;
+  font-weight: 700;
+  font-synthesis: none;
 }
 * {
   box-sizing: border-box;
@@ -16,15 +20,14 @@ html {
 }
 body {
   margin: 0;
-  background-image: linear-gradient(#ffffff03 1px, transparent 1px);
-  background-size: 100% 8px;
+  background: radial-gradient(ellipse at 32% 10%, #fffbf1 0 25%, #f3ecdd 75%);
 }
 a {
-  color: var(--lime);
+  color: #035e96;
   text-underline-offset: 4px;
 }
 a:hover {
-  color: var(--orange);
+  color: var(--ink);
 }
 nav {
   position: sticky;
@@ -34,8 +37,8 @@ nav {
   gap: 1.6rem;
   align-items: center;
   padding: 1rem 5vw;
-  background: #121614f5;
-  border-bottom: 1px solid #ffffff20;
+  background: #fffdf9f5;
+  border-bottom: 3px solid var(--ink);
   flex-wrap: wrap;
 }
 nav a {
@@ -47,7 +50,7 @@ nav a:first-child {
     1.1rem Bungee,
     sans-serif;
   margin-right: auto;
-  color: var(--orange);
+  color: var(--ink);
 }
 header,
 section,
@@ -55,11 +58,10 @@ footer {
   padding: 3.5rem max(5vw, calc((100vw - 1400px) / 2));
 }
 header {
-  padding-top: 5rem;
-  border-bottom: 1px solid #ffffff20;
+  padding-top: 4rem;
 }
 .eyebrow {
-  color: var(--orange);
+  color: var(--muted);
   font:
     700 0.8rem "Courier New",
     monospace;
@@ -72,10 +74,52 @@ h3 {
   font-weight: 400;
 }
 h1 {
-  font-size: clamp(2.7rem, 8vw, 7rem);
-  max-width: 15ch;
+  font-size: clamp(1.7rem, 6vw, 5.8rem);
   line-height: 1.12;
   margin: 1rem 0;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  filter: drop-shadow(0 8px 0 var(--ink));
+}
+.brand-chat,
+.brand-codex {
+  display: flex;
+  align-items: center;
+  gap: 0.15em;
+  padding: 0.28em 0.3em;
+  border: 3px solid var(--ink);
+}
+.brand-chat {
+  background: var(--chat);
+  border-radius: 26px 0 0 26px;
+  box-shadow: inset 0 -8px 0 #a8460b30;
+}
+.brand-codex {
+  background: var(--codex);
+  color: white;
+  border-radius: 0 26px 26px 0;
+  box-shadow: inset 0 -8px 0 #035384;
+}
+.brand-vs {
+  padding: 0.3em 0.2em;
+  font-size: 0.35em;
+}
+.brand-mark {
+  width: 0.7em;
+  height: 0.7em;
+  flex-shrink: 0;
+  fill: currentColor;
+}
+.brand-codex .brand-mark {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 h2 {
   font-size: clamp(1.8rem, 3.2vw, 2.7rem);
@@ -118,33 +162,35 @@ p {
   font-variant-numeric: tabular-nums;
 }
 .headline-stats .stat strong {
-  color: var(--lime);
+  color: var(--codex);
   font-size: 2rem;
 }
 .model-grid,
 .round-grid {
   display: grid;
-  gap: 1.2rem;
+  gap: 1.5rem;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .metric-card,
 .round-card {
   min-width: 0;
-  background: #1c231f;
-  border: 1px solid #ffffff20;
+  background: var(--cream);
+  border: 3px solid var(--ink);
+  border-radius: 24px;
+  box-shadow: 0 8px 0 var(--ink);
   padding: 1.6rem;
 }
 .metric-card:first-child {
-  border-top: 4px solid var(--lime);
+  border-top: 12px solid var(--codex);
 }
 .metric-card:nth-child(2) {
-  border-top: 4px solid var(--orange);
+  border-top: 12px solid var(--chat);
 }
 .big-number {
   font:
     clamp(2.7rem, 6vw, 5rem) Bungee,
     sans-serif;
-  color: var(--lime);
+  color: var(--codex);
 }
 .mini-stats {
   gap: 1rem;
@@ -152,22 +198,24 @@ p {
 }
 .badge {
   display: inline-block;
-  color: #151c13;
-  background: var(--lime);
-  border-radius: 2px;
+  color: var(--ink);
+  background: var(--chat);
+  border: 2px solid var(--ink);
+  border-radius: 8px;
   padding: 0.3rem 0.55rem;
   font:
     700 0.8rem "Courier New",
     monospace;
+  box-shadow: 0 3px 0 var(--ink);
 }
 details {
-  border-top: 1px solid #ffffff20;
+  border-top: 1px solid #1f1d1b30;
   margin-top: 1.3rem;
   padding-top: 0.9rem;
 }
 summary {
   cursor: pointer;
-  color: var(--lime);
+  color: #035e96;
   font-size: 0.92rem;
   padding: 0.3rem 0;
 }
@@ -175,6 +223,12 @@ details a {
   display: inline-block;
   margin: 0.65rem 1rem 0.65rem 0;
   font-size: 0.9rem;
+}
+.earlier-tests {
+  margin-top: 2.4rem;
+}
+.earlier-rounds {
+  margin-top: 1.2rem;
 }
 code,
 pre,
@@ -207,14 +261,14 @@ th,
 td {
   text-align: left;
   padding: 0.7rem 0.7rem 0.7rem 0;
-  border-bottom: 1px solid #ffffff12;
+  border-bottom: 1px solid #1f1d1b20;
 }
 th {
   color: var(--muted);
 }
 .round-time {
   display: block;
-  color: var(--lime);
+  color: var(--codex);
   font:
     700 1.8rem "Courier New",
     monospace;
@@ -226,31 +280,33 @@ th {
 .patch pre {
   padding: 0.55rem;
   margin: 0.25rem 0;
+  border-radius: 5px;
 }
 .added {
-  background: #72e3961c;
-  color: #bcf7c8;
+  background: #d3f0dc;
+  color: #165033;
 }
 .removed {
-  background: #f66d6d1a;
-  color: #ffb7b3;
+  background: #fce0d9;
+  color: #8c2519;
 }
 button,
 select {
   font: inherit;
   font-size: 0.9rem;
-  border: 1px solid #ffffff45;
-  color: #f0eadc;
-  background: #27392c;
-  border-radius: 2px;
+  border: 2px solid var(--ink);
+  color: white;
+  background: var(--codex);
+  border-radius: 12px;
   padding: 0.85rem 1rem;
 }
 button {
   cursor: pointer;
   margin-top: 1rem;
+  box-shadow: 0 4px 0 var(--ink);
 }
 button:hover {
-  border-color: var(--lime);
+  background: #035e96;
 }
 button:disabled {
   cursor: progress;
@@ -261,7 +317,7 @@ select:focus-visible,
 input:focus-visible,
 summary:focus-visible,
 a:focus-visible {
-  outline: 3px solid var(--orange);
+  outline: 3px solid var(--ink);
   outline-offset: 4px;
 }
 .replay-controls {
@@ -276,24 +332,26 @@ a:focus-visible {
 canvas {
   width: 100%;
   aspect-ratio: 10 / 3;
-  background: #101b16;
-  border: 1px solid #ffffff25;
+  background: var(--cream);
+  border: 3px solid var(--ink);
+  border-radius: 16px;
   display: block;
   image-rendering: pixelated;
   margin-top: 1rem;
+  box-shadow: 0 6px 0 var(--ink);
 }
 input[type="range"] {
   display: block;
   width: 100%;
-  accent-color: var(--lime);
+  accent-color: var(--codex);
   margin: 1.2rem 0;
 }
 .proof-result {
   font-family: "Courier New", monospace;
-  color: var(--orange);
+  color: var(--ink);
 }
 .proof-result[data-state="match"] {
-  color: var(--lime);
+  color: #035e96;
 }
 .canary-controls {
   display: grid;
@@ -303,7 +361,7 @@ input[type="range"] {
 }
 section {
   scroll-margin-top: 7rem;
-  border-bottom: 1px solid #ffffff14;
+  border-bottom: 1px solid #1f1d1b25;
 }
 footer {
   color: var(--muted);
@@ -335,6 +393,14 @@ footer {
   }
   .headline-stats {
     gap: 1.2rem;
+  }
+  .brand {
+    font-size: clamp(1.15rem, 6.1vw, 2.5rem);
+  }
+  .brand-chat,
+  .brand-codex {
+    padding: 0.35em 0.18em;
+    border-radius: 16px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

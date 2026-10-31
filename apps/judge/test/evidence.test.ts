@@ -47,6 +47,18 @@ describe("committed judge evidence", () => {
       expect(source.list(".")).toEqual(["proof.json"]);
       expect(source.commitCount()).toBe(1);
       expect(source.read("proof.json")).not.toContain("private");
+      git("add", "proof.json");
+      git(
+        "-c",
+        "user.name=Stephen Sookra",
+        "-c",
+        "user.email=stephensookra@gmail.com",
+        "commit",
+        "-qm",
+        "Record another evidence version",
+      );
+      expect(committedSource(root).commitCount()).toBe(2);
+      expect(source.commitCount()).toBe(1);
     } finally {
       if (previous === undefined) delete process.env.GIT_DIR;
       else process.env.GIT_DIR = previous;
@@ -60,6 +72,7 @@ describe("committed judge evidence", () => {
     const { manifest, files } = await buildJudgeEvidence();
     expect(manifest.sessionId).toBe(MAIN_SESSION_ID);
     const source = committedSource();
+    expect(manifest.commitCount).toBe(source.commitCount());
     expect(
       manifest.rounds.map((round) => round.path.replace(/^evidence\//, "")),
     ).toEqual(

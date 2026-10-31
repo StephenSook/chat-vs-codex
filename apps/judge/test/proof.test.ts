@@ -2,7 +2,12 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { HELD_OUT, runTrack } from "../../../packages/replay/src/index.js";
 import * as game from "../../../packages/sim/src/index.js";
-import { greenSplit, type Receipt, roundLabel } from "../src/evidence.js";
+import {
+  greenSplit,
+  isEarlierTestRound,
+  type Receipt,
+  roundLabel,
+} from "../src/evidence.js";
 import {
   loadVerifiedGame,
   proofAvailability,
@@ -86,6 +91,24 @@ describe("browser proof", () => {
     expect(importer.mock.calls[0]?.[0]).toMatch(/^blob:/);
     expect(revoke).toHaveBeenCalledOnce();
     revoke.mockRestore();
+  });
+
+  it("groups only receipts without a measured green split and captured diff as earlier tests", () => {
+    const legacy = JSON.parse(
+      readFileSync(
+        new URL(
+          "../../../docs/rounds/65e06ea8-d2bd-4e40-9ec7-79f4318c2b02.json",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    ) as Receipt;
+    expect(isEarlierTestRound(legacy)).toBe(true);
+    expect(isEarlierTestRound(receipt)).toBe(false);
+    expect(isEarlierTestRound({ ...receipt, autopsy: null })).toBe(false);
+    expect(
+      isEarlierTestRound({ ...receipt, durations: legacy.durations }),
+    ).toBe(false);
   });
 
   it("keeps broadcaster tests distinct from viewer and fixture rounds", () => {

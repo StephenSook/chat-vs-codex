@@ -6,6 +6,7 @@ import {
 import type { ValidatedReplayFrame } from "../../../packages/bench/src/validated-replay.js";
 import {
   greenSplit,
+  isEarlierTestRound,
   type JudgeEvidence,
   roundLabel,
   seconds,
@@ -99,7 +100,7 @@ async function start(): Promise<void> {
   const green = selected.filter((row) => row.status === "green").length;
   const nav = element("nav");
   nav.setAttribute("aria-label", "Evidence pages");
-  nav.append(link("C / C", "#top"));
+  nav.append(link("CHAT vs CODEX", "#top"));
   for (const [label, id] of [
     ["The numbers", "numbers"],
     ["Rounds", "rounds"],
@@ -110,9 +111,27 @@ async function start(): Promise<void> {
     nav.append(link(label ?? "", `#${id}`));
   const header = element("header");
   header.id = "top";
+  const brand = element("h1", undefined, "brand");
+  brand.setAttribute("aria-label", "CHAT vs CODEX");
+  for (const [name, className, glyph] of [
+    ["CHAT", "brand-chat", "M23 3 5 26h15l-5 19 22-28H22Z"],
+    ["CODEX", "brand-codex", "m7 25 11 11L40 10"],
+  ] as const) {
+    if (name === "CODEX") brand.append(element("span", "vs", "brand-vs"));
+    const team = element("span", undefined, className);
+    const mark = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    mark.setAttribute("class", "brand-mark");
+    mark.setAttribute("viewBox", "0 0 48 48");
+    mark.setAttribute("aria-hidden", "true");
+    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    path.setAttribute("d", glyph);
+    mark.append(path);
+    team.append(mark, element("span", name));
+    brand.append(team);
+  }
   header.append(
     element("p", "CHAT BREAKS IT. CODEX FIXES IT.", "eyebrow"),
-    element("h1", "CHAT / VS / CODEX"),
+    brand,
     element("p", "Watch a bug become a fix. Then replay the proof.", "lede"),
   );
   const headline = element("div", undefined, "headline-stats");
@@ -297,16 +316,16 @@ async function start(): Promise<void> {
     const context = canvas.getContext("2d");
     const frame = frames[Number(slider.value) - 1];
     if (!context || !frame) return;
-    context.fillStyle = "#101b16";
+    context.fillStyle = "#fffdf9";
     context.fillRect(0, 0, canvas.width, canvas.height);
     for (const [y, row] of game.LEVEL.entries())
       for (const [x, tile] of [...row].entries()) {
         if (tile === ".") continue;
         context.fillStyle =
-          tile === "#" ? "#344b3c" : tile === "!" ? "#ff8048" : "#d4f683";
+          tile === "#" ? "#527568" : tile === "!" ? "#e5644d" : "#0477bd";
         context.fillRect(x * 32 + 1, y * 32 + 1, 30, 30);
       }
-    context.strokeStyle = "#d4f68366";
+    context.strokeStyle = "#0477bd66";
     context.lineWidth = 2;
     context.beginPath();
     for (const [index, point] of frames.entries()) {
@@ -316,14 +335,14 @@ async function start(): Promise<void> {
     }
     context.stroke();
     const platform = game.platformAt(frame.frame);
-    context.fillStyle = "#f0dbc0";
+    context.fillStyle = "#f7914e";
     context.fillRect(
       platform.x / game.UNIT,
       platform.y / game.UNIT,
       platform.width / game.UNIT,
       platform.height / game.UNIT,
     );
-    context.fillStyle = "#d4f683";
+    context.fillStyle = "#0477bd";
     context.fillRect(
       frame.x / game.UNIT,
       frame.y / game.UNIT,
@@ -406,6 +425,7 @@ async function start(): Promise<void> {
     "Every receipt. Every label.",
   );
   const roundGrid = element("div", undefined, "round-grid");
+  const earlierGrid = element("div", undefined, "round-grid earlier-rounds");
   for (const round of [...evidence.rounds].reverse()) {
     const receipt = round.receipt;
     const card = element("article", undefined, "round-card");
@@ -489,9 +509,14 @@ async function start(): Promise<void> {
       details(`Autopsy / ${receipt.roundId.slice(0, 8)}`, detail),
       replayRound,
     );
-    roundGrid.append(card);
+    (isEarlierTestRound(receipt) ? earlierGrid : roundGrid).append(card);
   }
   rounds.append(roundGrid);
+  if (earlierGrid.childElementCount) {
+    const earlier = details("Earlier test rounds", earlierGrid);
+    earlier.className = "earlier-tests";
+    rounds.append(earlier);
+  }
   app.append(rounds, replay);
 
   const build = section("build", "04 / THE BUILD", "How Codex built this");
@@ -512,10 +537,14 @@ async function start(): Promise<void> {
   build.append(buildStats);
   const buildDetail = element("div");
   buildDetail.append(
+    element(
+      "p",
+      "The build thread grew from deterministic replays into a live Twitch round loop. Atomic commits preserve each step; verified fixes add a regression replay.",
+    ),
     element("p", `Main session ${evidence.sessionId}`),
     element(
       "p",
-      "The session ID identifies the main build thread. The graph count measures reachable commits; it does not attribute every commit to that thread.",
+      "The count is recomputed with git rev-list at build time from the pinned evidence commit. It measures reachable commits, not authorship by this session.",
     ),
     element("code", `git rev-list --count ${evidence.commit}`),
     element("code", `git log ${evidence.commit} -- chat-found/`),
