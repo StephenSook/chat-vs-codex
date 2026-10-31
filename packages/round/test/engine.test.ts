@@ -116,6 +116,53 @@ afterEach(async () => {
   vi.useRealTimers();
 });
 
+describe("streamer phone controls", () => {
+  it("vetoes before repair, rolls back, and leaves the runner available", async () => {
+    const { engine, game } = setup();
+    breakGame(engine);
+    await vi.advanceTimersByTimeAsync(0);
+    const roundId = engine.snapshot().roundId as string;
+    expect(
+      engine.streamerAction({ roundId: "stale", action: "veto" }).accepted,
+    ).toBe(false);
+    expect(engine.streamerAction({ roundId, action: "veto" })).toEqual({
+      accepted: true,
+      reason: "vetoed",
+    });
+    const result = await engine.waitForRound();
+    expect(result.phase).toBe("rolled-back");
+    expect(result.reason).toBe("streamer-veto");
+    expect(game.repair).not.toHaveBeenCalled();
+    breakGame(engine);
+    expect(engine.snapshot().active).toBe(true);
+  });
+  it("sends an enum hint to the real repair without awarding viewer points", async () => {
+    const { engine, game, repair } = setup();
+    breakGame(engine);
+    await vi.advanceTimersByTimeAsync(0);
+    const roundId = engine.snapshot().roundId as string;
+    expect(
+      engine.streamerAction({ roundId, action: "hint", family: "gravity-sign" })
+        .accepted,
+    ).toBe(true);
+    expect(engine.snapshot().scores.chat).toBe(0);
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(game.repair).toHaveBeenCalledWith(
+      expect.objectContaining({ hint: "gravity-sign" }),
+    );
+    expect(engine.streamerAction({ roundId, action: "veto" })).toEqual({
+      accepted: false,
+      reason: "codex-already-started",
+    });
+    expect(
+      engine.streamerAction({ roundId, action: "hint", family: "jump-buffer" })
+        .accepted,
+    ).toBe(false);
+    repair.resolve(repaired);
+    await engine.waitForRound();
+  });
+});
+
 describe("round input provenance", () => {
   it.each([
     ["chat", "chat"],

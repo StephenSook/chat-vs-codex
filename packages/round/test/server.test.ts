@@ -63,6 +63,32 @@ const preparing = (roundId: string): RoundEvent => ({
   reason: null,
 });
 
+it("accepts real overlay death telemetry only from its own origin when opted in", async () => {
+  const deaths: string[] = [];
+  const running = await server({
+    death: (roundId, id) => deaths.push(`${roundId}/${id}`),
+  });
+  const body = JSON.stringify({
+    roundId: "11111111-1111-1111-1111-111111111111",
+    id: "22222222-2222-2222-2222-222222222222",
+  });
+  const post = (origin: string, payload = body) =>
+    fetch(`${running.origin}/api/pit-wall/death`, {
+      method: "POST",
+      headers: { Origin: origin, "Content-Type": "application/json" },
+      body: payload,
+    });
+  expect((await post("https://evil.example")).status).toBe(403);
+  expect((await post(running.origin, "{}")).status).toBe(400);
+  expect((await post(running.origin)).status).toBe(204);
+  expect(deaths).toHaveLength(1);
+  const disabled = await server();
+  expect(
+    (await fetch(`${disabled.origin}/api/pit-wall/death`, { method: "POST" }))
+      .status,
+  ).toBe(405);
+});
+
 async function http(
   origin: string,
   path: string,

@@ -14,6 +14,7 @@ import { startGameClient } from "./client.js";
 import { createCommentary } from "./commentary.js";
 import type { RoundEnvelope } from "./contracts.js";
 import { RoundEngine } from "./engine.js";
+import { startPitWall } from "./pit-wall.js";
 import {
   loadPreviousVerifiedRound,
   publicReceipt,
@@ -43,6 +44,7 @@ async function main() {
   const client = await startGameClient(join(directory, "client.log"));
   let server: Awaited<ReturnType<typeof startRoundServer>> | undefined;
   let engine: RoundEngine | undefined;
+  let pitWall: Awaited<ReturnType<typeof startPitWall>> | undefined;
   let guessTimer: ReturnType<typeof setTimeout> | undefined;
   const deliveries: Promise<unknown>[] = [];
   const events: RoundEnvelope[] = [];
@@ -93,6 +95,11 @@ async function main() {
       },
     });
     server = await startRoundServer({
+      ...(process.env.PIT_WALL === "1"
+        ? {
+            death: (roundId: string, id: string) => pitWall?.death(roundId, id),
+          }
+        : {}),
       commentary: createCommentary({
         cacheDirectory: join(ROOT, ".local/polly"),
         report: (message) => console.log(message),
@@ -103,6 +110,7 @@ async function main() {
         await client.install(artifact, signal);
       },
       record: (envelope) => {
+        pitWall?.publish(envelope);
         events.push(envelope);
         deliveries.push(
           appendFile(
@@ -142,6 +150,23 @@ async function main() {
     console.log(
       `Overlay: ${server.origin}/?bridge=${encodeURIComponent(server.origin)}`,
     );
+    if (process.env.PIT_WALL === "1")
+      pitWall = await startPitWall({
+        action: (action) =>
+          engine?.streamerAction(action) ?? {
+            accepted: false,
+            reason: "runner-unavailable",
+          },
+        record: (entry) =>
+          deliveries.push(
+            appendFile(
+              join(directory, "pit-wall.jsonl"),
+              `${JSON.stringify(entry)}\n`,
+              { mode: 0o600 },
+            ),
+          ),
+        announce: (message) => console.log(message),
+      });
     replayFixtures([start], handler);
     const result = await engine.waitForRound();
     if (guessTimer) clearTimeout(guessTimer);
@@ -206,6 +231,7 @@ async function main() {
       await new Promise<void>((done) => process.once("SIGINT", done));
     }
   } finally {
+    await pitWall?.close();
     if (guessTimer) clearTimeout(guessTimer);
     await engine?.stop();
     await server?.close();

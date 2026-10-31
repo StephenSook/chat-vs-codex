@@ -22,6 +22,7 @@ import { createCommentary } from "./commentary.js";
 import type { RoundEnvelope } from "./contracts.js";
 import { RoundEngine, type RoundSnapshot } from "./engine.js";
 import { type LiveEngine, LiveRoundController } from "./live.js";
+import { startPitWall } from "./pit-wall.js";
 import {
   loadPreviousVerifiedRound,
   publicReceipt,
@@ -273,6 +274,7 @@ export async function runLiveCli(
   let gate: ReturnType<typeof createLiveRoundGate> | undefined;
   let controller: LiveRoundController | undefined;
   let scorebug: TitleScorebug | undefined;
+  let pitWall: Awaited<ReturnType<typeof startPitWall>> | undefined;
   let events: RoundEnvelope[] = [];
   try {
     const helix = createLiveHelix({
@@ -348,6 +350,11 @@ export async function runLiveCli(
     });
     const live = controller;
     server = await startRoundServer({
+      ...(process.env.PIT_WALL === "1"
+        ? {
+            death: (roundId: string, id: string) => pitWall?.death(roundId, id),
+          }
+        : {}),
       season: (await loadSeason(join(ROOT, "docs/rounds"))).viewers,
       commentary: createCommentary({
         cacheDirectory: join(ROOT, ".local/polly"),
@@ -366,6 +373,7 @@ export async function runLiveCli(
       },
       present: (event) => live.present(event),
       record: (envelope) => {
+        pitWall?.publish(envelope);
         if (
           envelope.event.type === "round.state" &&
           envelope.event.phase === "preparing"
@@ -420,6 +428,16 @@ export async function runLiveCli(
       publish: server.publish,
       activate: server.activate,
     });
+    if (process.env.PIT_WALL === "1")
+      pitWall = await startPitWall({
+        action: (action) =>
+          engine?.streamerAction(action) ?? {
+            accepted: false,
+            reason: "runner-unavailable",
+          },
+        record,
+        announce: (message) => console.log(message),
+      });
     gate = createLiveRoundGate(
       engine,
       async (result) => {
@@ -491,6 +509,7 @@ export async function runLiveCli(
   } finally {
     signal.removeEventListener("abort", stop);
     await closeLiveResources([
+      () => pitWall?.close(),
       () => listener?.stop(),
       () => engine?.stop(),
       () => gate?.drain(),

@@ -43,6 +43,7 @@ interface ActiveRound {
   abort: AbortController;
   prepared: PreparedGame | null;
   votes: Map<string, BugFamily>;
+  streamerHint: BugFamily | null;
   startedAt: number | null;
   winner: "chat" | "codex" | null;
   reason: string | null;
@@ -269,6 +270,7 @@ export class RoundEngine {
       abort: new AbortController(),
       prepared: null,
       votes: new Map(),
+      streamerHint: null,
       startedAt: null,
       winner: null,
       reason: null,
@@ -301,6 +303,38 @@ export class RoundEngine {
       return { accepted: false, reason: "invalid-family" };
     this.startRound(intent.actor, "whisper", intent.family);
     return { accepted: true };
+  }
+
+  /** Streamer controls never enter viewer scoring or change a running Codex ticket. */
+  streamerAction(
+    action:
+      | { roundId: string; action: "veto" }
+      | { roundId: string; action: "hint"; family: BugFamily },
+  ): { accepted: boolean; reason: string } {
+    const round = this.current;
+    if (
+      this.stopped ||
+      !round ||
+      round.id !== action.roundId ||
+      round.abort.signal.aborted ||
+      round.completed
+    )
+      return { accepted: false, reason: "round-unavailable" };
+    if (
+      !["preparing", "head-start"].includes(this.state.phase) ||
+      (round.startedAt !== null &&
+        this.now() >= round.startedAt + this.headStartMs)
+    )
+      return { accepted: false, reason: "codex-already-started" };
+    if (action.action === "hint") {
+      if (!BUG_FAMILIES.includes(action.family))
+        return { accepted: false, reason: "invalid-family" };
+      round.streamerHint = action.family;
+      return { accepted: true, reason: "hint-set" };
+    }
+    round.reason = "streamer-veto";
+    round.abort.abort(new Error("streamer-veto"));
+    return { accepted: true, reason: "vetoed" };
   }
 
   async stop(): Promise<void> {
@@ -609,6 +643,7 @@ export class RoundEngine {
     });
   }
   private hint(round: ActiveRound): BugFamily | null {
+    if (round.streamerHint) return round.streamerHint;
     const counts = new Map<BugFamily, number>();
     for (const family of round.votes.values())
       counts.set(family, (counts.get(family) ?? 0) + 1);
