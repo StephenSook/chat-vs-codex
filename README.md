@@ -51,8 +51,10 @@ The isolation canary is one separate runtime check, excluded from the 212 repair
 trials. Its dedicated fixture puts a test file above the workspace and verifies
 parent and host-skill reads, test/fixture writes, and network access are denied,
 with positive controls. A trusted sandbox execution corroborates the SDK thread's
-output. The full bench requires its fresh local receipt. Timing trial parents
-contain only `game`; dependencies are copied inside it, no clean source or
+output. The canary also runs the real clean-source trial validator under the
+hotfix profile and checks that temporary files stay inside the workspace. The
+full bench requires its fresh local receipt, including this validation check.
+Timing trial parents contain only `game`; dependencies are copied inside it, no clean source or
 held-out inputs are present, and logs stay outside. Each game has one Git commit
 containing the already-mutated source. Tests and fixtures are read-only under
 the exact profile in `packages/bench/hotfix.toml`.
@@ -60,10 +62,22 @@ the exact profile in `packages/bench/hotfix.toml`.
 The pinned SDK uses `runStreamed`, a final output schema, raw permission overrides
 and an exec launcher for flags the SDK does not expose. Runtime processes receive
 an empty HOME and the real CODEX_HOME. The build process keeps its normal config.
+Every workspace has an ignored `.tmp/` directory created before its single
+commit. Runtime and validation share `TMPDIR`, `TMP` and `TEMP` pointing there;
+all system-temp denies remain in place. Generated temp files are excluded from
+source-change inspection.
 The 240-second deadline aborts the SDK and has an independent worker-group kill.
 Repairs pass the full visible suite and an unrevealed replay under the same
 permission profile. Changes to tests, fixtures or tools are losses; source byte
 equality against the clean build is recorded separately as exact-revert rate.
+
+Before trial 1, every batch validates the clean source using the same sandbox,
+environment, TypeScript command, full Vitest suite and held-out replay as trial
+validation. A failure aborts before any repair thread starts and records its
+output in `bench/runs/preflight-*.jsonl`. This check makes no model call. CI runs
+the real verifier commands through a test executable to check environment and
+failure propagation. Ubuntu CI does not provide the Mac's Codex/Seatbelt setup;
+the mandatory outside-sandbox canary and batch preflight enforce the real profile.
 
 Events, validation stdout/stderr and run manifests go to `bench/runs/*.jsonl`;
 each trial appends to `bench/results.jsonl`. Return these files for committing
@@ -72,8 +86,10 @@ The single sandbox dry run exited before a model thread started: a PATH-alias
 permission warning preceded a fatal permission-profile parsing error. Its raw
 record says `sandbox-blocked`; the accompanying diagnosis identifies the fatal
 config error. Quoted path keys now stay inside inline TOML override values,
-verified against the unchanged profile offline. No second trial was attempted;
-actual runtime enforcement still requires the outside-sandbox canary.
+verified against the unchanged profile offline. No second in-sandbox trial was attempted.
+The first outside-sandbox batch then stopped after trial 1 because host validation
+tried to write Vitest's SSR cache under `/tmp`. Runtime and validation now share
+the workspace temp path, and clean sandbox validation gates the next batch.
 Recompute with `pnpm bench --summary` (add `--batch <id>` for multiple batches).
 Use `--head-start 15` to select the chat head start in seconds.
 

@@ -34,10 +34,13 @@ it.each([false, true])(
         `#!/usr/bin/env node
       import fs from 'node:fs';import path from 'node:path';import{spawnSync}from'node:child_process';
       const args=process.argv.slice(2);
+      const game=args[args.indexOf('--cd')+1];
+      if(!['TMPDIR','TMP','TEMP'].every(key=>process.env[key]===path.join(game,'.tmp'))||!fs.statSync(process.env.TMPDIR).isDirectory()) {console.error('Wrong trial temporary directory');process.exit(71);}
+      fs.mkdirSync(path.join(process.env.TMPDIR,'ssr'),{recursive:true});fs.writeFileSync(path.join(process.env.TMPDIR,'ssr/cache.js'),'cache');
       if(args[0]==='sandbox') {const i=args.indexOf('--');const r=spawnSync(args[i+1],args.slice(i+2),{cwd:args[args.indexOf('--cd')+1],encoding:'utf8'});process.stdout.write(r.stdout||'');process.stderr.write(r.stderr||'');process.exit(r.status??1);}
       if(args[0]!=='exec')process.exit(64);
       process.stdin.resume();process.stdin.on('end',()=>{
-        const game=args[args.indexOf('--cd')+1];const file=path.join(game,${JSON.stringify(tamper ? "fixtures/goldens.json" : "src/index.ts")});
+        const file=path.join(game,${JSON.stringify(tamper ? "fixtures/goldens.json" : "src/index.ts")});
         ${tamper ? "fs.writeFileSync(file,'{}');" : `const before=fs.readFileSync(file,'utf8');if(!before.includes(${JSON.stringify(mutant.replacement)}))process.exit(70);fs.writeFileSync(file,before.replace(${JSON.stringify(mutant.replacement)},${JSON.stringify(mutant.original)}));`}
         for(const e of [{type:'thread.started',thread_id:'fake-contract'},
           {type:'item.completed',item:{type:'agent_message',id:'answer',text:JSON.stringify({rootCause:'Contract test',file:'src/index.ts',line:1,explanation:'Contract test',confidence:1})}},

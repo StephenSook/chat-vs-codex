@@ -11,7 +11,13 @@ import {
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { ROOT } from "../../mutator/src/gate.js";
-import { createLauncher, loadProfile, runRuntime } from "./runtime.js";
+import { runPreflight } from "./preflight.js";
+import {
+  createLauncher,
+  loadProfile,
+  runRuntime,
+  runtimeEnvironment,
+} from "./runtime.js";
 import { sandboxCommand } from "./trial.js";
 import { git } from "./workspace.js";
 
@@ -19,7 +25,11 @@ export function assertCanary(value: unknown): void {
   if (!value || typeof value !== "object")
     throw new Error("No canary evidence");
   const row = value as Record<string, unknown>;
-  if (row.workspaceWrite !== true || row.testRead !== true)
+  if (
+    row.workspaceWrite !== true ||
+    row.testRead !== true ||
+    row.tempDirectory !== true
+  )
     throw new Error("Canary positive controls failed");
   for (const key of [
     "parent",
@@ -52,10 +62,12 @@ export async function runCanary(): Promise<void> {
   try {
     await mkdir(join(game, "test"), { recursive: true });
     await mkdir(join(game, "fixtures"));
+    await mkdir(join(game, ".tmp"));
+    await writeFile(join(game, ".gitignore"), ".tmp/\n");
     await writeFile(join(parent, "SECRET.txt"), randomUUID());
     await writeFile(join(game, "test/protected.txt"), "unchanged");
     await writeFile(join(game, "fixtures/protected.txt"), "unchanged");
-    const script = `import fs from 'node:fs'; import net from 'node:net';
+    const script = `import fs from 'node:fs'; import net from 'node:net'; import os from 'node:os'; import path from 'node:path';
       const result={};
       const attempt=(key,fn)=>{try{fn();result[key]='ALLOWED'}catch(e){result[key]=e.code}};
       attempt('parent',()=>fs.readFileSync('../SECRET.txt'));
@@ -64,12 +76,14 @@ export async function runCanary(): Promise<void> {
       attempt('fixtureWrite',()=>fs.appendFileSync('fixtures/protected.txt','x'));
       fs.writeFileSync('control.txt','allowed');result.workspaceWrite=fs.readFileSync('control.txt','utf8')==='allowed';
       result.testRead=fs.readFileSync('test/protected.txt','utf8')==='unchanged';
+      result.tempDirectory=['TMPDIR','TMP','TEMP'].every(key=>process.env[key]===path.resolve('.tmp'))&&os.tmpdir()===path.resolve('.tmp');
+      fs.writeFileSync(path.join(os.tmpdir(),'probe.txt'),'temp allowed');
       result.network=await new Promise(resolve=>{const s=net.connect({host:'1.1.1.1',port:443});s.setTimeout(1200);s.on('connect',()=>{s.destroy();resolve('ALLOWED')});s.on('timeout',()=>{s.destroy();resolve('TIMEOUT')});s.on('error',e=>resolve(e.code))});
       console.log(JSON.stringify(result));
     `;
     await writeFile(join(game, "test/probe.mjs"), script);
     git(game, ["init", "-b", "main"]);
-    git(game, ["add", "test", "fixtures"]);
+    git(game, ["add", "test", "fixtures", ".gitignore"]);
     git(game, [
       "-c",
       "user.name=Stephen Sookra",
@@ -80,6 +94,8 @@ export async function runCanary(): Promise<void> {
       "Initial check",
     ]);
     const profile = await loadProfile();
+    const preflightLog = await runPreflight(runs, profile);
+    await log({ cleanValidation: "passed", preflightLog });
     const launcher = join(runs, `${id}.launcher`);
     await createLauncher(launcher);
     let sdkObserved = false;
@@ -124,11 +140,7 @@ export async function runCanary(): Promise<void> {
         cwd: game,
         encoding: "utf8",
         timeout: 10000,
-        env: {
-          PATH: process.env.PATH ?? "/opt/homebrew/bin:/usr/bin:/bin",
-          HOME: home,
-          CODEX_HOME: process.env.CODEX_HOME ?? join(homedir(), ".codex"),
-        },
+        env: runtimeEnvironment(game, home),
       },
     );
     await log({
@@ -147,6 +159,7 @@ export async function runCanary(): Promise<void> {
           passed: true,
           sdkObserved: true,
           kernelVerified: true,
+          validationVerified: true,
           sdkVersion: "0.163.0",
           profileHash: profileHash(profile),
           verifiedAt: new Date().toISOString(),

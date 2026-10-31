@@ -1,6 +1,6 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { appendFile, mkdir, readFile, rm } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { performance } from "node:perf_hooks";
 import { build } from "esbuild";
 import type { PooledMutant } from "../../mutator/src/gate.js";
@@ -10,6 +10,7 @@ import {
   loadProfile,
   permissionOverrides,
   runRuntime,
+  runtimeEnvironment,
 } from "./runtime.js";
 import type { ModelSpec, TrialResult } from "./statistics.js";
 import {
@@ -54,7 +55,7 @@ export function sandboxCommand(
   ];
 }
 
-async function validate(
+export async function validateWorkspace(
   workspace: TrialWorkspace,
   profile: string,
   remaining: () => number,
@@ -73,12 +74,7 @@ async function validate(
         killSignal: "SIGKILL",
         encoding: "utf8",
         maxBuffer: 4 * 1024 * 1024,
-        env: {
-          PATH: process.env.PATH ?? "/opt/homebrew/bin:/usr/bin:/bin",
-          HOME: workspace.home,
-          CODEX_HOME:
-            process.env.CODEX_HOME ?? resolve(process.env.HOME ?? "", ".codex"),
-        },
+        env: runtimeEnvironment(workspace.game, workspace.home),
       },
     );
     await log({
@@ -271,7 +267,7 @@ export async function executeTrial(
           throw new Error("Nontext source change");
         return n + Number(added) + Number(removed);
       }, 0);
-    await validate(
+    await validateWorkspace(
       workspace,
       profile,
       () => HARD_BUDGET_MS - (performance.now() - started),

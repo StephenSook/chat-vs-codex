@@ -67,6 +67,7 @@ export async function snapshot(root: string): Promise<Snapshot> {
       if (
         key === ".git" ||
         key === ".cache" ||
+        key === ".tmp" ||
         key === "node_modules/.vite-temp"
       )
         continue;
@@ -153,7 +154,7 @@ for (const track of tracks) it(track.name, () => {
 `;
 
 export async function prepareWorkspace(
-  mutant: PooledMutant,
+  mutant: PooledMutant | null,
 ): Promise<TrialWorkspace> {
   const parent = await mkdtemp(join(tmpdir(), "cv-"));
   const game = join(parent, "game");
@@ -165,6 +166,7 @@ export async function prepareWorkspace(
   try {
     await mkdir(join(game, "test"), { recursive: true });
     await mkdir(join(game, "fixtures"));
+    await mkdir(join(game, ".tmp"));
     await cp(join(ROOT, "packages/sim/src"), join(game, "src"), {
       recursive: true,
     });
@@ -177,12 +179,14 @@ export async function prepareWorkspace(
         join(game, "src", file),
         "utf8",
       );
-    const localFile = mutant.file.replace(/^packages\/sim\//, "");
-    if (!localFile.startsWith("src/") || localFile.includes(".."))
-      throw new Error("Invalid mutant source path");
-    const source = cleanSources[localFile];
-    if (!source) throw new Error("Missing mutant source");
-    await writeFile(join(game, localFile), applyCandidate(source, mutant));
+    if (mutant) {
+      const localFile = mutant.file.replace(/^packages\/sim\//, "");
+      if (!localFile.startsWith("src/") || localFile.includes(".."))
+        throw new Error("Invalid mutant source path");
+      const source = cleanSources[localFile];
+      if (!source) throw new Error("Missing mutant source");
+      await writeFile(join(game, localFile), applyCandidate(source, mutant));
+    }
     await writeFile(join(game, "test/replay.test.ts"), replayTest);
     await writeFile(
       join(game, "fixtures/tracks.json"),
@@ -251,7 +255,10 @@ export async function prepareWorkspace(
         2,
       ),
     );
-    await writeFile(join(game, ".gitignore"), "node_modules/\n.cache/\n");
+    await writeFile(
+      join(game, ".gitignore"),
+      "node_modules/\n.cache/\n.tmp/\n",
+    );
     await copyDependencies(game, ROOT);
     git(game, ["init", "-b", "main"]);
     git(game, [

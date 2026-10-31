@@ -1,9 +1,16 @@
 import { spawnSync } from "node:child_process";
-import { readdir, readFile, realpath, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  readdir,
+  readFile,
+  realpath,
+  writeFile,
+} from "node:fs/promises";
 import { join } from "node:path";
 import { expect, it } from "vitest";
 import { type PooledMutant, ROOT } from "../../mutator/src/gate.js";
 import { HELD_OUT } from "../../replay/src/index.js";
+import { runtimeEnvironment } from "../src/runtime.js";
 import { buildTicket } from "../src/trial.js";
 import {
   changedPaths,
@@ -24,6 +31,14 @@ it("creates a neutral isolated mutated repo with one commit and self-contained t
     expect(await readdir(workspace.home)).toEqual([]);
     expect(git(workspace.game, ["rev-list", "--count", "HEAD"])).toBe("1");
     expect(git(workspace.game, ["status", "--porcelain"])).toBe("");
+    expect(await readdir(join(workspace.game, ".tmp"))).toEqual([]);
+    expect(git(workspace.game, ["show", "HEAD:.gitignore"])).toContain(".tmp/");
+    await mkdir(join(workspace.game, ".tmp/ssr"));
+    await writeFile(join(workspace.game, ".tmp/ssr/cache.js"), "cache");
+    expect(
+      changedPaths(workspace.before, await snapshot(workspace.game)),
+    ).toEqual([]);
+    expect(git(workspace.game, ["status", "--porcelain"])).toBe("");
     expect(
       await realpath(join(workspace.game, "node_modules/pure-rand")),
     ).toMatch(`${workspace.game}/`);
@@ -43,6 +58,7 @@ it("creates a neutral isolated mutated repo with one commit and self-contained t
         [join(workspace.game, "node_modules/vitest/vitest.mjs"), "run"],
         {
           cwd: workspace.game,
+          env: runtimeEnvironment(workspace.game, workspace.home),
           encoding: "utf8",
           timeout: 10000,
         },
@@ -67,6 +83,7 @@ it("creates a neutral isolated mutated repo with one commit and self-contained t
       [join(workspace.game, "node_modules/typescript/bin/tsc"), "--noEmit"],
       {
         cwd: workspace.game,
+        env: runtimeEnvironment(workspace.game, workspace.home),
         encoding: "utf8",
         timeout: 10000,
       },

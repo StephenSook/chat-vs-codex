@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { profileHash } from "../packages/bench/src/canary.js";
+import { runPreflight } from "../packages/bench/src/preflight.js";
 import { loadProfile } from "../packages/bench/src/runtime.js";
 import {
   auditSchedule,
@@ -119,6 +120,7 @@ if (mode === "--summary") {
         receipt.passed !== true ||
         receipt.sdkObserved !== true ||
         receipt.kernelVerified !== true ||
+        receipt.validationVerified !== true ||
         receipt.sdkVersion !== "0.163.0" ||
         receipt.profileHash !== profileHash(await loadProfile()) ||
         typeof receipt.verifiedAt !== "string" ||
@@ -133,6 +135,13 @@ if (mode === "--summary") {
     const batchId = randomUUID();
     const runsDirectory = join(ROOT, "bench/runs");
     await mkdir(runsDirectory, { recursive: true });
+    console.log(
+      "Checking clean-source validation under the hotfix profile before trial 1 (no model call).",
+    );
+    const preflightLog = await runPreflight(runsDirectory);
+    console.log(
+      `Clean-source sandbox preflight passed. Evidence: ${preflightLog}`,
+    );
     const schedule =
       mode === "--dry-run"
         ? [
@@ -152,6 +161,7 @@ if (mode === "--summary") {
         batchId,
         sourceDigest: pool.sourceDigest,
         dryRun: mode === "--dry-run",
+        preflightLog,
         schedule: schedule.map(({ mutant, spec }) => ({
           mutantId: mutant?.id,
           family: mutant?.family,

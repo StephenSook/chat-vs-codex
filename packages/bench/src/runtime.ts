@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { realpathSync } from "node:fs";
 import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
@@ -98,21 +99,33 @@ export interface RuntimeOptions extends ModelSpec {
   codexHome?: string;
 }
 
+/** Runtime tools and host validation must use the same workspace-local temp path. */
+export function runtimeEnvironment(
+  workspace: string,
+  home: string,
+  codexHome?: string,
+): Record<string, string> {
+  const temp = join(realpathSync(workspace), ".tmp");
+  return {
+    PATH: process.env.PATH ?? "/opt/homebrew/bin:/usr/bin:/bin",
+    HOME: home,
+    CODEX_HOME:
+      codexHome ?? process.env.CODEX_HOME ?? join(homedir(), ".codex"),
+    TMPDIR: temp,
+    TMP: temp,
+    TEMP: temp,
+  };
+}
+
 export async function runRuntime(options: RuntimeOptions): Promise<{
   usage: TrialResult["usage"];
   answer: TrialResult["answer"];
 }> {
+  await mkdir(join(options.workspace, ".tmp"), { recursive: true });
   const codex = new Codex({
     codexPathOverride: options.launcher,
     configOverrides: permissionOverrides(options.profile),
-    env: {
-      PATH: process.env.PATH ?? "/opt/homebrew/bin:/usr/bin:/bin",
-      HOME: options.home,
-      CODEX_HOME:
-        options.codexHome ??
-        process.env.CODEX_HOME ??
-        join(homedir(), ".codex"),
-    },
+    env: runtimeEnvironment(options.workspace, options.home, options.codexHome),
   });
   const thread = codex.startThread({
     workingDirectory: options.workspace,

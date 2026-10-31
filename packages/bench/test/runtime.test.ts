@@ -3,7 +3,10 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  realpath,
   rm,
+  stat,
+  symlink,
   writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -16,6 +19,7 @@ import {
   permissionOverrides,
   RUNTIME_FLAGS,
   runRuntime,
+  runtimeEnvironment,
 } from "../src/runtime.js";
 import { isSandboxFailure, sandboxCommand } from "../src/trial.js";
 
@@ -101,7 +105,25 @@ it("uses real SDK streaming, raw config overrides and stripped exec flags with a
     );
     expect(actual.env.HOME).toBe(home);
     expect(actual.env.CODEX_HOME).toBe("/real/auth/home");
+    for (const key of ["TMPDIR", "TMP", "TEMP"])
+      expect(actual.env[key]).toBe(join(await realpath(scratch), ".tmp"));
+    expect((await stat(join(scratch, ".tmp"))).isDirectory()).toBe(true);
     expect(actual.env.OPENAI_API_KEY).toBeUndefined();
+  } finally {
+    await rm(scratch, { recursive: true, force: true });
+  }
+});
+
+it("uses the physical workspace temp path when the workspace has an alias", async () => {
+  const scratch = await mkdtemp(join(tmpdir(), "temp-alias-"));
+  try {
+    const game = join(scratch, "game");
+    const alias = join(scratch, "alias");
+    await mkdir(join(game, ".tmp"), { recursive: true });
+    await symlink(game, alias);
+    const environment = runtimeEnvironment(alias, scratch);
+    for (const key of ["TMPDIR", "TMP", "TEMP"])
+      expect(environment[key]).toBe(join(await realpath(game), ".tmp"));
   } finally {
     await rm(scratch, { recursive: true, force: true });
   }
@@ -122,6 +144,7 @@ it("requires positive controls and actual permission denials for every canary", 
   const receipt = {
     workspaceWrite: true,
     testRead: true,
+    tempDirectory: true,
     parent: "EPERM",
     hostSkills: "EPERM",
     testWrite: "EACCES",
