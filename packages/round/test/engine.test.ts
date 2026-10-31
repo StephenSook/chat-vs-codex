@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   GameArtifact,
   PreparedGame,
+  PreviousVerifiedRound,
   RoundEvent,
   RuntimePhaseObservation,
 } from "../src/contracts.js";
@@ -44,6 +45,8 @@ function setup(
     ) => Promise<void>;
     prepare?: (id: string, signal: AbortSignal) => Promise<PreparedGame>;
     headStartMs?: number;
+    identify?: (actor: string) => string | null;
+    previousRound?: PreviousVerifiedRound;
   } = {},
 ) {
   const repair = deferred<GameArtifact>();
@@ -63,6 +66,10 @@ function setup(
     runtime: { prepare },
     activate,
     publish: (event) => events.push(event),
+    ...(overrides.identify ? { identify: overrides.identify } : {}),
+    ...(overrides.previousRound
+      ? { previousRound: overrides.previousRound }
+      : {}),
     ...(overrides.headStartMs === undefined
       ? {}
       : { headStartMs: overrides.headStartMs }),
@@ -447,6 +454,136 @@ describe("round race and safe swaps", () => {
   });
 });
 
+describe("terminal round autopsy", () => {
+  it("keeps the first correct hashed viewer separate from the winner and publishes only after cleanup", async () => {
+    const cleanup = deferred<void>();
+    const alice = "viewer-aaaaaaaaaaaaaaaa";
+    const context = setup({
+      identify: (actor) =>
+        actor === "alice" ? alice : "viewer-bbbbbbbbbbbbbbbb",
+      previousRound: { roundId: "prior", timeToGreenMs: 1000 },
+    });
+    context.game.close = async () => cleanup.promise;
+    breakGame(context.engine);
+    await vi.advanceTimersByTimeAsync(15000);
+    guess(context.engine, "alice", "gravity-sign");
+    guess(context.engine, "bob", "gravity-sign");
+    await vi.advanceTimersByTimeAsync(600);
+    const patch = { added: 1, removed: 1, preview: ["-old", "+new"] };
+    context.repair.resolve({
+      ...repaired,
+      patch,
+      diagnosis: {
+        rootCause: "actual cause",
+        file: "src/index.ts",
+        line: 1,
+        explanation: "Restore downward\n acceleration.",
+        confidence: 1,
+      },
+      timings: {
+        threadStartedAtMs: 16000,
+        patchReadyAtMs: 16500,
+        validationStartedAtMs: 16500,
+        validationFinishedAtMs: 16600,
+      },
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(
+      context.events.some(
+        (event) =>
+          event.type === "overlay" && event.event.type === "round.autopsy",
+      ),
+    ).toBe(false);
+    expect(
+      context.events.some(
+        (event) =>
+          event.type === "overlay" && event.event.type === "tests.green",
+      ),
+    ).toBe(false);
+    cleanup.resolve();
+    const result = await context.engine.waitForRound();
+    expect(result.autopsy).toMatchObject({
+      status: "verified",
+      breaker: "viewer-bbbbbbbbbbbbbbbb",
+      firstCorrectGuesser: alice,
+      winner: "chat",
+      family: "gravity-sign",
+      patch,
+      explanation: "Restore downward acceleration.",
+      previousRoundId: "prior",
+      deltaMs: -400,
+      durations: { timeToGreenMs: 600 },
+    });
+    expect(
+      context.events.filter(
+        (event) =>
+          event.type === "overlay" && event.event.type === "round.autopsy",
+      ),
+    ).toHaveLength(1);
+    expect(JSON.stringify(context.events)).not.toMatch(/"alice"|"bob"/);
+  });
+
+  it("uses ephemeral HMAC labels by default and leaves missing diagnosis, patch and timing unavailable", async () => {
+    const { engine, repair } = setup();
+    breakGame(engine);
+    await vi.advanceTimersByTimeAsync(0);
+    guess(engine, "viewer", "gravity-sign");
+    await vi.advanceTimersByTimeAsync(15000);
+    repair.resolve(repaired);
+    const result = await engine.waitForRound();
+    expect(result.autopsy?.breaker).toMatch(/^viewer-[a-f0-9]{16}$/);
+    expect(result.autopsy?.firstCorrectGuesser).toBe(result.autopsy?.breaker);
+    expect(result.autopsy).toMatchObject({
+      patch: null,
+      explanation: null,
+      previousRoundId: null,
+      deltaMs: null,
+      durations: { timeToGreenMs: null },
+    });
+  });
+
+  it("refuses raw identity callbacks without replacing an unavailable first guesser with a later one", async () => {
+    const { engine, repair } = setup({
+      identify: (actor) =>
+        actor === "bob" ? "viewer-bbbbbbbbbbbbbbbb" : actor,
+    });
+    breakGame(engine);
+    await vi.advanceTimersByTimeAsync(0);
+    guess(engine, "alice", "gravity-sign");
+    guess(engine, "bob", "gravity-sign");
+    await vi.advanceTimersByTimeAsync(15000);
+    repair.resolve(repaired);
+    expect((await engine.waitForRound()).autopsy).toMatchObject({
+      breaker: null,
+      firstCorrectGuesser: null,
+    });
+  });
+
+  it("emits a rollback autopsy without patch, green timing or comparison after failed verification", async () => {
+    const { engine, repair, events } = setup({
+      previousRound: { roundId: "prior", timeToGreenMs: 1000 },
+    });
+    breakGame(engine);
+    await vi.advanceTimersByTimeAsync(15000);
+    repair.reject(new Error("private failure"));
+    expect((await engine.waitForRound()).autopsy).toMatchObject({
+      status: "rolled-back",
+      reason: "repair-failed",
+      patch: null,
+      explanation: null,
+      deltaMs: null,
+      previousRoundId: "prior",
+      durations: { timeToGreenMs: null },
+    });
+    expect(
+      events.some(
+        (event) =>
+          event.type === "overlay" && event.event.type === "tests.green",
+      ),
+    ).toBe(false);
+  });
+});
+
 describe("abort and failure boundaries", () => {
   it("rolls back a failed repair and never publishes a green or Codex score", async () => {
     const { engine, repair, events, activate, close } = setup();
@@ -660,17 +797,37 @@ describe("abort and failure boundaries", () => {
     expect(activate.mock.calls[1]?.[3].aborted).toBe(true);
   });
   it("bounds cleanup and refuses subsequent rounds when cleanup cannot complete", async () => {
-    const { engine, game, repair, prepare } = setup();
+    const { engine, game, repair, prepare, events, activate } = setup();
     game.close = vi.fn(async () => new Promise<void>(() => {}));
     breakGame(engine);
     await vi.advanceTimersByTimeAsync(15_000);
     repair.resolve(repaired);
     await vi.advanceTimersByTimeAsync(5000);
     expect(await engine.waitForRound()).toMatchObject({
-      phase: "resolved",
+      phase: "rolled-back",
       reason: "cleanup-timeout",
       active: false,
+      scores: { chat: 0, codex: 0 },
+      autopsy: {
+        status: "rolled-back",
+        reason: "cleanup-timeout",
+        patch: null,
+        explanation: null,
+        deltaMs: null,
+        durations: { timeToGreenMs: null },
+      },
     });
+    expect(
+      events.some(
+        (event) =>
+          event.type === "overlay" && event.event.type === "tests.green",
+      ),
+    ).toBe(false);
+    expect(activate.mock.calls.map(([, phase]) => phase)).toEqual([
+      "broken",
+      "repaired",
+      "rollback",
+    ]);
     breakGame(engine);
     expect(prepare).toHaveBeenCalledTimes(1);
   });

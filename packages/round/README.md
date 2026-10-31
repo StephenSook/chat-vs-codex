@@ -58,6 +58,12 @@ test commands show their command result; actual guarded source diffs provide
 patch line counts. Arguments, command output and arbitrary agent text stay out of
 the ticker. Command exit 0 does not claim tests green; only the engine publishes
 green after the full gate and successful activation.
+The terminal autopsy shows hashed breaker and first-correct attribution, the
+revealed family, up to four actual changed source lines, Codex's returned
+explanation, phase durations and a signed time-to-green delta. Prior verified
+receipts supply the comparison across runner invocations. A legacy or incompatible
+prior measurement leaves the delta unavailable. Rollback cards carry no green
+split; failed cleanup rolls back before publishing a success or Codex point.
 Replayed events use the delivery clock so reconnection does not restart the head
 start. Build-load failure blocks that round's later green and score messages.
 

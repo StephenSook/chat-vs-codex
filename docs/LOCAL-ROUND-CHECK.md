@@ -8,6 +8,12 @@ source evidence remains under `.local/round-runs/`. This round predates monotoni
 phase stamps: missing durations are unavailable, not reconstructed from the late
 legacy `validating` event. New rounds record actual runtime boundaries.
 
+The autopsy implementation has contract, reducer, safe DOM rendering and local
+integration coverage. A single Playwright attempt in the build sandbox stopped
+at Chrome launch (`SIGABRT`, with `kill EPERM` during cleanup), before any page
+assertion. Its new pixels and OBS appearance remain for the next outside-sandbox
+round. The temporary preview server was closed after this attempt.
+
 The following earlier attempt records the build sandbox's refusal, not the
 subsequent successful round.
 

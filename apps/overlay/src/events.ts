@@ -1,3 +1,5 @@
+import type { RoundAutopsy } from "../../../packages/round/src/contracts.js";
+
 /** Local presentation contract. The operator's SDK bridge publishes observed events only.
  * No timer manufactures agent activity, scores, guesses, or a passing test result.
  */
@@ -23,6 +25,7 @@ export type CodexStep =
   | { kind: "activity"; action: CodexAction };
 
 export type OverlayEvent =
+  | { type: "round.preparing"; id: string }
   | {
       type: "round.started";
       id: string;
@@ -42,6 +45,7 @@ export type OverlayEvent =
       total: number;
     }
   | { type: "tests.green"; roundId: string }
+  | { type: "round.autopsy"; roundId: string; autopsy: RoundAutopsy }
   | { type: "score.changed"; chat: number; codex: number }
   | { type: "simulation.death" };
 
@@ -83,6 +87,7 @@ export interface BroadcastState {
   steps: readonly DisplayStep[];
   attempt: number | null;
   total: number | null;
+  autopsy: RoundAutopsy | null;
 }
 
 export function initialBroadcast(): BroadcastState {
@@ -100,6 +105,7 @@ export function initialBroadcast(): BroadcastState {
     steps: [],
     attempt: null,
     total: null,
+    autopsy: null,
   };
 }
 
@@ -135,6 +141,13 @@ export function reduceBroadcast(
 ): BroadcastState {
   if ("roundId" in event && event.roundId !== state.roundId) return state;
   switch (event.type) {
+    case "round.preparing":
+      return {
+        ...initialBroadcast(),
+        roundId: event.id,
+        chat: state.chat,
+        codex: state.codex,
+      };
     case "round.started":
       return {
         ...initialBroadcast(),
@@ -179,6 +192,10 @@ export function reduceBroadcast(
           },
         ].slice(-4),
       };
+    case "round.autopsy":
+      return event.autopsy.roundId === state.roundId
+        ? { ...state, autopsy: event.autopsy }
+        : state;
     case "codex.step": {
       // A late completion from an earlier SDK retry cannot replace the current attempt.
       if (state.attempt !== null && event.attempt < state.attempt) return state;

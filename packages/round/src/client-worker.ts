@@ -69,6 +69,16 @@ lines.on("line", (line) => {
         });
       } else if (
         command.kind === "event" &&
+        command.envelope?.event.type === "round.state" &&
+        command.envelope.event.phase === "preparing" &&
+        command.envelope.event.roundId !== null
+      ) {
+        broadcast = reduceBroadcast(broadcast, {
+          type: "round.preparing",
+          id: command.envelope.event.roundId,
+        });
+      } else if (
+        command.kind === "event" &&
         command.envelope?.event.type === "overlay"
       ) {
         const event = command.envelope.event.event;

@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHmac, randomBytes, randomUUID } from "node:crypto";
 import type { OverlayEvent } from "../../../apps/overlay/src/events.js";
 import {
   BUG_FAMILIES,
@@ -10,6 +10,8 @@ import { eventStamp, monotonicMs } from "./clocks.js";
 import type {
   GameArtifact,
   PreparedGame,
+  PreviousVerifiedRound,
+  RoundAutopsy,
   RoundDurations,
   RoundEvent,
   RoundRuntime,
@@ -25,6 +27,7 @@ export interface RoundSnapshot extends PublicState {
   scores: { chat: number; codex: number };
   guessClosesAt: number | null;
   active: boolean;
+  autopsy?: RoundAutopsy | null;
 }
 interface ActiveRound {
   id: string;
@@ -41,6 +44,9 @@ interface ActiveRound {
   swapStartedAt: number | null;
   swapFinishedAt: number | null;
   patchSequence: number;
+  breaker: string | null;
+  firstCorrectGuesser: string | null;
+  correctGuessRecorded: boolean;
 }
 
 function abortable<T>(
@@ -90,6 +96,9 @@ export class RoundEngine {
   private readonly headStartMs: number;
   private readonly roundLimitMs: number;
   private readonly hardBudgetMs: number;
+  private readonly identityKey = randomBytes(32);
+  private previous: PreviousVerifiedRound | null;
+  private autopsy: RoundAutopsy | null = null;
 
   constructor(
     private readonly options: {
@@ -105,12 +114,15 @@ export class RoundEngine {
       headStartMs?: number;
       roundLimitMs?: number;
       hardBudgetMs?: number;
+      identify?: (actor: string) => string | null;
+      previousRound?: PreviousVerifiedRound | null;
     },
   ) {
     this.now = options.now ?? monotonicMs;
     this.headStartMs = options.headStartMs ?? 15_000;
     this.roundLimitMs = options.roundLimitMs ?? 60_000;
     this.hardBudgetMs = options.hardBudgetMs ?? 240_000;
+    this.previous = options.previousRound ?? null;
     if (
       ![this.headStartMs, this.roundLimitMs, this.hardBudgetMs].every(
         Number.isFinite,
@@ -128,6 +140,7 @@ export class RoundEngine {
       scores: { ...this.scores },
       guessClosesAt: this.guessClosesAt,
       active: this.current !== null,
+      autopsy: this.autopsy,
     };
   }
   waitForRound(): Promise<RoundSnapshot> {
@@ -160,8 +173,12 @@ export class RoundEngine {
         swapStartedAt: null,
         swapFinishedAt: null,
         patchSequence: 0,
+        breaker: this.identify(intent.actor),
+        firstCorrectGuesser: null,
+        correctGuessRecorded: false,
       };
       this.current = round;
+      this.autopsy = null;
       this.guessClosesAt = null;
       this.phase(round, "preparing");
       this.task = this.run(round);
@@ -174,11 +191,16 @@ export class RoundEngine {
       round.abort.signal.aborted ||
       !round.prepared ||
       round.startedAt === null ||
+      round.swapFinishedAt !== null ||
       this.now() >= round.startedAt + this.roundLimitMs
     )
       return;
     if (!BUG_FAMILIES.includes(intent.word as BugFamily)) return;
     const family = intent.word as BugFamily;
+    if (family === round.prepared.family && !round.correctGuessRecorded) {
+      round.correctGuessRecorded = true;
+      round.firstCorrectGuesser = this.identify(intent.actor);
+    }
     if (this.now() < round.startedAt + this.headStartMs)
       round.votes.set(intent.actor, family);
     if (family === round.prepared.family && round.winner === null) {
@@ -210,6 +232,52 @@ export class RoundEngine {
 
   private overlay(event: OverlayEvent): void {
     this.publish({ type: "overlay", event });
+  }
+  private identify(actor: string): string | null {
+    try {
+      const label = this.options.identify
+        ? this.options.identify(actor)
+        : `viewer-${createHmac("sha256", this.identityKey).update(actor).digest("hex").slice(0, 16)}`;
+      return typeof label === "string" && /^viewer-[a-f0-9]{16}$/.test(label)
+        ? label
+        : null;
+    } catch {
+      return null;
+    }
+  }
+  private finishAutopsy(
+    round: ActiveRound,
+    artifact: GameArtifact | null,
+  ): void {
+    const verified = this.state.phase === "resolved";
+    const durations = this.durations(round);
+    if (!verified) durations.timeToGreenMs = null;
+    const current = durations.timeToGreenMs;
+    const prior = this.previous?.timeToGreenMs ?? null;
+    const explanation = artifact?.diagnosis?.explanation
+      .replace(/\s+/g, " ")
+      .trim();
+    this.autopsy = {
+      roundId: round.id,
+      status: verified ? "verified" : "rolled-back",
+      reason: round.reason,
+      breaker: round.breaker,
+      firstCorrectGuesser: round.firstCorrectGuesser,
+      family: round.prepared?.family ?? null,
+      winner: round.winner,
+      patch: verified ? (artifact?.patch ?? null) : null,
+      explanation: verified && explanation ? explanation : null,
+      durations,
+      previousRoundId: this.previous?.roundId ?? null,
+      deltaMs:
+        verified && current !== null && prior !== null ? current - prior : null,
+    };
+    this.overlay({
+      type: "round.autopsy",
+      roundId: round.id,
+      autopsy: this.autopsy,
+    });
+    if (verified) this.previous = { roundId: round.id, timeToGreenMs: current };
   }
   private stamp() {
     return { ...eventStamp(), atMs: this.now() };
@@ -297,6 +365,8 @@ export class RoundEngine {
     );
   }
   private phase(round: ActiveRound, phase: PublicState["phase"]): void {
+    const durations = this.durations(round);
+    if (phase === "rolled-back") durations.timeToGreenMs = null;
     this.state = {
       type: "round.state",
       roundId: round.id,
@@ -305,7 +375,7 @@ export class RoundEngine {
         round.startedAt === null ? null : round.startedAt + this.headStartMs,
       winner: round.winner,
       reason: round.reason,
-      durations: this.durations(round),
+      durations,
       ...this.stamp(),
     };
     this.options.publish({ ...this.state });
@@ -403,6 +473,7 @@ export class RoundEngine {
   }
   private async run(round: ActiveRound): Promise<RoundSnapshot> {
     let stage: "prepare" | "activation" | "repair" = "prepare";
+    let installed: GameArtifact | null = null;
     this.arm(round, this.hardBudgetMs, "prepare-deadline");
     try {
       const prepared = await abortable(
@@ -462,22 +533,7 @@ export class RoundEngine {
       stage = "activation";
       await this.activate(round, repaired, "repaired");
       round.swapFinishedAt = this.now();
-      if (
-        round.winner === null &&
-        this.now() < (round.startedAt ?? 0) + this.roundLimitMs
-      ) {
-        round.winner = "codex";
-        this.scores.codex++;
-        this.overlay({ type: "score.changed", ...this.scores });
-      }
-      if (round.winner === null) round.reason = "round-limit";
-      this.overlay({
-        type: "bug.named",
-        roundId: round.id,
-        name: prepared.family,
-      });
-      this.overlay({ type: "tests.green", roundId: round.id });
-      this.phase(round, "resolved");
+      installed = repaired;
     } catch {
       round.reason ??=
         stage === "prepare"
@@ -486,24 +542,7 @@ export class RoundEngine {
             ? "activation-failed"
             : "repair-failed";
       round.abort.abort(new Error(round.reason));
-      if (round.prepared && round.visible) {
-        try {
-          await this.activate(round, round.prepared.clean, "rollback");
-          this.overlay({ type: "bug.active", roundId: round.id, intensity: 0 });
-        } catch (error) {
-          round.reason =
-            error instanceof Error && error.message === "rollback-timeout"
-              ? "rollback-timeout"
-              : "rollback-failed";
-          this.stopped = true;
-        }
-        this.overlay({
-          type: "bug.named",
-          roundId: round.id,
-          name: round.prepared.family,
-        });
-      }
-      this.phase(round, "rolled-back");
+      await this.rollback(round);
     } finally {
       if (round.timer) clearTimeout(round.timer);
       try {
@@ -514,10 +553,59 @@ export class RoundEngine {
             ? "cleanup-timeout"
             : "cleanup-failed";
         this.stopped = true;
-        this.phase(round, this.state.phase);
+        round.abort.abort(new Error(round.reason));
+        if (installed) {
+          await this.rollback(round);
+          installed = null;
+        } else this.phase(round, "rolled-back");
       }
+      if (installed && round.abort.signal.aborted) {
+        await this.rollback(round);
+        installed = null;
+      }
+      if (installed) {
+        if (
+          round.winner === null &&
+          (round.swapFinishedAt ?? Infinity) <
+            (round.startedAt ?? 0) + this.roundLimitMs
+        ) {
+          round.winner = "codex";
+          this.scores.codex++;
+          this.overlay({ type: "score.changed", ...this.scores });
+        }
+        if (round.winner === null) round.reason = "round-limit";
+        if (round.prepared)
+          this.overlay({
+            type: "bug.named",
+            roundId: round.id,
+            name: round.prepared.family,
+          });
+        this.overlay({ type: "tests.green", roundId: round.id });
+        this.phase(round, "resolved");
+      }
+      this.finishAutopsy(round, installed);
       if (this.current === round) this.current = null;
     }
     return this.snapshot();
+  }
+  private async rollback(round: ActiveRound): Promise<void> {
+    if (round.prepared && round.visible) {
+      try {
+        await this.activate(round, round.prepared.clean, "rollback");
+        this.overlay({ type: "bug.active", roundId: round.id, intensity: 0 });
+      } catch (error) {
+        round.reason =
+          error instanceof Error && error.message === "rollback-timeout"
+            ? "rollback-timeout"
+            : "rollback-failed";
+        this.stopped = true;
+      }
+      this.overlay({
+        type: "bug.named",
+        roundId: round.id,
+        name: round.prepared.family,
+      });
+    }
+    this.phase(round, "rolled-back");
   }
 }

@@ -12,7 +12,7 @@ import { dirname, join, resolve } from "node:path";
 import { build } from "esbuild";
 import { afterEach, describe, expect, it } from "vitest";
 import { startGameClient } from "../src/client.js";
-import type { GameArtifact } from "../src/contracts.js";
+import type { GameArtifact, RoundAutopsy } from "../src/contracts.js";
 
 const cleanups: (() => unknown)[] = [];
 afterEach(async () => {
@@ -79,6 +79,59 @@ async function clientFixture() {
 }
 
 describe("real headless hot-swap client with a test-only sandbox launcher", () => {
+  it("mirrors a preparation-only failure into the same reducer without inventing a started round", async () => {
+    const f = await clientFixture();
+    const roundId = "preparation-failure-fixture";
+    const prepared = await f.client.event({
+      sequence: 1,
+      serverTimeMs: 1,
+      event: {
+        type: "round.state",
+        phase: "preparing",
+        roundId,
+        headStartEndsAt: null,
+        winner: null,
+        reason: null,
+      },
+    });
+    expect(prepared.broadcast).toMatchObject({
+      roundId,
+      round: 0,
+      startedAtMs: null,
+      steps: [],
+    });
+    const autopsy: RoundAutopsy = {
+      roundId,
+      status: "rolled-back",
+      reason: "prepare-failed",
+      breaker: null,
+      firstCorrectGuesser: null,
+      family: null,
+      winner: null,
+      patch: null,
+      explanation: null,
+      durations: {
+        headStartMs: null,
+        repairMs: null,
+        validationMs: null,
+        swapMs: null,
+        timeToGreenMs: null,
+      },
+      previousRoundId: null,
+      deltaMs: null,
+    };
+    const failed = await f.client.event({
+      sequence: 2,
+      serverTimeMs: 2,
+      event: {
+        type: "overlay",
+        event: { type: "round.autopsy", roundId, autopsy },
+      },
+    });
+    expect(failed.broadcast.autopsy).toEqual(autopsy);
+    expect(failed.broadcast.startedAtMs).toBeNull();
+    expect(failed.sdkSteps).toBe(0);
+  });
   it("installs broken then repaired simulation modules without resetting state or inventing green", async () => {
     const source = await readFile("packages/sim/src/index.ts", "utf8");
     const brokenSource = source.replace(

@@ -1,4 +1,5 @@
 import type {
+  RoundAutopsy,
   RoundEnvelope,
   RoundEvent,
 } from "../../../packages/round/src/contracts.js";
@@ -64,6 +65,8 @@ function validateOverlay(event: unknown): event is OverlayEvent {
   const integer = (key: string) =>
     Number.isSafeInteger(e[key]) && Number(e[key]) >= 0;
   switch (e.type) {
+    case "round.preparing":
+      return typeof e.id === "string";
     case "round.started":
       return (
         typeof e.id === "string" &&
@@ -78,6 +81,12 @@ function validateOverlay(event: unknown): event is OverlayEvent {
       return typeof e.roundId === "string" && typeof e.name === "string";
     case "tests.green":
       return typeof e.roundId === "string";
+    case "round.autopsy":
+      return (
+        typeof e.roundId === "string" &&
+        validAutopsy(e.autopsy) &&
+        e.autopsy.roundId === e.roundId
+      );
     case "score.changed":
       return integer("chat") && integer("codex");
     case "simulation.death":
@@ -106,6 +115,60 @@ function validateOverlay(event: unknown): event is OverlayEvent {
     default:
       return false;
   }
+}
+
+function validAutopsy(value: unknown): value is RoundAutopsy {
+  if (!value || typeof value !== "object") return false;
+  const record = value as RoundAutopsy;
+  const alias = (actor: unknown) =>
+    actor === null ||
+    (typeof actor === "string" && /^viewer-[a-f0-9]{16}$/.test(actor));
+  const measured = (time: unknown) =>
+    time === null ||
+    (typeof time === "number" && Number.isFinite(time) && time >= 0);
+  const nullableText = (text: unknown) =>
+    text === null || typeof text === "string";
+  const patch = record.patch;
+  return (
+    typeof record.roundId === "string" &&
+    ["verified", "rolled-back"].includes(record.status) &&
+    nullableText(record.reason) &&
+    alias(record.breaker) &&
+    alias(record.firstCorrectGuesser) &&
+    (record.family === null ||
+      [
+        "gravity-sign",
+        "collision-off-by-one",
+        "swapped-controls",
+        "coyote-never-expires",
+        "jump-buffer",
+        "enemy-ledge-turn",
+      ].includes(record.family)) &&
+    (record.winner === null || ["chat", "codex"].includes(record.winner)) &&
+    (patch === null ||
+      (!!patch &&
+        Number.isSafeInteger(patch.added) &&
+        patch.added >= 0 &&
+        Number.isSafeInteger(patch.removed) &&
+        patch.removed >= 0 &&
+        Array.isArray(patch.preview) &&
+        patch.preview.length <= 4 &&
+        patch.preview.every((line) => typeof line === "string"))) &&
+    nullableText(record.explanation) &&
+    !!record.durations &&
+    [
+      "headStartMs",
+      "repairMs",
+      "validationMs",
+      "swapMs",
+      "timeToGreenMs",
+    ].every((key) =>
+      measured(record.durations[key as keyof typeof record.durations]),
+    ) &&
+    nullableText(record.previousRoundId) &&
+    (record.deltaMs === null ||
+      (typeof record.deltaMs === "number" && Number.isFinite(record.deltaMs)))
+  );
 }
 
 export function parseRoundEnvelope(value: unknown): RoundEnvelope {
@@ -197,7 +260,9 @@ export class OrderedRoundBridge {
     const receivedAtMs = (this.options.now ?? (() => performance.now()))();
     const event = envelope.event;
     const introduced =
-      event.type === "overlay" && event.event.type === "round.started"
+      event.type === "overlay" &&
+      (event.event.type === "round.started" ||
+        event.event.type === "round.preparing")
         ? event.event.id
         : event.type === "round.state" && event.phase === "preparing"
           ? event.roundId
@@ -216,7 +281,8 @@ export class OrderedRoundBridge {
       if (this.closed) return;
       const roundId =
         event.type === "overlay"
-          ? event.event.type === "round.started"
+          ? event.event.type === "round.started" ||
+            event.event.type === "round.preparing"
             ? event.event.id
             : "roundId" in event.event
               ? event.event.roundId
@@ -243,7 +309,14 @@ export class OrderedRoundBridge {
                 }
               : event.event,
           );
-        } else this.options.onState?.(event);
+        } else {
+          if (event.phase === "preparing" && event.roundId !== null)
+            this.options.events.publish({
+              type: "round.preparing",
+              id: event.roundId,
+            });
+          this.options.onState?.(event);
+        }
       } catch (error) {
         if (this.closed || roundId !== this.roundId) return;
         if (roundId === this.roundId) this.faultRound = this.roundId;

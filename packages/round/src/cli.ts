@@ -9,6 +9,7 @@ import { startGameClient } from "./client.js";
 import type { RoundEnvelope } from "./contracts.js";
 import { RoundEngine } from "./engine.js";
 import {
+  loadPreviousVerifiedRound,
   publicReceipt,
   saveReceipt,
   viewerKey,
@@ -26,6 +27,10 @@ async function main() {
   }
   const directory = join(ROOT, ".local/round-runs", randomUUID());
   await mkdir(directory, { recursive: true, mode: 0o700 });
+  const key = await viewerKey(join(ROOT, ".local"));
+  const previousRound = await loadPreviousVerifiedRound(
+    join(ROOT, "docs/rounds"),
+  );
   console.log(`Local round logs: ${directory}`);
   // This exact sandbox validation makes no model call and fails before any SDK turn.
   await runPreflight(directory);
@@ -110,6 +115,8 @@ async function main() {
       },
     });
     engine = new RoundEngine({
+      identify: (actor) => viewerLabel(actor, key),
+      previousRound,
       runtime: createRoundRuntime({
         runsDirectory: directory,
         fixtureMutantId: mutant.id,
@@ -151,7 +158,7 @@ async function main() {
         "Local fixture round did not complete a verified hot swap",
       );
     console.log(
-      `Public receipt: ${await saveReceipt(join(ROOT, "docs/rounds"), publicReceipt({ result, client: snapshot, events, breaker: viewerLabel(start.event.chatter_user_id, await viewerKey(join(ROOT, ".local"))) }))}`,
+      `Public receipt: ${await saveReceipt(join(ROOT, "docs/rounds"), publicReceipt({ result, client: snapshot, events, breaker: viewerLabel(start.event.chatter_user_id, key) }))}`,
     );
     if (process.argv.includes("--serve")) {
       console.log(

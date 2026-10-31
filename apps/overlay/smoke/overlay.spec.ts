@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { runTrack } from "@chat-vs-codex/replay";
 import { hashState } from "@chat-vs-codex/sim";
 import { expect, test } from "@playwright/test";
+import type { RoundAutopsy } from "../../../packages/round/src/contracts.js";
 import type { OverlayEvent } from "../src/events.js";
 import { CLEAN_TRACK } from "../src/simulation.js";
 
@@ -163,7 +164,21 @@ test("event fixtures exercise countdown, retry vocabulary, and corruption cleari
   });
   expect(docked).toBe(true);
   await page.screenshot({ path: resolve(stillDir, "overlay-720-ui-test.png") });
+  await publish([
+    {
+      type: "codex.step",
+      roundId: "ui-test",
+      id: "tests",
+      step: { kind: "tests" },
+      status: "done",
+      attempt: 1,
+      total: 3,
+    },
+  ]);
+  await expect(page.locator("#steps")).toContainText("Tests passed");
+  await expect(page.locator("#bug-name")).toHaveText("???");
   await publish([{ type: "tests.green", roundId: "ui-test" }]);
+  await expect(page.locator("#steps")).toContainText("Tests green");
   await expect(page.locator("#bug-name")).toHaveText("Fixed");
   await expect(page.locator("#game")).toHaveAttribute("data-status", "fixed");
   await expect(page.locator("#countdown")).toBeHidden();
@@ -171,6 +186,110 @@ test("event fixtures exercise countdown, retry vocabulary, and corruption cleari
     "data-corruption",
     "none",
   );
+});
+
+test("UI-only terminal autopsy fixture stays off the game at 720p and renders receipt text safely", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto("/");
+  await page.waitForFunction(() => Boolean(window.chatVsCodex));
+  // Presentation fixture only. These values are not a round, SDK trace or measured evidence.
+  const autopsy: RoundAutopsy = {
+    roundId: "ui-autopsy-only",
+    status: "verified",
+    reason: null,
+    breaker: "viewer-0123456789abcdef",
+    firstCorrectGuesser: "viewer-1111111111111111",
+    family: "gravity-sign",
+    winner: "chat",
+    patch: {
+      added: 1,
+      removed: 1,
+      preview: ["- return vy - GRAVITY;", "+ return vy + GRAVITY;"],
+    },
+    explanation: "Grounded gravity used the wrong sign.",
+    durations: {
+      headStartMs: 15000,
+      repairMs: 10000,
+      validationMs: 2000,
+      swapMs: 10,
+      timeToGreenMs: 12010,
+    },
+    previousRoundId: "ui-previous-only",
+    deltaMs: -1200,
+  };
+  await page.evaluate((record) => {
+    window.chatVsCodex.events.publish({
+      type: "round.started",
+      id: record.roundId,
+      number: 1,
+      atMs: performance.now(),
+    });
+    window.chatVsCodex.events.publish({
+      type: "tests.green",
+      roundId: record.roundId,
+    });
+    window.chatVsCodex.events.publish({
+      type: "round.autopsy",
+      roundId: record.roundId,
+      autopsy: record,
+    });
+  }, autopsy);
+  await expect(page.locator("#autopsy")).toBeVisible();
+  await expect(page.locator("#ticker")).toBeHidden();
+  await expect(page.locator("#countdown")).toBeHidden();
+  await expect(page.locator("#autopsy-verdict")).toHaveText("CHAT FOUND IT");
+  await expect(page.locator("#autopsy-breaker")).toContainText(
+    autopsy.breaker ?? "",
+  );
+  await expect(page.locator("#autopsy-guesser")).toContainText(
+    autopsy.firstCorrectGuesser ?? "",
+  );
+  await expect(page.locator("#autopsy-family")).toHaveText("gravity-sign");
+  await expect(page.locator("#autopsy-diff")).toHaveText(
+    autopsy.patch?.preview.join("\n") ?? "",
+  );
+  await expect(page.locator("#autopsy-green")).toHaveText("GREEN 0:12.01");
+  await expect(page.locator("#autopsy-delta")).toHaveText(
+    "-0:01.20 vs previous",
+  );
+  const geometry = await page.evaluate(() => {
+    const card = document.getElementById("autopsy");
+    const game = document.querySelector(".game-shell");
+    if (!card || !game) throw new Error("Missing autopsy geometry");
+    const a = card.getBoundingClientRect();
+    const b = game.getBoundingClientRect();
+    return {
+      offGame: a.left >= b.right,
+      withinViewport:
+        a.top >= 0 && a.right <= innerWidth && a.bottom <= innerHeight,
+      contentFits: card.scrollHeight <= card.clientHeight,
+    };
+  });
+  expect(geometry).toEqual({
+    offGame: true,
+    withinViewport: true,
+    contentFits: true,
+  });
+  await mkdir(stillDir, { recursive: true });
+  await page.screenshot({
+    path: resolve(stillDir, "overlay-720-autopsy-ui-test.png"),
+  });
+  const unsafe = { ...autopsy, explanation: '<img src=x onerror="bad()">' };
+  await page.evaluate(
+    (record) =>
+      window.chatVsCodex.events.publish({
+        type: "round.autopsy",
+        roundId: record.roundId,
+        autopsy: record,
+      }),
+    unsafe,
+  );
+  await expect(page.locator("#autopsy-explanation")).toHaveText(
+    unsafe.explanation ?? "",
+  );
+  await expect(page.locator("#autopsy img, #autopsy script")).toHaveCount(0);
 });
 
 test("keyboard input changes the actual sim and reduced motion disables filters", async ({

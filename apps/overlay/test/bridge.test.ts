@@ -80,11 +80,12 @@ describe("ordered round bridge", () => {
       }),
     );
     await Promise.resolve();
-    expect(f.received).toEqual([]);
+    expect(f.received).toEqual([{ type: "round.preparing", id: "r" }]);
     resolve(module);
     await Promise.all([importDone, startDone, bugDone]);
     expect(f.simulation.state).toBe(state);
     expect(f.received.map((event) => event.type)).toEqual([
+      "round.preparing",
       "round.started",
       "bug.active",
     ]);
@@ -149,8 +150,11 @@ describe("ordered round bridge", () => {
         event: { type: "tests.green", roundId: "old" },
       }),
     );
-    expect(f.received).toHaveLength(1);
-    expect(f.received[0]).toMatchObject({ type: "round.started", id: "new" });
+    expect(f.received).toHaveLength(2);
+    expect(f.received.at(-1)).toMatchObject({
+      type: "round.started",
+      id: "new",
+    });
   });
 
   it("discards obsolete import failures and old unscoped scores queued behind them", async () => {
@@ -176,8 +180,11 @@ describe("ordered round bridge", () => {
     reject(new Error("old request failed"));
     await Promise.all([pending, score, next]);
     expect(f.onError).not.toHaveBeenCalled();
-    expect(f.received).toHaveLength(1);
-    expect(f.received[0]).toMatchObject({ type: "round.started", id: "next" });
+    expect(f.received).toHaveLength(2);
+    expect(f.received.at(-1)).toMatchObject({
+      type: "round.started",
+      id: "next",
+    });
   });
 
   it("does not move the countdown start forward while waiting for a build import", async () => {
@@ -202,7 +209,10 @@ describe("ordered round bridge", () => {
     now = 9000;
     resolve(module);
     await Promise.all([loading, start]);
-    expect(received[0]).toMatchObject({ type: "round.started", atMs: 5000 });
+    expect(received.at(-1)).toMatchObject({
+      type: "round.started",
+      atMs: 5000,
+    });
   });
 
   it("keeps the previous module and suppresses green/score after a local build failure", async () => {

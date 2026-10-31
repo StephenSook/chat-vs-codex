@@ -1,9 +1,93 @@
 import { createHmac, randomBytes } from "node:crypto";
-import { chmod, mkdir, readFile, writeFile } from "node:fs/promises";
+import {
+  chmod,
+  mkdir,
+  readdir,
+  readFile,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import { join } from "node:path";
 import type { ClientSnapshot } from "./client.js";
-import type { RoundEnvelope } from "./contracts.js";
+import type { PreviousVerifiedRound, RoundEnvelope } from "./contracts.js";
 import type { RoundSnapshot } from "./engine.js";
+
+export const ROUND_TIMING_DEFINITION =
+  "Time to green starts immediately before the SDK call and ends after verified build installation; head start is separate. Repair ends at submitted patch verification after the SDK turn.";
+
+/** Select the last verified round, including legacy rounds with unavailable timing. */
+export async function loadPreviousVerifiedRound(
+  directory: string,
+): Promise<PreviousVerifiedRound | null> {
+  const files = await readdir(directory).catch(
+    (error: NodeJS.ErrnoException) => {
+      if (error.code === "ENOENT") return [];
+      throw error;
+    },
+  );
+  const candidates: { baseline: PreviousVerifiedRound; completed: number }[] =
+    [];
+  for (const name of files
+    .filter((file) => /^[a-f0-9-]{36}\.json$/.test(file))
+    .sort()) {
+    const file = join(directory, name);
+    const row = JSON.parse(await readFile(file, "utf8"));
+    if (row.schemaVersion !== 1 || row.roundId !== name.slice(0, -5))
+      throw new Error(`Invalid prior round receipt: ${name}`);
+    if (
+      row.verification?.fullReplaySuite !== true ||
+      row.verification?.heldOutReplay !== true ||
+      row.verification?.statePreserved !== true ||
+      (row.reason !== undefined &&
+        row.reason !== null &&
+        row.reason !== "round-limit")
+    )
+      continue;
+    const resolved = Array.isArray(row.events)
+      ? [...row.events]
+          .reverse()
+          .find(
+            (event: Record<string, unknown>) =>
+              event.type === "round.state" && event.phase === "resolved",
+          )
+      : undefined;
+    const recordedTime = row.completedAt ?? resolved?.wallTime;
+    // Old receipts may lack ISO completion evidence; file metadata only orders
+    // that compatibility case. Absolute monotonic clocks never cross processes.
+    const completed =
+      recordedTime === undefined
+        ? (await stat(file)).mtimeMs
+        : Date.parse(recordedTime);
+    if (!Number.isFinite(completed))
+      throw new Error(`Invalid prior completion time: ${name}`);
+    const measured = row.durations?.timeToGreenMs;
+    const compatible =
+      row.clock === "host-monotonic-ms" &&
+      (row.timingVersion === 1 ||
+        row.timingDefinition === ROUND_TIMING_DEFINITION) &&
+      row.model === "gpt-6.1-terra" &&
+      row.effort === "low";
+    candidates.push({
+      completed,
+      baseline: {
+        roundId: row.roundId,
+        timeToGreenMs:
+          compatible &&
+          typeof measured === "number" &&
+          Number.isFinite(measured) &&
+          measured >= 0
+            ? measured
+            : null,
+      },
+    });
+  }
+  candidates.sort(
+    (a, b) =>
+      b.completed - a.completed ||
+      b.baseline.roundId.localeCompare(a.baseline.roundId),
+  );
+  return candidates[0]?.baseline ?? null;
+}
 
 export function viewerLabel(actor: string, key: Uint8Array): string {
   return `viewer-${createHmac("sha256", key).update(actor).digest("hex").slice(0, 16)}`;
@@ -31,6 +115,7 @@ export function publicReceipt(input: {
   breaker: string;
 }) {
   const { result, client } = input;
+  const autopsy = result.autopsy ?? null;
   if (
     !result.roundId ||
     !/^[a-f0-9-]{36}$/.test(result.roundId) ||
@@ -42,7 +127,14 @@ export function publicReceipt(input: {
     !client.buildId ||
     client.installs.at(-1)?.buildId !== client.buildId ||
     !/^[a-f0-9]{64}$/.test(client.buildId) ||
-    !/^viewer-[a-f0-9]{16}$/.test(input.breaker)
+    !/^viewer-[a-f0-9]{16}$/.test(input.breaker) ||
+    (autopsy !== null &&
+      (autopsy.status !== "verified" ||
+        autopsy.roundId !== result.roundId ||
+        (autopsy.breaker !== null &&
+          !/^viewer-[a-f0-9]{16}$/.test(autopsy.breaker)) ||
+        (autopsy.firstCorrectGuesser !== null &&
+          !/^viewer-[a-f0-9]{16}$/.test(autopsy.firstCorrectGuesser))))
   )
     throw new Error(
       "Public receipts require a verified state-preserving round",
@@ -55,14 +147,46 @@ export function publicReceipt(input: {
     model: "gpt-6.1-terra",
     effort: "low",
     breaker: input.breaker,
+    firstCorrectGuesser: autopsy?.firstCorrectGuesser ?? null,
+    autopsy:
+      autopsy === null
+        ? null
+        : {
+            roundId: autopsy.roundId,
+            status: autopsy.status,
+            reason: autopsy.reason,
+            breaker: autopsy.breaker,
+            firstCorrectGuesser: autopsy.firstCorrectGuesser,
+            family: autopsy.family,
+            winner: autopsy.winner,
+            patch:
+              autopsy.patch === null
+                ? null
+                : {
+                    added: autopsy.patch.added,
+                    removed: autopsy.patch.removed,
+                    preview: [...autopsy.patch.preview],
+                  },
+            explanation: autopsy.explanation,
+            durations: { ...autopsy.durations },
+            previousRoundId: autopsy.previousRoundId,
+            deltaMs: autopsy.deltaMs,
+          },
     family: client.broadcast.bugName,
     winner: result.winner,
     reason: result.reason,
     scores: { chat: result.scores.chat, codex: result.scores.codex },
     clock: "host-monotonic-ms",
+    timingVersion: 1,
     durations: result.durations ?? null,
-    timingDefinition:
-      "Time to green starts immediately before the SDK call and ends after verified build installation; head start is separate. Repair ends at submitted patch verification after the SDK turn.",
+    timingDefinition: ROUND_TIMING_DEFINITION,
+    completedAt:
+      [...input.events]
+        .reverse()
+        .find(
+          ({ event }) =>
+            event.type === "round.state" && event.phase === "resolved",
+        )?.wallTime ?? new Date().toISOString(),
     events: input.events.map(({ sequence, event, atMs, wallTime }) => ({
       sequence,
       type: event.type === "overlay" ? event.event.type : event.type,

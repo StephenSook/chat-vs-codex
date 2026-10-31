@@ -7,6 +7,7 @@ import {
   UNIT,
   WIDTH,
 } from "@chat-vs-codex/sim";
+import type { RoundAutopsy } from "../../../packages/round/src/contracts.js";
 import type { BroadcastState } from "./events.js";
 
 export const VIEWPORT = { width: 1200, height: 560 } as const;
@@ -15,6 +16,68 @@ const WORLD_WIDTH = (WIDTH * TILE) / UNIT;
 const WORLD_HEIGHT = (HEIGHT * TILE) / UNIT;
 // Twice the original full-level renderer's 1728 / 1280 scale.
 export const FOLLOW_ZOOM = (2 * 1728) / WORLD_WIDTH;
+
+const seconds = (milliseconds: number | null) =>
+  milliseconds === null
+    ? "Not measured"
+    : `${(milliseconds / 1000).toFixed(2)}s`;
+export function splitTime(milliseconds: number): string {
+  const hundredths = Math.round(milliseconds / 10);
+  return `${Math.floor(hundredths / 6000)}:${String(Math.floor(hundredths / 100) % 60).padStart(2, "0")}.${String(hundredths % 100).padStart(2, "0")}`;
+}
+export function autopsyView(record: RoundAutopsy) {
+  const restoreFailed =
+    record.reason === "rollback-failed" || record.reason === "rollback-timeout";
+  return {
+    verdict:
+      record.status === "rolled-back"
+        ? restoreFailed
+          ? "RESTORE FAILED"
+          : "ROUND ROLLED BACK"
+        : record.winner === "chat"
+          ? "CHAT FOUND IT"
+          : record.winner === "codex"
+            ? "CODEX FIXED IT"
+            : "FIX VERIFIED",
+    family: record.family ?? "Family unavailable",
+    breaker: `BREAK: ${record.breaker ?? "Not recorded"}`,
+    guesser: `FOUND: ${record.firstCorrectGuesser ?? "No correct guess"}`,
+    diff: record.patch?.preview.length
+      ? record.patch.preview.slice(0, 4).join("\n")
+      : "Diff unavailable",
+    patch: record.patch
+      ? `Patch +${record.patch.added} / -${record.patch.removed}`
+      : "Patch counts unavailable",
+    explanation:
+      record.explanation?.replace(/\s+/g, " ").trim() ||
+      "Explanation unavailable",
+    green:
+      record.status === "rolled-back"
+        ? "NO VERIFIED GREEN"
+        : record.durations.timeToGreenMs === null
+          ? "Green time not measured"
+          : `GREEN ${splitTime(record.durations.timeToGreenMs)}`,
+    splits: [
+      `HEAD START ${seconds(record.durations.headStartMs)}`,
+      `REPAIR ${seconds(record.durations.repairMs)}`,
+      `TESTS ${seconds(record.durations.validationMs)}`,
+      `SWAP ${seconds(record.durations.swapMs)}`,
+    ],
+    delta:
+      record.deltaMs === null
+        ? "Previous split unavailable"
+        : `${record.deltaMs >= 0 ? "+" : "-"}${splitTime(Math.abs(record.deltaMs))} vs previous`,
+    trend:
+      record.deltaMs === null
+        ? "missing"
+        : record.deltaMs < 0
+          ? "faster"
+          : record.deltaMs > 0
+            ? "slower"
+            : "equal",
+    reason: record.reason,
+  };
+}
 
 export function actorPositions(state: State) {
   return {

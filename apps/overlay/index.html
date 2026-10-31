@@ -31,10 +31,24 @@
         <h1 id="bug-name">No active bug</h1>
       </section>
       <div class="countdown card" id="countdown" hidden><span>CHAT HEAD START</span><strong id="seconds">15s</strong></div>
-      <section class="ticker card" aria-label="Codex activity">
+      <section class="ticker card" id="ticker" aria-label="Codex activity">
         <h2><span class="crew-mark" aria-hidden="true">&gt;_</span> PIT CREW</h2>
         <p id="attempt" hidden></p>
         <ol id="steps"><li class="waiting"><span aria-hidden="true">○</span> Waiting for Codex</li></ol>
+      </section>
+      <section class="autopsy card" id="autopsy" aria-label="Round autopsy" hidden>
+        <h2>AUTOPSY</h2>
+        <p id="autopsy-verdict"></p>
+        <p id="autopsy-family"></p>
+        <p class="autopsy-actor" id="autopsy-breaker"></p>
+        <p class="autopsy-actor" id="autopsy-guesser"></p>
+        <p id="autopsy-patch"></p>
+        <pre id="autopsy-diff"></pre>
+        <p id="autopsy-explanation"></p>
+        <strong id="autopsy-green"></strong>
+        <ul id="autopsy-splits"></ul>
+        <p id="autopsy-delta"></p>
+        <p id="autopsy-reason" hidden></p>
       </section>
       <section class="game-shell" aria-label="Simulation game">
         <div id="game"></div>

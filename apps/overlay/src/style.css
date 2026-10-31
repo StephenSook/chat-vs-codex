@@ -316,6 +316,96 @@ h2 {
   border-radius: 24px;
   box-shadow: 0 12px 0 #1f1d1b;
 }
+.autopsy {
+  position: absolute;
+  top: 280px;
+  right: 96px;
+  width: 484px;
+  max-height: 666px;
+  border-radius: 24px;
+  padding: 16px 20px;
+  overflow: hidden;
+  z-index: 2;
+}
+.autopsy h2 {
+  font-size: 36px;
+  line-height: 42px;
+  margin: 0 0 4px;
+}
+.autopsy p {
+  margin: 4px 0;
+}
+#autopsy-verdict {
+  font-size: 32px;
+  line-height: 38px;
+}
+#autopsy-family {
+  font-size: 29px;
+  line-height: 34px;
+  overflow-wrap: anywhere;
+}
+.autopsy-actor {
+  font-size: 23px;
+  line-height: 28px;
+  white-space: nowrap;
+}
+#autopsy-patch {
+  font-size: 25px;
+  line-height: 30px;
+}
+#autopsy-diff {
+  margin: 8px 0;
+  padding: 9px;
+  border-radius: 9px;
+  background: #f0eee8;
+  font: 700 21px / 25px monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 166px;
+  overflow: auto;
+}
+#autopsy-explanation {
+  font-size: 27px;
+  line-height: 33px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+#autopsy-green {
+  display: block;
+  font-size: 34px;
+  line-height: 42px;
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+}
+#autopsy-splits {
+  list-style: none;
+  padding: 0;
+  margin: 5px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  font-size: 22px;
+  line-height: 28px;
+}
+#autopsy-delta,
+#autopsy-reason {
+  font-size: 24px;
+  line-height: 29px;
+  font-variant-numeric: tabular-nums;
+}
+#autopsy-delta[data-trend="faster"] {
+  color: #176345;
+}
+#autopsy-delta[data-trend="slower"] {
+  color: #9b321f;
+}
+.autopsy[data-status="verified"] {
+  border-top: 8px solid var(--green);
+}
+.autopsy[data-status="rolled-back"] {
+  border-top: 8px solid var(--broken);
+}
 #game {
   width: 100%;
   height: 100%;

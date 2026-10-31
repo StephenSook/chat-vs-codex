@@ -1,4 +1,5 @@
 import { type BroadcastState, headStartSeconds } from "./events.js";
+import { autopsyView } from "./presentation.js";
 
 export function element<T extends HTMLElement = HTMLElement>(id: string): T {
   const found = document.getElementById(id);
@@ -17,7 +18,11 @@ export function renderBroadcast(state: BroadcastState): void {
   element("codex-score").textContent = String(state.codex);
   element("death-count").textContent = String(state.deaths);
   element("round-label").textContent = state.roundId
-    ? `ROUND ${state.round}`
+    ? state.round > 0
+      ? `ROUND ${state.round}`
+      : state.autopsy
+        ? "ROUND AUTOPSY"
+        : "PREPARING ROUND"
     : "SIM REPLAY";
   element("bug-name").textContent =
     state.bug === "fixed"
@@ -55,11 +60,44 @@ export function renderBroadcast(state: BroadcastState): void {
   attempt.hidden = state.attempt === null;
   attempt.textContent =
     state.attempt === null ? "" : `Attempt ${state.attempt}/${state.total}`;
+  const card = element("autopsy");
+  card.hidden = state.autopsy === null;
+  element("ticker").hidden = state.autopsy !== null;
+  if (state.autopsy) {
+    const view = autopsyView(state.autopsy);
+    card.dataset.status = state.autopsy.status;
+    for (const key of [
+      "verdict",
+      "family",
+      "breaker",
+      "guesser",
+      "patch",
+      "diff",
+      "explanation",
+      "green",
+      "delta",
+    ] as const) {
+      const item = element(`autopsy-${key}`);
+      item.textContent = view[key];
+      item.title = view[key];
+    }
+    const splits = element("autopsy-splits");
+    splits.replaceChildren();
+    for (const split of view.splits) {
+      const row = document.createElement("li");
+      row.textContent = split;
+      splits.append(row);
+    }
+    element("autopsy-reason").hidden = view.reason === null;
+    element("autopsy-reason").textContent = view.reason;
+    element("autopsy-delta").dataset.trend = view.trend;
+  }
 }
 
 export function renderClock(state: BroadcastState, nowMs: number): void {
   const seconds = headStartSeconds(state, nowMs);
-  const active = seconds !== null && seconds > 0 && state.bug !== "fixed";
+  const active =
+    seconds !== null && seconds > 0 && state.bug !== "fixed" && !state.autopsy;
   element("countdown").hidden = !active;
   element("fuse").hidden = !active;
   element("seconds").textContent = `${seconds ?? 15}s`;

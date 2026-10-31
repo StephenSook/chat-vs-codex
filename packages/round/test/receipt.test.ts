@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it } from "vitest";
@@ -6,6 +6,7 @@ import { initialBroadcast } from "../../../apps/overlay/src/events.js";
 import type { ClientSnapshot } from "../src/client.js";
 import type { RoundSnapshot } from "../src/engine.js";
 import {
+  loadPreviousVerifiedRound,
   publicReceipt,
   saveReceipt,
   viewerKey,
@@ -136,4 +137,113 @@ it("keeps viewer labels stable with a private mode-0600 key and receipts append-
     saveReceipt(path, { ...receipt, winner: "chat" }),
   ).rejects.toThrow(/overwrite/);
   expect(JSON.parse(await readFile(file, "utf8"))).toEqual(receipt);
+});
+
+it("loads the most recent verified receipt across invocations and never skips an unavailable legacy timing", async () => {
+  const path = await directory();
+  const receipt = publicReceipt(verified());
+  const first = { ...receipt, completedAt: "2026-10-31T10:00:00.000Z" };
+  await saveReceipt(path, first);
+  expect(await loadPreviousVerifiedRound(path)).toEqual({
+    roundId: first.roundId,
+    timeToGreenMs: 11003,
+  });
+  const legacy = {
+    ...receipt,
+    roundId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    completedAt: "2026-10-31T11:00:00.000Z",
+    clock: "legacy-wall-clock-ms",
+    durations: receipt.durations
+      ? { ...receipt.durations, timeToGreenMs: null }
+      : null,
+  };
+  await saveReceipt(path, legacy);
+  expect(await loadPreviousVerifiedRound(path)).toEqual({
+    roundId: legacy.roundId,
+    timeToGreenMs: null,
+  });
+  // The same disk baseline is returned to a later independent caller.
+  expect(await loadPreviousVerifiedRound(path)).toEqual({
+    roundId: legacy.roundId,
+    timeToGreenMs: null,
+  });
+});
+
+it("keeps a newer incompatible timing unavailable and ignores explicitly failed rounds", async () => {
+  const path = await directory();
+  const receipt = publicReceipt(verified());
+  await saveReceipt(path, {
+    ...receipt,
+    completedAt: "2026-10-31T10:00:00.000Z",
+  });
+  const incompatible = {
+    ...receipt,
+    roundId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    completedAt: "2026-10-31T11:00:00.000Z",
+    clock: "unrelated-clock",
+  };
+  await saveReceipt(path, incompatible);
+  await saveReceipt(path, {
+    ...receipt,
+    roundId: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+    completedAt: "2026-10-31T12:00:00.000Z",
+    reason: "repair-failed",
+  });
+  expect(await loadPreviousVerifiedRound(path)).toEqual({
+    roundId: incompatible.roundId,
+    timeToGreenMs: null,
+  });
+});
+
+it("distinguishes missing prior receipts from unreadable prior evidence", async () => {
+  const path = await directory();
+  expect(await loadPreviousVerifiedRound(join(path, "absent"))).toBeNull();
+  expect(await loadPreviousVerifiedRound(path)).toBeNull();
+  await writeFile(
+    join(path, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa.json"),
+    "not json",
+  );
+  await expect(loadPreviousVerifiedRound(path)).rejects.toThrow();
+});
+
+it("retains terminal autopsy evidence without copying unrelated fields or raw viewer names", () => {
+  const input = verified();
+  const patch = {
+    added: 1,
+    removed: 1,
+    preview: ["-before", "+after"],
+    privateNote: "private-name",
+  };
+  input.result.autopsy = {
+    roundId: input.result.roundId ?? "",
+    status: "verified",
+    reason: null,
+    breaker: input.breaker,
+    firstCorrectGuesser: "viewer-aaaaaaaaaaaaaaaa",
+    family: "gravity-sign",
+    winner: "codex",
+    patch,
+    explanation: "The actual explanation",
+    durations: input.result.durations ?? {
+      headStartMs: null,
+      repairMs: null,
+      validationMs: null,
+      swapMs: null,
+      timeToGreenMs: null,
+    },
+    previousRoundId: null,
+    deltaMs: null,
+  };
+  Object.assign(input.result.autopsy, { privateNote: "private-name" });
+  const receipt = publicReceipt(input);
+  expect(receipt.firstCorrectGuesser).toBe("viewer-aaaaaaaaaaaaaaaa");
+  expect(receipt.autopsy?.patch).toEqual({
+    added: 1,
+    removed: 1,
+    preview: ["-before", "+after"],
+  });
+  expect(receipt.autopsy?.explanation).toBe("The actual explanation");
+  expect(JSON.stringify(receipt)).not.toContain("private-name");
+  input.result.autopsy.firstCorrectGuesser = "raw-user";
+  expect(() => publicReceipt(input)).toThrow("verified");
 });

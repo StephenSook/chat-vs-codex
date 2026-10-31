@@ -61,6 +61,29 @@ export interface RoundDurations {
   timeToGreenMs: number | null;
 }
 
+/** Terminal evidence. Missing runtime metadata remains unavailable, never inferred. */
+export interface RoundAutopsy {
+  roundId: string;
+  status: "verified" | "rolled-back";
+  reason: string | null;
+  breaker: string | null;
+  firstCorrectGuesser: string | null;
+  family: BugFamily | null;
+  winner: "chat" | "codex" | null;
+  patch: RuntimePatch | null;
+  explanation: string | null;
+  durations: RoundDurations;
+  previousRoundId: string | null;
+  /** Current minus previous compatible time to green; negative means faster. */
+  deltaMs: number | null;
+}
+
+export interface PreviousVerifiedRound {
+  roundId: string;
+  /** Null for legacy or incompatible timing definitions. */
+  timeToGreenMs: number | null;
+}
+
 export interface PreparedGame {
   family: BugFamily;
   clean: GameArtifact;
