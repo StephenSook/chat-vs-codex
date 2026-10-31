@@ -7,6 +7,10 @@ import {
 } from "../../twitch/src/events.js";
 import type { LiveHelix } from "../../twitch/src/helix.js";
 import { TwitchRefusal } from "../../twitch/src/helix.js";
+import type {
+  LiveRewards,
+  RewardCapability,
+} from "../../twitch/src/rewards.js";
 import { eventStamp, monotonicMs } from "./clocks.js";
 import type { RoundAutopsy, RoundEvent } from "./contracts.js";
 
@@ -36,6 +40,15 @@ export class LiveRoundController {
   private readonly sentMessageIds = new Set<string>();
   private outgoing = Promise.resolve();
   private stopped = false;
+  private redemption: {
+    id: string;
+    fulfilled: boolean;
+    roundId?: string;
+  } | null = null;
+  private readonly roundRedemptions = new Map<
+    string,
+    { id: string; fulfilled: boolean; ran: boolean }
+  >();
   constructor(
     private readonly options: {
       broadcasterId: string;
@@ -47,10 +60,14 @@ export class LiveRoundController {
       allowBroadcasterTest?: boolean;
       cooldownMs?: number;
       now?: () => number;
+      rewards?: { api: LiveRewards; capability: RewardCapability };
     },
   ) {
     this.handler = new TwitchHandler({
       broadcasterId: options.broadcasterId,
+      ...(options.rewards
+        ? { breakRewardId: options.rewards.capability.rewardId }
+        : {}),
       sink: {
         public: (intent) => this.publicIntent(intent),
         private: (intent) => this.privateIntent(intent),
@@ -95,7 +112,28 @@ export class LiveRoundController {
         if (message.event.from_user_id === options.botUserId) return;
         if (message.event.to_user_id !== options.broadcasterId) return;
         this.remember(message.event.from_user_id, message.event.from_user_name);
-      } else return; // Monetization and raids are intentionally not enabled by this mode.
+      } else if (
+        message.type === "channel.channel_points_custom_reward_redemption.add"
+      ) {
+        const data = message.event;
+        if (
+          data.broadcaster_user_id !== options.broadcasterId ||
+          data.reward.id !== options.rewards?.capability.rewardId ||
+          data.status === "canceled"
+        )
+          return;
+        this.remember(data.user_id, data.user_name);
+        this.redemption = {
+          id: data.id,
+          fulfilled: data.status === "fulfilled",
+        };
+        try {
+          accept(message);
+        } finally {
+          this.redemption = null;
+        }
+        return;
+      } else return; // Other monetization and raids remain disabled.
       accept(message);
     };
   }
@@ -146,8 +184,10 @@ export class LiveRoundController {
     return true;
   }
   private publicIntent(intent: PublicIntent): void {
-    if (intent.kind === "break-requested" && !this.eligible(intent.actor))
+    if (intent.kind === "break-requested" && !this.eligible(intent.actor)) {
+      if (this.redemption) this.settleRedemption(this.redemption, false);
       return;
+    }
     if (intent.kind !== "break-requested" && intent.kind !== "guess-submitted")
       return;
     this.currentActor = intent.actor;
@@ -155,7 +195,41 @@ export class LiveRoundController {
       this.engine?.handlePublic(intent);
     } finally {
       this.currentActor = null;
+      if (this.redemption && !this.redemption.roundId)
+        this.settleRedemption(this.redemption, false);
     }
+  }
+  private settleRedemption(
+    redemption: { id: string; fulfilled: boolean },
+    ran: boolean,
+  ): void {
+    const rewards = this.options.rewards;
+    if (!rewards) return;
+    this.schedule(`redemption:${redemption.id}`, async () => {
+      if (redemption.fulfilled) {
+        this.log({
+          type: "twitch.reward-already-fulfilled",
+          redemptionId: redemption.id,
+        });
+        return;
+      }
+      const status = ran ? "FULFILLED" : "CANCELED";
+      if (this.options.dryChat || rewards.capability.path !== "app-owned") {
+        this.log({
+          type: this.options.dryChat
+            ? "twitch.reward-dry-run"
+            : "twitch.reward-manual-settlement",
+          redemptionId: redemption.id,
+          rewardId: rewards.capability.rewardId,
+          requestedStatus: status,
+          reason: this.options.dryChat
+            ? "All Twitch writes disabled."
+            : "Only the creating app can update this dashboard reward. Broadcaster must settle it in the request queue.",
+        });
+        return;
+      }
+      await rewards.api.settle(rewards.capability, redemption.id, status);
+    });
   }
   private privateIntent(intent: PrivateIntent): void {
     if (this.eligible(intent.actor)) this.engine?.handlePrivate(intent);
@@ -221,6 +295,28 @@ export class LiveRoundController {
           : null
         : event.roundId;
     if (!id) return;
+    if (
+      event.type === "round.state" &&
+      event.phase === "preparing" &&
+      this.redemption
+    ) {
+      this.redemption.roundId = id;
+      this.roundRedemptions.set(id, { ...this.redemption, ran: false });
+    }
+    if (event.type === "game.build" && event.phase === "broken") {
+      const redemption = this.roundRedemptions.get(id);
+      if (redemption) redemption.ran = true;
+    }
+    if (
+      event.type === "round.state" &&
+      (event.phase === "resolved" || event.phase === "rolled-back")
+    ) {
+      const redemption = this.roundRedemptions.get(id);
+      if (redemption) {
+        this.roundRedemptions.delete(id);
+        this.settleRedemption(redemption, redemption.ran);
+      }
+    }
     if (event.type === "game.build" && event.phase === "broken") {
       this.schedule(`${id}:start`, async () => {
         await this.chat("Something broke. Chat has 15 s.");

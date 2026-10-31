@@ -218,7 +218,7 @@ describe("recording privacy and reward capabilities", () => {
     await expect(
       chooseReward({
         create: async () => {
-          throw { statusCode: 403, body: "missing scope" };
+          throw { statusCode: 401, body: "invalid token" };
         },
         dashboardRewardId: "dashboard",
         log: (path) => paths.push(path),

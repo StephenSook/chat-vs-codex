@@ -14,6 +14,7 @@ import {
 } from "../../twitch/src/auth.js";
 import { createEventSub } from "../../twitch/src/eventsub.js";
 import { createLiveHelix } from "../../twitch/src/helix.js";
+import { createLiveRewards } from "../../twitch/src/rewards.js";
 import { ROUND_PORT } from "./address.js";
 import { startGameClient } from "./client.js";
 import { eventStamp } from "./clocks.js";
@@ -265,6 +266,23 @@ export async function runLiveCli(
   let controller: LiveRoundController | undefined;
   let events: RoundEnvelope[] = [];
   try {
+    const rewards = createLiveRewards({
+      clientId,
+      broadcasterId: account.userId,
+      accessToken,
+      record: (entry) => {
+        record(entry);
+        // Reward endpoints return no credentials. The adapter redacts reflected tokens.
+        if (entry.type === "twitch.reward-response")
+          console.log(`Twitch reward response: ${JSON.stringify(entry)}`);
+        else if (
+          entry.type === "twitch.reward-ready" ||
+          entry.type === "twitch.reward-unavailable"
+        )
+          console.log(`Twitch rewards: ${JSON.stringify(entry)}`);
+      },
+    });
+    const reward = await rewards.setup({ dryRun: flags.dryChat });
     client = await startGameClient(join(directory, "client.log"));
     const runningClient = client;
     await client.snapshot();
@@ -276,6 +294,7 @@ export async function runLiveCli(
       record,
       dryChat: flags.dryChat,
       allowBroadcasterTest: flags.allowBroadcasterTest,
+      ...(reward ? { rewards: { api: rewards, capability: reward } } : {}),
       helix: createLiveHelix({
         clientId,
         broadcasterId: account.userId,
@@ -391,7 +410,7 @@ export async function runLiveCli(
     );
     if (flags.dryChat)
       console.log(
-        "Dry chat: outgoing lines are logged; no chat, markers, clips or pins are sent.",
+        "Dry chat: outgoing lines are logged; no chat, markers, clips, pins, reward creation or reward updates are sent.",
       );
     abort.signal.throwIfAborted();
     listener.start();

@@ -63,12 +63,16 @@ events are ignored in either order. Price/time matching would merge real purchas
 Configure reward and power-up IDs in the handler before enabling those paths.
 Public power-up input is ignored and never interpreted as a secret.
 
-`chooseReward` is an injected capability helper for the later reward setup step:
-an explicit create succeeds as app-owned/refundable; only the documented 403
-"not a partner or affiliate" permits dashboard consume-only fallback. It logs the
-selected path. The CLI does not call this helper or create anything during auth.
+`round:live` uses `createLiveRewards` to create Break the game (100 points, no
+input), or discover the same-title dashboard reward after HTTP 403. Only app-owned
+redemptions can be fulfilled or refunded through the API. Dashboard settlement
+is manual. Startup prints exact reward responses with reflected access tokens
+redacted and retains them in private logs. See [Channel Points](../../docs/CHANNEL-POINTS.md)
+for startup, restart, dry-chat and redemption verification. Authorization and the
+standalone listener do not create rewards.
 
 API signatures verified from the published 8.2.0 package type definitions and source.
 Real authorization and all nine subscription registrations passed the
-[Twitch check](../../docs/TWITCH-VERIFICATION.md). Live event delivery, account
-reward eligibility and a live-stream round remain unverified.
+[Twitch check](../../docs/TWITCH-VERIFICATION.md). Offline broadcaster-test chat
+delivery has a [verified receipt](../../docs/rounds/82589ac9-1b1b-4393-8085-9bed5d88ee2b.json).
+Account reward eligibility and a live-stream round remain unverified.

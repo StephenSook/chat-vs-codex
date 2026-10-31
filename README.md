@@ -19,6 +19,8 @@ and an [offline Twitch broadcaster test](docs/rounds/82589ac9-1b1b-4393-8085-9be
 are verified. Broadcaster tests are labelled separately from viewer rounds.
 The [streaming guide](docs/STREAMING.md) covers the offline channel test, OBS scene
 import, keyboard play and Twitch account connection without a stored stream key.
+The [Channel Points guide](docs/CHANNEL-POINTS.md) covers reward creation,
+dashboard fallback and redemption settlement.
 The real [Twitch authorization and subscription check](docs/TWITCH-VERIFICATION.md)
 verified the broadcaster and all nine subscriptions without sending chat.
 

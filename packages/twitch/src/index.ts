@@ -24,5 +24,5 @@ export {
   parseFixture,
   replayFixtures,
 } from "./fixtures.js";
-export type { RewardCapability } from "./rewards.js";
-export { chooseReward } from "./rewards.js";
+export type { LiveRewards, RewardCapability } from "./rewards.js";
+export { BREAK_REWARD, chooseReward, createLiveRewards } from "./rewards.js";
