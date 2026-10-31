@@ -3,8 +3,22 @@
 **Chat vs Codex:** viewers plant a real bug in the platformer a streamer is playing. Codex races viewers to diagnose
 and repair the real TypeScript bug, checked by deterministic replay tests.
 
-The runtime spike repaired 211 of 212 planted bugs. Terra low finished green trials
-in a 14.52 second median; Sol high in 29.40 seconds. Both pass the GO gate.
+## For judges
+
+| Criterion                                | Proof                                                                                                                                                                      | Film |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| Innovation                               | [Real Twitch rounds](docs/LIVE-VERIFICATION.md), [round autopsies](https://chat-vs-codex-judge.vercel.app/#rounds)                                                         | TBD  |
+| Potential Impact                         | [Second game](https://chat-vs-codex-judge.vercel.app/#second-game), [reusable game preparation](.agents/skills/hotfix-ready/SKILL.md)                                      | TBD  |
+| Technological implementation incl. Codex | [Benchmark](bench/SUMMARY.md), [browser recomputation](https://chat-vs-codex-judge.vercel.app/#numbers), [sandbox canary](https://chat-vs-codex-judge.vercel.app/#sandbox) | TBD  |
+| Design                                   | [Judge site](https://chat-vs-codex-judge.vercel.app/), [streaming and OBS](docs/STREAMING.md)                                                                              | TBD  |
+
+211/212 fixes. Recompute: `pnpm bench:summary`.
+
+Terra median 14.5 s across green trials. Recompute: `pnpm bench:summary`.
+
+596 tests. Recompute: `pnpm test`.
+
+Sol high finished green trials in a 29.40 second median. Both pass the GO gate.
 [Results and limits](bench/SUMMARY.md) include the retained infrastructure loss,
 alternate fixes and per-family timings. Raw [results](bench/results.jsonl) and
 [run logs](bench/runs/) are retained for recomputation.
