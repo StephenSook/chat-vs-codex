@@ -15,6 +15,7 @@ import type { GhostView } from "./ghost.js";
 import {
   actorPositions,
   type CameraMode,
+  cameraFor,
   type corruptionFor,
   playfieldCamera,
   VIEWPORT,
@@ -211,8 +212,12 @@ export async function createScene(host: HTMLElement, cameraMode: CameraMode) {
       effect: ReturnType<typeof corruptionFor>,
       ghost: GhostView | null = null,
       validating = false,
+      symptomFocus: "player" | "enemy" | null = null,
     ) {
-      const camera = playfieldCamera(state, cameraMode, ghost, validating);
+      const camera =
+        symptomFocus === "enemy"
+          ? cameraFor(state.enemy.x, state.enemy.y, cameraMode)
+          : playfieldCamera(state, cameraMode, ghost, validating);
       world.scale.set(camera.zoom);
       world.position.set(camera.left, camera.top);
       const actors = actorPositions(state);

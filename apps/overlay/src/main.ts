@@ -23,6 +23,7 @@ import {
 } from "./presentation.js";
 import { createScene } from "./scene.js";
 import { SimulationPlayer } from "./simulation.js";
+import { SymptomReel } from "./symptom.js";
 
 declare global {
   interface Window {
@@ -93,6 +94,8 @@ async function start(): Promise<void> {
     audio.setVolume(Number(audioVolume.value) / 100),
   );
   const ghost = new RecordedGhost();
+  const symptom = new SymptomReel();
+  let headStart = false;
   let broadcast = initialBroadcast();
   let input = 0;
   let lastCountdown: number | null = null;
@@ -100,6 +103,8 @@ async function start(): Promise<void> {
   let bridgeError: string | null = null;
   let validating = false;
   let renderedGhost: GhostView | null = null;
+  let renderedState = simulation.state;
+  let renderedSymptom: ReturnType<SymptomReel["view"]> = null;
   resizeStage();
   window.addEventListener("resize", resizeStage);
   renderBroadcast(broadcast);
@@ -116,6 +121,7 @@ async function start(): Promise<void> {
     audio.observe(event);
     broadcast = reduceBroadcast(broadcast, event);
     ghost.observe(event);
+    symptom.observe(event);
     renderBroadcast(broadcast);
     if (!broadcast.roundId && mode === "play")
       element("round-label").textContent = "FREE PLAY";
@@ -130,7 +136,13 @@ async function start(): Promise<void> {
       mode,
       filtersEnabled: !motion.matches,
       camera: playfieldCamera(
-        simulation.state,
+        renderedSymptom?.focus === "enemy"
+          ? {
+              ...renderedState,
+              x: renderedState.enemy.x,
+              y: renderedState.enemy.y,
+            }
+          : renderedState,
         cameraMode,
         renderedGhost,
         validating,
@@ -162,6 +174,7 @@ async function start(): Promise<void> {
         onState(state) {
           audio.observeState(state);
           validating = state.phase === "validating";
+          headStart = state.phase === "head-start";
           if (state.phase === "preparing") bridgeError = null;
           if (state.phase === "rolled-back") ghost.clear();
         },
@@ -217,7 +230,21 @@ async function start(): Promise<void> {
     const corruption = corruptionFor(broadcast, nowMs, motion.matches);
     element("game").dataset.corruption = corruption.treatment;
     renderedGhost = ghost.advance(ticker.elapsedMS, motion.matches);
-    scene.draw(simulation.state, corruption, renderedGhost, validating);
+    const reel = symptom.view(
+      nowMs,
+      headStart,
+      simulation.state,
+      motion.matches,
+    );
+    renderedSymptom = reel;
+    renderedState = reel?.state ?? simulation.state;
+    scene.draw(
+      reel?.state ?? simulation.state,
+      corruption,
+      renderedGhost,
+      validating,
+      reel?.focus ?? null,
+    );
     const countdown = headStartSeconds(broadcast, nowMs);
     if (countdown !== lastCountdown) {
       lastCountdown = countdown;
@@ -225,11 +252,13 @@ async function start(): Promise<void> {
     }
     const status = bridgeError
       ? "ROUND DISCONNECTED"
-      : !simulation.state.alive
-        ? "ϟ YOU DIED"
-        : simulation.state.won
-          ? "✓ FLAG REACHED"
-          : "RUNNING";
+      : reel
+        ? "FAILING REPLAY · LOOP"
+        : !simulation.state.alive
+          ? "ϟ YOU DIED"
+          : simulation.state.won
+            ? "✓ FLAG REACHED"
+            : "RUNNING";
     if (lastRunStatus !== status) {
       element("run-status").textContent = status;
       lastRunStatus = status;

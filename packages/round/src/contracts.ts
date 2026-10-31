@@ -24,6 +24,31 @@ export interface RoundSession {
   trigger?: "broadcaster-test";
 }
 
+export interface SymptomReplay {
+  fps: 60;
+  buildDigest: string;
+  sourceDigest: string;
+  trackDigest: string;
+  firstDivergentFrame: number;
+  focus: "player" | "enemy";
+  frames: {
+    frame: number;
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    alive: boolean;
+    won: boolean;
+    enemy: {
+      x: number;
+      y: number;
+      vy: number;
+      direction: number;
+      turns: number;
+    };
+  }[];
+}
+
 export interface GameArtifact {
   id: string;
   code: string;
@@ -134,6 +159,7 @@ export interface PreviousVerifiedRound {
 }
 
 export interface PreparedGame {
+  symptom?: SymptomReplay;
   mutation?: MutationProvenance;
   family: BugFamily;
   clean: GameArtifact;

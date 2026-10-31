@@ -1168,6 +1168,51 @@ it("publishes generation provenance before bug installation without revealing a 
   expect(JSON.stringify(generated)).not.toContain("gravity-sign");
 });
 
+it("publishes the failing recording after broken installation and before the head start", async () => {
+  const context = setup();
+  context.game.symptom = {
+    fps: 60,
+    buildDigest: "a".repeat(64),
+    sourceDigest: "b".repeat(64),
+    trackDigest: "c".repeat(64),
+    firstDivergentFrame: 1,
+    focus: "player",
+    frames: [0, 1].map((frame) => ({
+      frame,
+      x: frame * 256,
+      y: 0,
+      vx: 256,
+      vy: 0,
+      alive: true,
+      won: false,
+      enemy: { x: 0, y: 0, vy: 0, direction: 1, turns: 0 },
+    })),
+  };
+  breakGame(context.engine);
+  await vi.advanceTimersByTimeAsync(0);
+  expect(context.activate).toHaveBeenCalledWith(
+    context.game.broken,
+    "broken",
+    expect.any(String),
+    expect.any(AbortSignal),
+  );
+  const started = context.events.findIndex(
+    (row) => row.type === "overlay" && row.event.type === "round.started",
+  );
+  const reel = context.events.findIndex(
+    (row) => row.type === "overlay" && row.event.type === "round.symptom",
+  );
+  const headStart = context.events.findIndex(
+    (row) => row.type === "round.state" && row.phase === "head-start",
+  );
+  expect(reel).toBeGreaterThan(started);
+  expect(headStart).toBeGreaterThan(reel);
+  expect(JSON.stringify(context.events[reel])).not.toContain(
+    context.game.family,
+  );
+  expect(context.game.repair).not.toHaveBeenCalled();
+});
+
 describe("SDK presentation honesty", () => {
   it("maps observed read/test commands without leaking outputs or claiming shell success proves green", () => {
     expect(

@@ -13,6 +13,7 @@ import {
 } from "./events.js";
 import { validGhostReplay } from "./ghost.js";
 import type { SimulationPlayer } from "./simulation.js";
+import { validSymptomReplay } from "./symptom.js";
 
 type BuildEvent = Extract<RoundEvent, { type: "game.build" }>;
 type StateEvent = Extract<RoundEvent, { type: "round.state" }>;
@@ -85,6 +86,8 @@ function validateOverlay(event: unknown): event is OverlayEvent {
       return typeof e.roundId === "string" && typeof e.name === "string";
     case "tests.green":
       return typeof e.roundId === "string";
+    case "round.symptom":
+      return typeof e.roundId === "string" && validSymptomReplay(e.replay);
     case "round.ghost":
       return typeof e.roundId === "string" && validGhostReplay(e.replay);
     case "round.autopsy":
@@ -341,6 +344,7 @@ export interface RoundBridgeOptions {
 
 /** Serializes asynchronous imports with event publication, including SSE replay after reconnect. */
 export class OrderedRoundBridge {
+  private brokenDigest: string | null = null;
   private queue: Promise<void> = Promise.resolve();
   private sequence = 0;
   private roundId: string | null = null;
@@ -415,9 +419,17 @@ export class OrderedRoundBridge {
           const module = await this.options.loadBuild(event);
           if (this.closed || event.roundId !== this.roundId) return;
           this.options.simulation.install(module);
+          if (event.phase === "broken") this.brokenDigest = event.digest;
           if (event.phase === "rollback") this.replaySourceDigest = null;
           this.options.onBuild?.(event);
         } else if (event.type === "overlay") {
+          if (
+            event.event.type === "round.symptom" &&
+            event.event.replay.buildDigest !== this.brokenDigest
+          )
+            throw new Error(
+              "Symptom recording does not match installed broken build",
+            );
           if (event.event.type === "round.ghost")
             this.replaySourceDigest = event.event.replay.sourceDigest;
           this.options.events.publish(

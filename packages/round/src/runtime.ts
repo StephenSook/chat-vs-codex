@@ -27,6 +27,8 @@ import type {
 } from "./contracts.js";
 import { bundleGame, type RepairExecution } from "./runtime-execution.js";
 
+import { captureSymptom } from "./symptom.js";
+
 export interface RoundRuntimeOptions {
   runsDirectory: string;
   model?: string;
@@ -211,6 +213,12 @@ export function createRoundRuntime(
         );
         if (clean.digest === broken.digest)
           throw new Error("Mutation has no visible source artifact");
+        const symptom = await captureSymptom(
+          workspace.game,
+          mutant,
+          broken.digest,
+          proof.brokenSourceDigest,
+        );
         const profile = await loadProfile();
         const launcher = join(runs, `${randomUUID()}.launcher`);
         await createLauncher(launcher);
@@ -222,6 +230,7 @@ export function createRoundRuntime(
         );
         signal.throwIfAborted();
         return {
+          symptom,
           family: mutant.family as BugFamily,
           mutation: provenance,
           clean,

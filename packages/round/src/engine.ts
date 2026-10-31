@@ -607,6 +607,12 @@ export class RoundEngine {
         headStartMs: this.headStartMs,
       });
       this.overlay({ type: "bug.active", roundId: round.id, intensity: 1 });
+      if (prepared.symptom)
+        this.overlay({
+          type: "round.symptom",
+          roundId: round.id,
+          replay: prepared.symptom,
+        });
       this.phase(round, "head-start");
       await this.headStart(round);
       round.headStartFinishedAt = this.now();

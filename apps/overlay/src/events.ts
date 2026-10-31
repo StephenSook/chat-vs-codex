@@ -1,6 +1,7 @@
 import type {
   RoundAutopsy,
   RoundValidationReplay,
+  SymptomReplay,
 } from "../../../packages/round/src/contracts.js";
 
 /** Local presentation contract. The operator's SDK bridge publishes observed events only.
@@ -50,6 +51,7 @@ export type OverlayEvent =
     }
   | { type: "tests.green"; roundId: string }
   | { type: "round.autopsy"; roundId: string; autopsy: RoundAutopsy }
+  | { type: "round.symptom"; roundId: string; replay: SymptomReplay }
   | { type: "round.ghost"; roundId: string; replay: RoundValidationReplay }
   | { type: "score.changed"; chat: number; codex: number }
   | { type: "simulation.death" };
@@ -210,6 +212,8 @@ export function reduceBroadcast(
             ghost: event.autopsy.status === "rolled-back" ? null : state.ghost,
           }
         : state;
+    case "round.symptom":
+      return state;
     case "round.ghost":
       return { ...state, ghost: event.replay };
     case "codex.step": {
