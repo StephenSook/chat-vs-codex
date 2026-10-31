@@ -378,6 +378,12 @@ describe("round runtime verification", () => {
     );
     if (!mutant) throw new Error("Missing controls fixture");
     const logs = await mkdtemp(join(tmpdir(), "round-factory-"));
+    const priorPath = process.env.PATH;
+    // Preparation must not depend on a host Codex installation or invoke a model.
+    await writeFile(join(logs, "codex"), "#!/bin/sh\nexit 99\n", {
+      mode: 0o700,
+    });
+    process.env.PATH = `${logs}:${priorPath ?? ""}`;
     try {
       const runtime = createRoundRuntime({
         runsDirectory: logs,
@@ -405,6 +411,8 @@ describe("round runtime verification", () => {
       ).rejects.toThrow("unavailable");
       expect((await stat(logs)).isDirectory()).toBe(true);
     } finally {
+      if (priorPath === undefined) delete process.env.PATH;
+      else process.env.PATH = priorPath;
       await rm(logs, { recursive: true, force: true });
     }
   }, 30000);
