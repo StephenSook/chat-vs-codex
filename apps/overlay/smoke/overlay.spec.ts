@@ -20,7 +20,12 @@ test("real sim renders, reproduces hashes, and keeps HUD readable at both sizes"
   await page.evaluate(() => document.fonts.ready);
   const actual = await page.evaluate(() => window.chatVsCodex.snapshot());
   expect(actual.mode).toBe("replay");
-  expect(actual.filtersEnabled).toBe(false);
+  expect(actual.filtersEnabled).toBe(true);
+  expect(actual.corruption.treatment).toBe("none");
+  expect((actual.camera.player.height * 720) / 1080).toBeGreaterThanOrEqual(32);
+  const favicon = await page.request.get("/favicon.svg");
+  expect(favicon.ok()).toBe(true);
+  expect(favicon.headers()["content-type"]).toContain("image/svg+xml");
   const expected = runTrack({
     ...CLEAN_TRACK,
     inputs: CLEAN_TRACK.inputs.slice(0, actual.frame),
@@ -73,7 +78,7 @@ test("real sim renders, reproduces hashes, and keeps HUD readable at both sizes"
 test("event fixtures exercise countdown, retry vocabulary, and corruption clearing", async ({
   page,
 }) => {
-  await page.goto("/?filters=1");
+  await page.goto("/");
   await page.waitForFunction(() => Boolean(window.chatVsCodex));
   const publish = (events: OverlayEvent[]) =>
     page.evaluate((messages) => {
@@ -90,7 +95,7 @@ test("event fixtures exercise countdown, retry vocabulary, and corruption cleari
     }),
   );
   await publish([
-    { type: "bug.active", roundId: "ui-test", intensity: 0.6 },
+    { type: "bug.active", roundId: "ui-test", intensity: 0.7 },
     {
       type: "codex.step",
       roundId: "ui-test",
@@ -134,22 +139,71 @@ test("event fixtures exercise countdown, retry vocabulary, and corruption cleari
   await expect(page.locator("#steps")).toContainText("[FAILED]");
   await expect(page.locator("#bug-name")).toHaveText("???");
   await page.setViewportSize({ width: 1280, height: 720 });
+  await expect(page.locator("#game")).toHaveAttribute(
+    "data-corruption",
+    "animated",
+  );
+  const corruption = await page.evaluate(
+    () => window.chatVsCodex.snapshot().corruption,
+  );
+  expect(corruption.rgbOffset).toBeCloseTo(6.3);
+  const docked = await page.evaluate(() => {
+    const game = document.querySelector(".game-shell")?.getBoundingClientRect();
+    if (!game) throw new Error("Missing game");
+    return ["#bug-ticket", "#countdown", ".ticker"].every((selector) => {
+      const panel = document.querySelector(selector)?.getBoundingClientRect();
+      if (!panel) throw new Error(`Missing ${selector}`);
+      return (
+        panel.right <= game.left ||
+        panel.left >= game.right ||
+        panel.bottom <= game.top ||
+        panel.top >= game.bottom
+      );
+    });
+  });
+  expect(docked).toBe(true);
   await page.screenshot({ path: resolve(stillDir, "overlay-720-ui-test.png") });
   await publish([{ type: "tests.green", roundId: "ui-test" }]);
   await expect(page.locator("#bug-name")).toHaveText("Fixed");
   await expect(page.locator("#game")).toHaveAttribute("data-status", "fixed");
   await expect(page.locator("#countdown")).toBeHidden();
+  await expect(page.locator("#game")).toHaveAttribute(
+    "data-corruption",
+    "none",
+  );
 });
 
 test("keyboard input changes the actual sim and reduced motion disables filters", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/?mode=play&filters=1");
+  await page.goto("/?mode=play");
   await page.waitForFunction(() => Boolean(window.chatVsCodex));
   expect(
     await page.evaluate(() => window.chatVsCodex.snapshot().filtersEnabled),
   ).toBe(false);
+  await page.evaluate(() => {
+    window.chatVsCodex.events.publish({
+      type: "round.started",
+      id: "reduced",
+      number: 1,
+      atMs: performance.now(),
+    });
+    window.chatVsCodex.events.publish({
+      type: "bug.active",
+      roundId: "reduced",
+      intensity: 0.7,
+    });
+  });
+  await expect(page.locator("#game")).toHaveAttribute(
+    "data-corruption",
+    "static",
+  );
+  expect(
+    await page.evaluate(
+      () => window.chatVsCodex.snapshot().corruption.rgbOffset,
+    ),
+  ).toBe(0);
   await expect(page.locator("#playback-label")).toHaveText("FREE PLAY");
   const before = await page.evaluate(() => window.chatVsCodex.snapshot());
   await page.keyboard.down("ArrowRight");
@@ -164,4 +218,16 @@ test("keyboard input changes the actual sim and reduced motion disables filters"
   expect(
     (await page.evaluate(() => window.chatVsCodex.snapshot())).frame,
   ).toBeLessThan(after.frame);
+});
+
+test("overview keeps the entire level available without claiming a ghost replay", async ({
+  page,
+}) => {
+  await page.goto("/?camera=overview");
+  await page.waitForFunction(() => Boolean(window.chatVsCodex));
+  const snapshot = await page.evaluate(() => window.chatVsCodex.snapshot());
+  expect(snapshot.camera.zoom).toBe(1200 / 1280);
+  expect(snapshot.camera.left).toBeGreaterThanOrEqual(0);
+  expect(snapshot.camera.top).toBeGreaterThanOrEqual(0);
+  await expect(page.locator("#playback-label")).toHaveText("CLEAN REPLAY");
 });

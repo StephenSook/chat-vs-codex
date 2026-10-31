@@ -14,8 +14,13 @@ Open `http://127.0.0.1:4173/` in a browser or an OBS browser source set to 1920 
 60 fps. The default is a labelled clean sim replay using the replay package's hand-authored
 `clean-flag` inputs and seed. It is not a recorded Codex round or benchmark result.
 `?mode=play` enables arrows, Space and R for movement, jump and restart.
+The default camera follows the player at twice the original renderer's scale, giving
+the 24 px character about 43 screen pixels of height at 720p. `?camera=overview` keeps
+the whole level visible for inspection and future replay work. This is not a ghost replay.
+The bug ticket sits above the playfield; the head start and Pit Crew use a right-hand dock.
 
 The renderer reads `LEVEL`, player dimensions and `platformAt` from the sim's public API.
+The purple enemy uses `state.enemy` position so its ledge turns and falls are visible.
 The clock calls the public `step` at 60 Hz; no physics are duplicated here. Unit tests
 compare final states and hashes with `runTrack` at 30, 60 and 120 display Hz.
 
@@ -56,7 +61,8 @@ pnpm --filter @chat-vs-codex/overlay smoke
 
 The smoke runner requires installed Google Chrome. It checks the live canvas's state hash
 against `runTrack`, idle activity, stage bounds, text sizes, countdown, failure vocabulary,
-keyboard input and reduced motion. It writes stills to ignored `.local/overlay-stills/`:
+keyboard input, panel non-overlap at 720p, favicon and reduced motion. It writes stills to
+ignored `.local/overlay-stills/`:
 
 - `overlay-1080.png`: 1920 by 1080 default replay.
 - `overlay-720.png`: 1280 by 720 default replay.
@@ -71,12 +77,14 @@ cannot establish readability after stream encoding.
 `OVERLAY_URL` selects another local URL; `OVERLAY_STILLS` selects the capture directory.
 Stills are local working artifacts, not submission evidence.
 
-## Filter experiment
+## Active bug presentation
 
-Filters are OFF by default. `?filters=1` opts into an RGB split on the game layer only,
-at the event intensity for 500 ms after activation. The HUD never receives a filter.
-Steady corruption uses a static border and bolt; `tests.green` removes it. Reduced motion
-disables the shader, including if the preference changes while running.
+An observed `bug.active` enables RGB split and sparse scan bands inside the game by
+default, at the supplied intensity. They persist while the observed bug is active;
+`tests.green` or the next round clears them. The HUD never receives a filter. Reduced
+motion uses static on-game color bands and disables RGB offsets, including if the
+preference changes while running. A visual clock moves bands only while a bug is active;
+it never creates agent steps, scores, passing tests or a bug activation.
 
 OBS encode cost at 4500 kbps is NOT VERIFIED. Before enabling a filter on stream, compare
 the same scene with filters off/on in OBS at 1920 by 1080, 60 fps and 4500 kbps. Retain
@@ -93,9 +101,12 @@ Pending: observed SDK bridge, active mutant build playback, autopsy, ghost repla
 judge app. The judge app and its recorded-round proof start after the overlay checkpoint.
 No site has been deployed.
 
-The first verification attempt could not launch Chrome in the restricted execution sandbox
-(SIGABRT at launch; permission error while cleaning up). The browser connector also required
-unavailable approval. Thus rendered stills and visual readability remain NOT VERIFIED.
-The full unit suite's mutation-pool binding requires a main-thread refresh because its
-digest includes the entire changed workspace lockfile. Sim/replay/mutator sources and
-fixtures have not been edited by this thread.
+OBS encode cost at 4500 kbps remains unmeasured. The local smoke checks do not establish
+encoded-stream performance or visual readability. Sim/replay/mutator sources and fixtures
+are unchanged by this app.
+
+Main-thread verification: strict TypeScript, lint, 116 unit tests and the production
+build pass. All four browser smoke tests were attempted, but Chrome exited at launch
+with SIGABRT and EPERM before any page assertion ran. The browser connector also
+requires approval unavailable in this noninteractive session. New rendered stills
+and encoded OBS cost therefore remain NOT VERIFIED.

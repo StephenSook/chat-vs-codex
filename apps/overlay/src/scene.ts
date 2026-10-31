@@ -11,6 +11,13 @@ import {
 } from "@chat-vs-codex/sim";
 import { Application, Container, Graphics } from "pixi.js";
 import { RGBSplitFilter } from "pixi-filters/rgb-split";
+import {
+  actorPositions,
+  type CameraMode,
+  cameraFor,
+  type corruptionFor,
+  VIEWPORT,
+} from "./presentation.js";
 
 const INK = 0x1f1d1b;
 const TILE_PX = TILE / UNIT;
@@ -31,14 +38,11 @@ function clayBox(
 }
 
 /** Art is original vector geometry, positioned from the sim's immutable world. */
-export async function createScene(
-  host: HTMLElement,
-  experimentalFilters: boolean,
-) {
+export async function createScene(host: HTMLElement, cameraMode: CameraMode) {
   const app = new Application();
   await app.init({
-    width: 1728,
-    height: 518.4,
+    width: VIEWPORT.width,
+    height: VIEWPORT.height,
     resolution: 1,
     antialias: true,
     backgroundAlpha: 0,
@@ -51,7 +55,6 @@ export async function createScene(
   app.canvas.setAttribute("tabindex", "0");
 
   const world = new Container();
-  world.scale.set(1728 / (WIDTH * TILE_PX));
   app.stage.addChild(world);
   const background = new Graphics();
   background.rect(0, 0, WIDTH * TILE_PX, HEIGHT * TILE_PX).fill(0xd9e6df);
@@ -139,22 +142,37 @@ export async function createScene(
     .fill(0xfffdf9)
     .stroke({ color: INK, width: 1.5 });
   player.rect(7, 7, 2, 4).rect(13, 7, 2, 4).fill(INK);
-  world.addChild(platform, player);
+  const enemy = new Graphics();
+  clayBox(enemy, 0, 0, pw, ph, 0xb16eaa, 4);
+  enemy.roundRect(3, 7, pw - 6, 7, 2).fill(0xfffdf9);
+  enemy.rect(6, 8, 3, 4).rect(12, 8, 3, 4).fill(INK);
+  enemy
+    .moveTo(2, 4)
+    .lineTo(8, 7)
+    .moveTo(12, 7)
+    .lineTo(18, 4)
+    .stroke({ color: INK, width: 2 });
+  world.addChild(platform, enemy, player);
 
-  // Never enabled by default: OBS at 4500 kbps has not been measured yet.
-  const corruption = experimentalFilters
-    ? new RGBSplitFilter({
-        red: { x: 0, y: 0 },
-        green: { x: 0, y: 0 },
-        blue: { x: 0, y: 0 },
-      })
-    : null;
+  const corruption = new RGBSplitFilter({
+    red: { x: 0, y: 0 },
+    green: { x: 0, y: 0 },
+    blue: { x: 0, y: 0 },
+  });
+  const scanBands = new Graphics();
+  app.stage.addChild(scanBands);
+  let lastTreatment = "";
   let lastPlatformX = Number.NaN;
 
   return {
     app,
-    draw(state: State, intensity: number) {
-      player.position.set(state.x / UNIT, state.y / UNIT);
+    draw(state: State, effect: ReturnType<typeof corruptionFor>) {
+      const camera = cameraFor(state.x, state.y, cameraMode);
+      world.scale.set(camera.zoom);
+      world.position.set(camera.left, camera.top);
+      const actors = actorPositions(state);
+      player.position.set(actors.player.x, actors.player.y);
+      enemy.position.set(actors.enemy.x, actors.enemy.y);
       player.alpha = state.alive ? 1 : 0.35;
       const rect = platformAt(state.frame);
       if (rect.x !== lastPlatformX) {
@@ -169,16 +187,41 @@ export async function createScene(
         );
         lastPlatformX = rect.x;
       }
-      if (corruption) {
-        corruption.red = { x: 5 * intensity, y: 0 };
-        corruption.blue = { x: -5 * intensity, y: 0 };
-        world.filters = intensity > 0 ? [corruption] : [];
+      corruption.red = { x: effect.rgbOffset, y: 0 };
+      corruption.blue = { x: -effect.rgbOffset, y: 0 };
+      world.filters = effect.rgbOffset > 0 ? [corruption] : [];
+      const treatment = `${effect.treatment}:${effect.intensity}:${effect.band}`;
+      if (treatment !== lastTreatment) {
+        scanBands.clear();
+        if (effect.intensity > 0) {
+          // Sparse translucent bands keep the player's route visible. Reduced motion
+          // retains the same static color treatment without shifts or animation.
+          for (let y = 12; y < VIEWPORT.height; y += 28) {
+            scanBands
+              .rect(0, y, VIEWPORT.width, 2)
+              .fill({ color: 0xe5644d, alpha: effect.intensity * 0.18 });
+          }
+          const bandY = 48 + effect.band * 56;
+          scanBands
+            .rect(0, bandY, VIEWPORT.width, 9)
+            .fill({ color: 0x0477bd, alpha: effect.intensity * 0.24 });
+          scanBands
+            .rect(8, bandY + 9, VIEWPORT.width - 8, 4)
+            .fill({ color: 0xe5644d, alpha: effect.intensity * 0.5 });
+          scanBands
+            .rect(0, 0, 7, VIEWPORT.height)
+            .fill({ color: 0xe5644d, alpha: effect.intensity });
+          scanBands
+            .rect(VIEWPORT.width - 7, 0, 7, VIEWPORT.height)
+            .fill({ color: 0x0477bd, alpha: effect.intensity });
+        }
+        lastTreatment = treatment;
       }
       // Application's render plugin draws after this ticker callback. Do not render twice.
     },
     destroy() {
       app.destroy(true, { children: true });
-      corruption?.destroy();
+      corruption.destroy();
     },
   };
 }

@@ -11,6 +11,7 @@ import {
   reduceBroadcast,
 } from "./events.js";
 import { element, renderBroadcast, renderClock, resizeStage } from "./hud.js";
+import { type CameraMode, cameraFor, corruptionFor } from "./presentation.js";
 import { createScene } from "./scene.js";
 import { SimulationPlayer } from "./simulation.js";
 
@@ -23,6 +24,8 @@ declare global {
         hash: string;
         mode: "play" | "replay";
         filtersEnabled: boolean;
+        camera: ReturnType<typeof cameraFor>;
+        corruption: ReturnType<typeof corruptionFor>;
       };
     };
   }
@@ -32,11 +35,11 @@ async function start(): Promise<void> {
   const params = new URLSearchParams(location.search);
   const mode = params.get("mode") === "play" ? "play" : "replay";
   const motion = matchMedia("(prefers-reduced-motion: reduce)");
-  const experimentalFilters = params.get("filters") === "1" && !motion.matches;
+  const cameraMode: CameraMode =
+    params.get("camera") === "overview" ? "overview" : "follow";
   const simulation = new SimulationPlayer(mode);
   const events = createEventBus();
   let broadcast = initialBroadcast();
-  let burstUntilMs = 0;
   let input = 0;
   let lastCountdown: number | null = null;
   let lastRunStatus = "";
@@ -51,26 +54,21 @@ async function start(): Promise<void> {
 
   const unsubscribe = events.subscribe((event) => {
     broadcast = reduceBroadcast(broadcast, event);
-    if (
-      event.type === "bug.active" &&
-      broadcast.roundId === event.roundId &&
-      broadcast.bug === "active"
-    ) {
-      burstUntilMs = performance.now() + 500;
-    }
     renderBroadcast(broadcast);
     if (!broadcast.roundId && mode === "play")
       element("round-label").textContent = "FREE PLAY";
     renderClock(broadcast, performance.now());
   });
-  const scene = await createScene(element("game"), experimentalFilters);
+  const scene = await createScene(element("game"), cameraMode);
   window.chatVsCodex = {
     events,
     snapshot: () => ({
       frame: simulation.state.frame,
       hash: hashState(simulation.state),
       mode,
-      filtersEnabled: experimentalFilters,
+      filtersEnabled: !motion.matches,
+      camera: cameraFor(simulation.state.x, simulation.state.y, cameraMode),
+      corruption: corruptionFor(broadcast, performance.now(), motion.matches),
     }),
   };
 
@@ -108,9 +106,9 @@ async function start(): Promise<void> {
     for (let death = 0; death < result.deaths; death++)
       events.publish({ type: "simulation.death" });
     const nowMs = performance.now();
-    const intensity =
-      !motion.matches && nowMs < burstUntilMs ? broadcast.intensity : 0;
-    scene.draw(simulation.state, intensity);
+    const corruption = corruptionFor(broadcast, nowMs, motion.matches);
+    element("game").dataset.corruption = corruption.treatment;
+    scene.draw(simulation.state, corruption);
     const countdown = headStartSeconds(broadcast, nowMs);
     if (countdown !== lastCountdown) {
       lastCountdown = countdown;
