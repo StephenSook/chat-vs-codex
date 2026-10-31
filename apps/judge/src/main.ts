@@ -1,0 +1,588 @@
+import {
+  type GroupSummary,
+  parseResultsJsonl,
+  summarizeResults,
+} from "../../../packages/bench/src/statistics.js";
+import type { ValidatedReplayFrame } from "../../../packages/bench/src/validated-replay.js";
+import {
+  greenSplit,
+  type JudgeEvidence,
+  roundLabel,
+  seconds,
+} from "./evidence.js";
+import {
+  type GameModule,
+  loadVerifiedGame,
+  proofAvailability,
+  replayProof,
+  sha256,
+} from "./proof.js";
+import "./style.css";
+
+const REPO = "https://github.com/StephenSook/chat-vs-codex";
+function element<K extends keyof HTMLElementTagNameMap>(
+  tag: K,
+  text?: string,
+  className?: string,
+): HTMLElementTagNameMap[K] {
+  const node = document.createElement(tag);
+  if (text !== undefined) node.textContent = text;
+  if (className) node.className = className;
+  return node;
+}
+function link(text: string, href: string): HTMLAnchorElement {
+  const node = element("a", text);
+  node.href = href;
+  return node;
+}
+function details(summary: string, ...children: Node[]): HTMLDetailsElement {
+  const node = element("details");
+  node.append(element("summary", summary), ...children);
+  return node;
+}
+function stat(label: string, value: string): HTMLElement {
+  const node = element("div", undefined, "stat");
+  node.append(element("span", label), element("strong", value));
+  return node;
+}
+function metricRow(label: string, metrics: GroupSummary): HTMLTableRowElement {
+  const row = element("tr");
+  for (const value of [
+    label,
+    `${metrics.green}/${metrics.trials}`,
+    `${((metrics.fixRate ?? 0) * 100).toFixed(1)}%`,
+    seconds(metrics.medianGreenMs),
+    seconds(metrics.p90GreenMs),
+    metrics.medianGreen95CiMs?.map(seconds).join(" to ") ?? "unavailable",
+    `${metrics.exactReverts}`,
+    `${metrics.greensBeforeHeadStart}`,
+    metrics.gate,
+  ])
+    row.append(element("td", value));
+  return row;
+}
+function json(value: unknown): HTMLPreElement {
+  return element("pre", JSON.stringify(value, null, 2));
+}
+function section(id: string, eyebrow: string, title: string): HTMLElement {
+  const node = element("section");
+  node.id = id;
+  node.append(element("p", eyebrow, "eyebrow"), element("h2", title));
+  return node;
+}
+
+async function start(): Promise<void> {
+  const app = document.querySelector<HTMLElement>("#app");
+  if (!app) throw new Error("Missing proof room");
+  const response = await fetch(
+    new URL("evidence/index.json", document.baseURI),
+  );
+  if (!response.ok)
+    throw new Error("Build the committed evidence before opening this site");
+  const evidence = (await response.json()) as JudgeEvidence;
+  if (evidence.schemaVersion !== 1 || !evidence.rounds.length)
+    throw new Error("No committed evidence");
+  const results = await fetch(
+    new URL(evidence.benchmark.path, document.baseURI),
+  );
+  if (!results.ok) throw new Error("Benchmark evidence could not be loaded");
+  const resultsText = await results.text();
+  if ((await sha256(resultsText)) !== evidence.benchmark.digest)
+    throw new Error("Benchmark evidence SHA-256 mismatch");
+  const rows = parseResultsJsonl(resultsText);
+  const summary = summarizeResults(rows, {
+    batchId: evidence.benchmark.batchId,
+  });
+  const selected = rows.filter(
+    (row) => row.batchId === summary.batchId && !row.dryRun,
+  );
+  const green = selected.filter((row) => row.status === "green").length;
+  const nav = element("nav");
+  nav.setAttribute("aria-label", "Evidence pages");
+  nav.append(link("C / C", "#top"));
+  for (const [label, id] of [
+    ["The numbers", "numbers"],
+    ["Rounds", "rounds"],
+    ["Replay it", "replay"],
+    ["The build", "build"],
+    ["Sandbox", "sandbox"],
+  ])
+    nav.append(link(label ?? "", `#${id}`));
+  const header = element("header");
+  header.id = "top";
+  header.append(
+    element("p", "CHAT BREAKS IT. CODEX FIXES IT.", "eyebrow"),
+    element("h1", "CHAT / VS / CODEX"),
+    element("p", "Watch a bug become a fix. Then replay the proof.", "lede"),
+  );
+  const headline = element("div", undefined, "headline-stats");
+  headline.append(
+    stat("Planted-bug benchmark", `${green} / ${selected.length} green`),
+    stat("Recorded round receipts", String(evidence.rounds.length)),
+    stat("Regression replays added", `+${evidence.regressionCount}`),
+  );
+  header.append(headline);
+  app.replaceChildren(nav, header);
+
+  const numbers = section(
+    "numbers",
+    "01 / THE NUMBERS",
+    "Fast enough for chat?",
+  );
+  const modelGrid = element("div", undefined, "model-grid");
+  for (const model of [...summary.models].reverse()) {
+    const card = element("article", undefined, "metric-card");
+    card.dataset.model = model.model;
+    card.append(
+      element(
+        "p",
+        `${model.model.replace("gpt-6.1-", "").toUpperCase()} / ${model.effort}`,
+        "eyebrow",
+      ),
+      element(
+        "strong",
+        `${((model.overall.fixRate ?? 0) * 100).toFixed(1)}%`,
+        "big-number",
+      ),
+      element(
+        "p",
+        `${model.overall.green} of ${model.overall.trials} fixes verified`,
+      ),
+    );
+    const splits = element("div", undefined, "mini-stats");
+    splits.append(
+      stat("Median", seconds(model.overall.medianGreenMs)),
+      stat("p90", seconds(model.overall.p90GreenMs)),
+      stat(
+        "Median 95% CI",
+        model.overall.medianGreen95CiMs?.map(seconds).join(" to ") ??
+          "unavailable",
+      ),
+    );
+    card.append(splits, element("span", model.overall.gate, "badge"));
+    const table = element("table");
+    const head = element("tr");
+    for (const label of [
+      "Family",
+      "Green",
+      "Rate",
+      "Median",
+      "p90",
+      "Median 95% CI",
+      "Exact reverts",
+      "Before 15 s",
+      "Gate",
+    ])
+      head.append(element("th", label));
+    const tableHead = element("thead");
+    tableHead.append(head);
+    const body = element("tbody");
+    body.append(
+      metricRow("Overall", model.overall),
+      ...model.families.map((family) =>
+        metricRow(family.family, family.metrics),
+      ),
+    );
+    table.append(tableHead, body);
+    const scroll = element("div", undefined, "table-scroll");
+    scroll.append(table);
+    card.append(
+      details(
+        "All families + method",
+        scroll,
+        element(
+          "p",
+          `Green timings only. Nearest-rank p90. ${summary.bootstrapSamples} bootstrap resamples; seed ${summary.bootstrapSeed}. Repeated planted bugs on one level, not independently sampled production bugs.`,
+        ),
+      ),
+    );
+    modelGrid.append(card);
+  }
+  numbers.append(modelGrid);
+  const method = element("div");
+  method.append(
+    element(
+      "p",
+      "Computed in this browser from committed JSONL. GO requires a median at most 120 s and a fix rate at least 70%, separately for each model.",
+    ),
+    element("code", `pnpm bench:summary --batch ${evidence.benchmark.batchId}`),
+    link(
+      "Recompute instructions",
+      `${REPO}/blob/${evidence.commit}/bench/SUMMARY.md`,
+    ),
+    link("Download result JSONL", evidence.benchmark.path),
+  );
+  const losses = selected
+    .filter((row) => row.status !== "green")
+    .map((row) => ({
+      trialId: row.trialId,
+      status: row.status,
+      reason: row.failureReason,
+      elapsedMs: row.elapsedMs,
+    }));
+  method.append(
+    element(
+      "p",
+      "Infrastructure losses remain in the denominator. Alternate fixes passed the full suite and held-out track.",
+    ),
+    json(losses),
+  );
+  numbers.append(details("Recompute + retained losses", method));
+  app.append(numbers);
+
+  const replay = section(
+    "replay",
+    "03 / REPLAY IT",
+    "Your browser. The recorded build.",
+  );
+  replay.append(
+    element(
+      "p",
+      "Re-run the validation inputs. Match the receipt's frame digest.",
+    ),
+  );
+  const select = element("select");
+  select.setAttribute("aria-label", "Round to re-simulate");
+  for (const round of evidence.rounds) {
+    const option = element(
+      "option",
+      `${roundLabel(round.receipt)} / ${round.receipt.roundId.slice(0, 8)}`,
+    );
+    option.value = round.receipt.roundId;
+    select.append(option);
+  }
+  select.value =
+    evidence.rounds.find(
+      (round) =>
+        proofAvailability(round.receipt, evidence.replay.buildDigest) === null,
+    )?.receipt.roundId ??
+    evidence.rounds[0]?.receipt.roundId ??
+    "";
+  const run = element("button", "Recompute replay");
+  run.type = "button";
+  run.dataset.testid = "recompute-replay";
+  const result = element("p", "Ready to verify.", "proof-result");
+  result.setAttribute("role", "status");
+  result.dataset.testid = "proof-result";
+  const canvas = element("canvas");
+  canvas.width = 1280;
+  canvas.height = 384;
+  canvas.setAttribute(
+    "aria-label",
+    "Re-simulated validation route, not a live game",
+  );
+  const slider = element("input");
+  slider.type = "range";
+  slider.min = "1";
+  slider.max = "600";
+  slider.value = "1";
+  slider.disabled = true;
+  slider.setAttribute("aria-label", "Validation replay frame");
+  const frameLabel = element("span", "No replay computed", "mono");
+  const evidenceDetail = element("div");
+  const controls = element("div", undefined, "replay-controls");
+  controls.append(select, run);
+  replay.append(
+    controls,
+    result,
+    canvas,
+    slider,
+    frameLabel,
+    details("Artifact + frame digest", evidenceDetail),
+  );
+  let game: GameModule | null = null;
+  let frames: ValidatedReplayFrame[] = [];
+  const draw = () => {
+    if (!game || !frames.length) return;
+    const context = canvas.getContext("2d");
+    const frame = frames[Number(slider.value) - 1];
+    if (!context || !frame) return;
+    context.fillStyle = "#101b16";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    for (const [y, row] of game.LEVEL.entries())
+      for (const [x, tile] of [...row].entries()) {
+        if (tile === ".") continue;
+        context.fillStyle =
+          tile === "#" ? "#344b3c" : tile === "!" ? "#ff8048" : "#d4f683";
+        context.fillRect(x * 32 + 1, y * 32 + 1, 30, 30);
+      }
+    context.strokeStyle = "#d4f68366";
+    context.lineWidth = 2;
+    context.beginPath();
+    for (const [index, point] of frames.entries()) {
+      if (index === 0)
+        context.moveTo(point.x / game.UNIT + 10, point.y / game.UNIT + 12);
+      else context.lineTo(point.x / game.UNIT + 10, point.y / game.UNIT + 12);
+    }
+    context.stroke();
+    const platform = game.platformAt(frame.frame);
+    context.fillStyle = "#f0dbc0";
+    context.fillRect(
+      platform.x / game.UNIT,
+      platform.y / game.UNIT,
+      platform.width / game.UNIT,
+      platform.height / game.UNIT,
+    );
+    context.fillStyle = "#d4f683";
+    context.fillRect(
+      frame.x / game.UNIT,
+      frame.y / game.UNIT,
+      game.PLAYER_WIDTH / game.UNIT,
+      game.PLAYER_HEIGHT / game.UNIT,
+    );
+    frameLabel.textContent = `RE-SIMULATED / frame ${frame.frame} of ${frames.length} / FNV ${frame.stateHash}`;
+  };
+  slider.addEventListener("input", draw);
+  select.addEventListener("change", () => {
+    frames = [];
+    slider.disabled = true;
+    canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
+    const receipt = evidence.rounds.find(
+      (round) => round.receipt.roundId === select.value,
+    )?.receipt;
+    result.textContent = receipt
+      ? (proofAvailability(receipt, evidence.replay.buildDigest) ??
+        "Ready to verify.")
+      : "No receipt";
+    result.dataset.state = "idle";
+    frameLabel.textContent = "No replay computed";
+    evidenceDetail.replaceChildren();
+  });
+  run.addEventListener("click", async () => {
+    const round = evidence.rounds.find(
+      (row) => row.receipt.roundId === select.value,
+    );
+    if (!round) return;
+    run.disabled = true;
+    select.disabled = true;
+    result.textContent = "Verifying artifact and re-simulating...";
+    try {
+      const unavailable = proofAvailability(
+        round.receipt,
+        evidence.replay.buildDigest,
+      );
+      if (unavailable) throw new Error(unavailable);
+      if (!game) {
+        const artifact = await fetch(
+          new URL(evidence.replay.artifactPath, document.baseURI),
+        );
+        if (!artifact.ok)
+          throw new Error("Recorded build artifact unavailable");
+        game = await loadVerifiedGame(
+          new Uint8Array(await artifact.arrayBuffer()),
+          evidence.replay.buildDigest,
+        );
+      }
+      const computed = await replayProof(game, evidence.replay, round.receipt);
+      frames = computed.frames;
+      slider.max = String(frames.length);
+      slider.value = "1";
+      slider.disabled = false;
+      draw();
+      result.textContent = `MATCH / ${frames.length} frames / receipt ${round.receipt.roundId.slice(0, 8)}`;
+      result.dataset.state = "match";
+      evidenceDetail.replaceChildren(
+        json({
+          buildDigest: evidence.replay.buildDigest,
+          trackDigest: computed.trackDigest,
+          framesDigest: computed.framesDigest,
+          recordedFramesDigest: round.receipt.validationReplay?.framesDigest,
+        }),
+        link("Download exact simulation module", evidence.replay.artifactPath),
+      );
+    } catch (error) {
+      result.textContent =
+        error instanceof Error ? error.message : "Proof unavailable";
+      result.dataset.state = "unavailable";
+    } finally {
+      run.disabled = false;
+      select.disabled = false;
+    }
+  });
+
+  const rounds = section(
+    "rounds",
+    "02 / RECORDED ROUNDS",
+    "Every receipt. Every label.",
+  );
+  const roundGrid = element("div", undefined, "round-grid");
+  for (const round of [...evidence.rounds].reverse()) {
+    const receipt = round.receipt;
+    const card = element("article", undefined, "round-card");
+    card.dataset.roundId = receipt.roundId;
+    card.append(
+      element("p", roundLabel(receipt), "eyebrow"),
+      element("h3", receipt.family ?? "Unrecorded family"),
+      element(
+        "strong",
+        greenSplit(receipt.durations?.timeToGreenMs),
+        "round-time",
+      ),
+    );
+    if (round.regression) card.append(element("span", "+1 test", "badge"));
+    if (receipt.autopsy?.headline || receipt.autopsy?.explanation)
+      card.append(
+        element(
+          "p",
+          receipt.autopsy.headline ?? receipt.autopsy.explanation ?? "",
+        ),
+      );
+    const patch = element("div", undefined, "patch");
+    for (const line of receipt.autopsy?.patch?.preview ?? [])
+      patch.append(
+        element("pre", line, line.startsWith("+") ? "added" : "removed"),
+      );
+    if (!receipt.autopsy?.patch)
+      patch.append(element("p", "This legacy receipt has no captured diff."));
+    card.append(patch);
+    const splitGrid = element("div", undefined, "mini-stats");
+    for (const [label, value] of [
+      ["Head start", receipt.durations?.headStartMs],
+      ["Repair", receipt.durations?.repairMs],
+      ["Tests", receipt.durations?.validationMs],
+      ["Swap", receipt.durations?.swapMs],
+    ] as const)
+      splitGrid.append(stat(label, seconds(value)));
+    const detail = element("div");
+    detail.append(
+      element(
+        "p",
+        `Saboteur ${receipt.breaker}. First correct guesser ${receipt.firstCorrectGuesser ?? "none"}. Winner ${receipt.winner}.`,
+      ),
+      splitGrid,
+      element(
+        "p",
+        receipt.autopsy?.deltaMs == null
+          ? "Previous-round delta unavailable."
+          : `Delta ${receipt.autopsy.deltaMs < 0 ? "-" : "+"}${seconds(Math.abs(receipt.autopsy.deltaMs))} vs ${receipt.autopsy.previousRoundId ?? "previous round"}.`,
+      ),
+      element(
+        "p",
+        receipt.autopsy?.explanation ??
+          "This receipt predates the autopsy card.",
+      ),
+      element(
+        "p",
+        "GREEN starts with the SDK call and ends after verified installation. The head start is separate.",
+      ),
+      element("code", `SHA-256 ${round.digest}`),
+      link("Download round receipt", round.path),
+    );
+    if (round.regression)
+      detail.append(
+        link(
+          round.regression.retroactive
+            ? "Regression recorded retroactively"
+            : "Download credited regression",
+          round.regression.path,
+        ),
+      );
+    const replayRound = element("button", "Recompute this round");
+    replayRound.type = "button";
+    replayRound.addEventListener("click", () => {
+      select.value = receipt.roundId;
+      select.dispatchEvent(new Event("change"));
+      location.hash = "replay";
+      run.click();
+    });
+    card.append(
+      details(`Autopsy / ${receipt.roundId.slice(0, 8)}`, detail),
+      replayRound,
+    );
+    roundGrid.append(card);
+  }
+  rounds.append(roundGrid);
+  app.append(rounds, replay);
+
+  const build = section("build", "04 / THE BUILD", "How Codex built this");
+  build.append(
+    element(
+      "p",
+      "One continuing main build session, with commits you can inspect.",
+    ),
+  );
+  const buildStats = element("div", undefined, "headline-stats");
+  buildStats.append(
+    stat(
+      "Commits reachable from this evidence SHA",
+      String(evidence.commitCount),
+    ),
+    stat("Committed regression replays", String(evidence.regressionCount)),
+  );
+  build.append(buildStats);
+  const buildDetail = element("div");
+  buildDetail.append(
+    element("p", `Main session ${evidence.sessionId}`),
+    element(
+      "p",
+      "The session ID identifies the main build thread. The graph count measures reachable commits; it does not attribute every commit to that thread.",
+    ),
+    element("code", `git rev-list --count ${evidence.commit}`),
+    element("code", `git log ${evidence.commit} -- chat-found/`),
+    element(
+      "p",
+      `${evidence.regressionCommits.length} commits touched regression JSON records.`,
+    ),
+    link("Inspect the commit graph", `${REPO}/commits/${evidence.commit}`),
+    element("code", `Evidence SHA ${evidence.commit}`),
+  );
+  build.append(details("Session + commit graph", buildDetail));
+  app.append(build);
+
+  const sandbox = section(
+    "sandbox",
+    "05 / THE SANDBOX",
+    "The repair stays in its lane.",
+  );
+  sandbox.append(
+    element(
+      "p",
+      "Workspace writes work. Parent files, host skills, tests and network stay protected.",
+    ),
+  );
+  const canary = element("div", undefined, "canary-controls");
+  for (const [control, outcome] of Object.entries(evidence.canary.controls))
+    canary.append(
+      stat(control, outcome === true ? "ALLOWED" : String(outcome)),
+    );
+  const canaryDetail = element("div");
+  canaryDetail.append(
+    canary,
+    element(
+      "p",
+      "A completed SDK command and the kernel probe reported the same output; clean validation also passed.",
+    ),
+    element("p", evidence.canary.completedAt),
+    element("code", `Source SHA-256 ${evidence.canary.digest}`),
+    link("Download sanitized canary receipt", "evidence/sandbox-canary.json"),
+    link(
+      "Inspect committed source log",
+      `${REPO}/blob/${evidence.commit}/${evidence.canary.path}`,
+    ),
+  );
+  sandbox.append(details("Open sandbox canary receipt", canaryDetail));
+  app.append(sandbox);
+  const footer = element("footer");
+  footer.append(
+    element(
+      "p",
+      `Static evidence / ${evidence.commit.slice(0, 8)} / no account or key required`,
+    ),
+    link("Source on GitHub", REPO),
+  );
+  app.append(footer);
+  document.documentElement.dataset.ready = "true";
+}
+
+start().catch((error: unknown) => {
+  const app = document.querySelector("#app");
+  app?.replaceChildren(
+    element("h1", "Evidence unavailable"),
+    element(
+      "p",
+      error instanceof Error
+        ? error.message
+        : "The evidence could not be loaded.",
+    ),
+  );
+});

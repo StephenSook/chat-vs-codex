@@ -15,7 +15,8 @@ a follow camera, keyboard play and a typed event contract. The
 inbound EventSub routing and offline fixture replay. The [round loop](packages/round/README.md)
 connects fixtures or `pnpm round:live` to runtime Codex, enum-only hint voting,
 replay validation, state-preserving hot swap and rollback. Real fixture rounds
-are verified; live-channel rounds still need the streamer's check.
+and an [offline Twitch broadcaster test](docs/rounds/82589ac9-1b1b-4393-8085-9bed5d88ee2b.json)
+are verified. Broadcaster tests are labelled separately from viewer rounds.
 The [streaming guide](docs/STREAMING.md) covers the offline channel test, OBS scene
 import, keyboard play and Twitch account connection without a stored stream key.
 The real [Twitch authorization and subscription check](docs/TWITCH-VERIFICATION.md)
@@ -24,6 +25,11 @@ verified the broadcaster and all nine subscriptions without sending chat.
 Requires Node 22 and pnpm. Run `pnpm ci:local` to mirror the workflow: frozen
 install, typecheck, lint, test. `pnpm check` repeats the checks without installing.
 Set `CI=true` when running the install without a TTY.
+
+The [static judge site](apps/judge/README.md) recomputes benchmark numbers in the
+browser, presents committed round receipts and re-simulates recorded validation
+tracks when the matching build is available. Run `pnpm judge:build`; the static
+output is `apps/judge/dist/`. Run `pnpm judge:smoke` for its Playwright preview check.
 
 `packages/sim` is a DOM-free 60 Hz platformer using Q8 integers (256 units per
 pixel). State and the level live outside paired mutation regions. The replay

@@ -21,6 +21,9 @@
     "round:fixture": "pnpm --filter @chat-vs-codex/round fixture",
     "round:live": "pnpm --filter @chat-vs-codex/round live",
     "obs:scene": "tsx scripts/obs-scene.ts",
+    "judge:build": "pnpm --filter @chat-vs-codex/judge build",
+    "judge:preview": "pnpm --filter @chat-vs-codex/judge preview",
+    "judge:smoke": "pnpm --filter @chat-vs-codex/judge smoke",
     "ci:local": "pnpm install --frozen-lockfile && pnpm typecheck && pnpm lint && pnpm test",
     "check": "pnpm typecheck && pnpm lint && pnpm test"
   },
