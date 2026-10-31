@@ -9,12 +9,37 @@ import {
   bridgeOrigin,
   loadVerifiedBuild,
   OrderedRoundBridge,
+  parseCommentary,
   parseRoundEnvelope,
   parseRoundSession,
 } from "../src/bridge.js";
+
 import { createEventBus, type OverlayEvent } from "../src/events.js";
 import { roundSessionLabel } from "../src/presentation.js";
 import { FRAME_MS, SimulationPlayer } from "../src/simulation.js";
+
+it("accepts only session commentary paths and refuses external or private file URLs", () => {
+  const roundId = "82589ac9-1b1b-4393-8085-9bed5d88ee2b";
+  const event = {
+    id: `${roundId}:fixed`,
+    roundId,
+    phase: "fixed",
+    audioUrl: `/api/commentary/${"a".repeat(64)}.mp3`,
+  };
+  expect(parseCommentary(event)).toEqual(event);
+  for (const audioUrl of [
+    "https://example.com/audio.mp3",
+    "file:///etc/passwd",
+    "/api/commentary/../tokens.json",
+    "/.env",
+    "//example.com/a.mp3",
+  ])
+    expect(() => parseCommentary({ ...event, audioUrl })).toThrow(
+      "Invalid commentary audio",
+    );
+  expect(() => parseCommentary({ ...event, phase: "preparing" })).toThrow();
+  expect(() => parseCommentary({ ...event, id: "unbound" })).toThrow();
+});
 
 it("uses host session identity for live, broadcaster-test and fixture labels", () => {
   expect(roundSessionLabel(parseRoundSession({ mode: "live-twitch" }))).toBe(

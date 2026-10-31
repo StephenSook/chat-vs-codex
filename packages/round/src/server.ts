@@ -4,6 +4,7 @@ import { realpath, stat } from "node:fs/promises";
 import { createServer, type ServerResponse } from "node:http";
 import { extname, resolve, sep } from "node:path";
 import { eventStamp, monotonicMs } from "./clocks.js";
+import type { createCommentary } from "./commentary.js";
 import type {
   GameArtifact,
   RoundEnvelope,
@@ -17,6 +18,7 @@ export async function startRoundServer(
     overlayDirectory?: string;
     now?: () => number;
     session?: RoundSession;
+    commentary?: ReturnType<typeof createCommentary>;
     record?: (envelope: RoundEnvelope) => void;
     /** Presentation only. Recorded evidence and sandbox client retain canonical hashes. */
     present?: (event: RoundEvent) => RoundEvent;
@@ -81,6 +83,22 @@ export async function startRoundServer(
         return;
       }
       const build = /^\/api\/builds\/([a-f0-9]{64})\.js$/.exec(path);
+      const commentary = /^\/api\/commentary\/([a-f0-9]{64})\.mp3$/.exec(path);
+      if (commentary?.[1]) {
+        const bytes = options.commentary?.readAudio(commentary[1]);
+        if (!bytes) {
+          response.writeHead(404).end();
+          return;
+        }
+        response
+          .writeHead(200, {
+            "Content-Type": "audio/mpeg",
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+          })
+          .end(bytes);
+        return;
+      }
       if (build?.[1]) {
         const artifact = artifacts.get(build[1]);
         if (!artifact) {
@@ -176,6 +194,14 @@ export async function startRoundServer(
       throw new Error("Round event retention budget exceeded");
     options.record?.(envelope);
     for (const client of clients) send(client, envelope);
+    // Voice is presentation only and never replayed to reconnecting clients.
+    options.commentary?.observe(envelope.event, (commentary) => {
+      if (closing) return;
+      for (const client of clients)
+        client.write(
+          `event: commentary\ndata: ${JSON.stringify(commentary)}\n\n`,
+        );
+    });
   };
   return {
     origin,
@@ -211,6 +237,7 @@ export async function startRoundServer(
     },
     async close() {
       closing = true;
+      await options.commentary?.close();
       activation++;
       for (const client of clients) client.end();
       clients.clear();

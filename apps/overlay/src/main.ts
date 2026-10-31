@@ -139,6 +139,7 @@ async function start(): Promise<void> {
         },
         simulation,
         events,
+        onCommentary: (event) => audio.playCommentary(event.audioUrl, event.id),
         onError(error) {
           bridgeError = error.message;
           element("run-status").title = error.message;

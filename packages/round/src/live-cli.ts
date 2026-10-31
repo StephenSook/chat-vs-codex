@@ -18,6 +18,7 @@ import { createLiveRewards } from "../../twitch/src/rewards.js";
 import { ROUND_PORT } from "./address.js";
 import { startGameClient } from "./client.js";
 import { eventStamp } from "./clocks.js";
+import { createCommentary } from "./commentary.js";
 import type { RoundEnvelope } from "./contracts.js";
 import { RoundEngine, type RoundSnapshot } from "./engine.js";
 import { type LiveEngine, LiveRoundController } from "./live.js";
@@ -304,6 +305,10 @@ export async function runLiveCli(
     });
     const live = controller;
     server = await startRoundServer({
+      commentary: createCommentary({
+        cacheDirectory: join(ROOT, ".local/polly"),
+        report: (message) => console.log(message),
+      }),
       session: {
         mode: "live-twitch",
         ...(flags.allowBroadcasterTest

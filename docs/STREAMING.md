@@ -5,6 +5,27 @@ streaming Mac. Twitch authorization is already stored in
 `.local/twitch/tokens.json` with mode 0600. Keep this file and all `.local/` logs
 private. The runner reads the public Client ID from `TWITCH_CLIENT_ID`.
 
+## Sound and optional voice
+
+Click **ENABLE SOUND** in the overlay, or right-click the browser source in OBS
+and choose **Interact**. Volume defaults to 15%; the same mute and volume controls
+apply to the original round sounds and optional commentary.
+
+Commentary is off by default. With AWS credentials already available through the
+standard provider chain, opt in for one runner session:
+
+```sh
+POLLY_ENABLED=1 pnpm round:live --allow-broadcaster-test
+```
+
+This uses Amazon Polly's neural Joanna voice in `us-east-1`. AWS credentials stay
+in their normal provider; the application never writes them. Fixed phase lines
+are cached under `.local/polly/` with mode 0600. A verified fix speaks its measured
+GREEN duration, rounded to seconds. Voice is at most one short line per phase;
+chat text is never synthesized. Reconnects do not replay old commentary. Disabled
+commentary performs no AWS calls; an enabled-provider failure leaves the round
+running with its original sounds.
+
 ## Check the round while offline
 
 Leave OBS's **Start Streaming** button alone for this check. From a normal terminal

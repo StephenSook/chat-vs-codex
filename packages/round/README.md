@@ -6,6 +6,11 @@ login, app, user and all 11 scopes, runs the clean sandbox gate, then opens one
 EventSub WebSocket on `steve_sociall`, including while offline. Build the overlay
 first. No command means no Codex call. Ctrl+C stops the listener and active round.
 
+Optional `POLLY_ENABLED=1` adds fixed neural phase commentary through Amazon Polly
+in `us-east-1`, with standard AWS credentials and private `.local/polly/` caching.
+It is silent and performs no provider lookup while disabled. The overlay's normal
+sound controls govern playback. See [streaming setup](../../docs/STREAMING.md).
+
 At each live start, Stryker enumerates the full operator x authorized-site space.
 The server shuffles candidates in the six enum families, excluding credited
 regressions, and checks them in an isolated worker for up to 10 seconds. Live and

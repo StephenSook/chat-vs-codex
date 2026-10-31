@@ -1,3 +1,4 @@
+import type { CommentaryAudio } from "../../../packages/round/src/commentary.js";
 import type {
   RoundAutopsy,
   RoundEnvelope,
@@ -310,6 +311,7 @@ export function parseRoundEnvelope(value: unknown): RoundEnvelope {
 
 export interface RoundBridgeOptions {
   onSession?: (session: RoundSession) => void;
+  onCommentary?: (event: CommentaryAudio) => void;
   simulation: SimulationPlayer;
   events: OverlayEventBus;
   loadBuild: (event: BuildEvent) => Promise<unknown>;
@@ -464,6 +466,19 @@ export function connectRoundBridge(
     }
   });
   source.addEventListener("open", () => options.onConnection?.(true));
+  source.addEventListener("commentary", (message) => {
+    try {
+      const event = parseCommentary(
+        JSON.parse((message as MessageEvent<string>).data),
+      );
+      options.onCommentary?.({
+        ...event,
+        audioUrl: `${origin}${event.audioUrl}`,
+      });
+    } catch {
+      options.onError?.(new Error("Invalid commentary audio"));
+    }
+  });
   source.addEventListener("round", (message) => {
     try {
       void bridge
@@ -482,6 +497,30 @@ export function connectRoundBridge(
   return () => {
     bridge.close();
     source.close();
+  };
+}
+
+export function parseCommentary(value: unknown): CommentaryAudio {
+  if (!value || typeof value !== "object")
+    throw new Error("Invalid commentary audio");
+  const e = value as Record<string, unknown>;
+  if (
+    typeof e.id !== "string" ||
+    typeof e.roundId !== "string" ||
+    !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(
+      e.roundId,
+    ) ||
+    !["broken", "repairing", "fixed", "failed"].includes(String(e.phase)) ||
+    e.id !== `${e.roundId}:${String(e.phase)}` ||
+    typeof e.audioUrl !== "string" ||
+    !/^\/api\/commentary\/[a-f0-9]{64}\.mp3$/.test(e.audioUrl)
+  )
+    throw new Error("Invalid commentary audio");
+  return {
+    id: e.id,
+    roundId: e.roundId,
+    phase: e.phase as CommentaryAudio["phase"],
+    audioUrl: e.audioUrl,
   };
 }
 

@@ -11,6 +11,7 @@ import { TwitchHandler } from "../../twitch/src/events.js";
 import { parseFixture, replayFixtures } from "../../twitch/src/fixtures.js";
 import { ROUND_PORT } from "./address.js";
 import { startGameClient } from "./client.js";
+import { createCommentary } from "./commentary.js";
 import type { RoundEnvelope } from "./contracts.js";
 import { RoundEngine } from "./engine.js";
 import {
@@ -92,6 +93,10 @@ async function main() {
       },
     });
     server = await startRoundServer({
+      commentary: createCommentary({
+        cacheDirectory: join(ROOT, ".local/polly"),
+        report: (message) => console.log(message),
+      }),
       port: ROUND_PORT,
       overlayDirectory: join(ROOT, "apps/overlay/dist"),
       install: async (artifact, signal) => {
