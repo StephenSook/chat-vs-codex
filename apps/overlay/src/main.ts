@@ -4,6 +4,7 @@ import "@fontsource/bungee/latin-400.css";
 import "./style.css";
 import { INPUT } from "@chat-vs-codex/sim";
 import { type AudioStatus, OverlayAudio } from "./audio.js";
+import { IdleAutopilot } from "./autopilot.js";
 import { connectRoundBridge } from "./bridge.js";
 import {
   createEventBus,
@@ -33,6 +34,7 @@ declare global {
         frame: number;
         hash: string;
         mode: "play" | "replay";
+        autopilot: boolean;
         filtersEnabled: boolean;
         camera: ReturnType<typeof cameraFor>;
         corruption: ReturnType<typeof corruptionFor>;
@@ -50,6 +52,8 @@ async function start(): Promise<void> {
   const cameraMode: CameraMode =
     params.get("camera") === "overview" ? "overview" : "follow";
   const simulation = new SimulationPlayer(mode);
+  const autopilot = new IdleAutopilot();
+  const playControls = "← → MOVE · SPACE JUMP · R RESTART";
   const events = createEventBus();
   const audioButton = element("audio-toggle") as HTMLButtonElement;
   const audioVolume = element("audio-volume") as HTMLInputElement;
@@ -108,8 +112,7 @@ async function start(): Promise<void> {
   resizeStage();
   window.addEventListener("resize", resizeStage);
   renderBroadcast(broadcast);
-  element("controls").textContent =
-    mode === "play" ? "← → MOVE · SPACE JUMP · R RESTART" : "";
+  element("controls").textContent = mode === "play" ? playControls : "";
   element("playback-label").textContent = bridgeUrl
     ? "CONNECTING"
     : mode === "play"
@@ -134,6 +137,7 @@ async function start(): Promise<void> {
       frame: simulation.state.frame,
       hash: simulation.hash(),
       mode,
+      autopilot: autopilot.active,
       filtersEnabled: !motion.matches,
       camera: playfieldCamera(
         renderedSymptom?.focus === "enemy"
@@ -202,6 +206,10 @@ async function start(): Promise<void> {
           : event.code === "Space"
             ? INPUT.JUMP
             : 0;
+    if (event.type === "keydown" || mask || event.code === "KeyR") {
+      autopilot.takeOver();
+      element("controls").textContent = playControls;
+    }
     if (mask) {
       event.preventDefault();
       input = event.type === "keydown" ? input | mask : input & ~mask;
@@ -212,6 +220,7 @@ async function start(): Promise<void> {
   window.addEventListener("keydown", key);
   window.addEventListener("keyup", key);
   const clearInput = () => {
+    if (input !== 0) autopilot.takeOver();
     input = 0;
   };
   window.addEventListener("blur", clearInput);
@@ -223,7 +232,9 @@ async function start(): Promise<void> {
 
   scene.app.ticker.maxFPS = 60;
   scene.app.ticker.add((ticker) => {
-    const result = simulation.advance(ticker.elapsedMS, input);
+    const result = autopilot.advance(simulation, ticker.elapsedMS, input);
+    element("controls").textContent =
+      mode === "play" ? (autopilot.active ? "AUTOPILOT" : playControls) : "";
     for (let death = 0; death < result.deaths; death++)
       events.publish({ type: "simulation.death" });
     const nowMs = performance.now();
