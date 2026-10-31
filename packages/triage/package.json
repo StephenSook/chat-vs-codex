@@ -1,0 +1,12 @@
+{
+  "name": "@chat-vs-codex/triage",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p ../../tsconfig.json"
+  },
+  "dependencies": {
+    "onnxruntime-node": "1.31.1"
+  }
+}

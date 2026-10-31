@@ -14,6 +14,7 @@ import {
   parseViewerSeason,
   type SeasonTotals,
 } from "../../../packages/round/src/season.js";
+import { validPrediction } from "../../../packages/triage/src/hint.js";
 import { BUG_FAMILIES } from "../../../packages/twitch/src/events.js";
 import {
   CODEX_ACTIONS,
@@ -83,6 +84,12 @@ function validateOverlay(event: unknown): event is OverlayEvent {
       return typeof e.roundId === "string";
     case "machine.load":
       return typeof e.roundId === "string" && validMachineLoad(e.machine);
+    case "round.triage":
+      return (
+        typeof e.roundId === "string" &&
+        Number.isFinite(e.revealedAtMs) &&
+        validPrediction(e.prediction)
+      );
     case "boss.note":
       return e.text === "BOSS PAUSED · LOW MEMORY";
     case "boss.started":
@@ -414,6 +421,7 @@ export interface RoundBridgeOptions {
 /** Serializes asynchronous imports with event publication, including SSE replay after reconnect. */
 export class OrderedRoundBridge {
   private brokenDigest: string | null = null;
+  private roundClockOffset: { roundId: string; offsetMs: number } | null = null;
   private queue: Promise<void> = Promise.resolve();
   private sequence = 0;
   private roundId: string | null = null;
@@ -459,6 +467,7 @@ export class OrderedRoundBridge {
       this.seenRounds.add(introduced);
       this.faultRound = null;
       this.replaySourceDigest = null;
+      this.roundClockOffset = null;
     }
     const receivedRoundId = this.roundId;
     const task = async () => {
@@ -501,19 +510,24 @@ export class OrderedRoundBridge {
             );
           if (event.event.type === "round.ghost")
             this.replaySourceDigest = event.event.replay.sourceDigest;
-          this.options.events.publish(
-            event.event.type === "round.started"
-              ? {
-                  ...event.event,
-                  atMs:
-                    receivedAtMs +
-                    event.event.atMs -
-                    (envelope.deliveryAtMs ??
-                      envelope.atMs ??
-                      envelope.serverTimeMs),
-                }
-              : event.event,
-          );
+          if (event.event.type === "round.started") {
+            const offsetMs =
+              receivedAtMs -
+              (envelope.deliveryAtMs ?? envelope.atMs ?? envelope.serverTimeMs);
+            this.roundClockOffset = { roundId: event.event.id, offsetMs };
+            this.options.events.publish({
+              ...event.event,
+              atMs: event.event.atMs + offsetMs,
+            });
+          } else if (event.event.type === "round.triage") {
+            const clock = this.roundClockOffset;
+            if (!clock || clock.roundId !== event.event.roundId)
+              throw new Error("Triage reveal requires the current round clock");
+            this.options.events.publish({
+              ...event.event,
+              revealedAtMs: event.event.revealedAtMs + clock.offsetMs,
+            });
+          } else this.options.events.publish(event.event);
         } else if (event.type === "round.state") {
           if (event.phase === "preparing" && event.roundId !== null)
             this.options.events.publish({

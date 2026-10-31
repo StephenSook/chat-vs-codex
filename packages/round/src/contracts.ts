@@ -305,6 +305,7 @@ export interface PreviousVerifiedRound {
 }
 
 export interface PreparedGame {
+  triage?: import("../../triage/src/predict.js").TriagePrediction;
   symptom?: SymptomReplay;
   mutation?: MutationProvenance;
   family: BugFamily;

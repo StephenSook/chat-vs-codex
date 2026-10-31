@@ -34,6 +34,12 @@ export type CodexStep =
 export type OverlayEvent =
   | { type: "machine.reset"; roundId: string }
   | { type: "machine.load"; roundId: string; machine: MachineLoad }
+  | {
+      type: "round.triage";
+      roundId: string;
+      prediction: import("../../../packages/triage/src/predict.js").TriagePrediction;
+      revealedAtMs: number;
+    }
   | { type: "boss.note"; text: "BOSS PAUSED · LOW MEMORY" }
   | { type: "boss.started"; roundId: string }
   | { type: "boss.predictions"; roundId: string; sol: number; terra: number }
@@ -93,6 +99,9 @@ export interface DisplayStep {
 
 export interface BroadcastState {
   machine: MachineLoad | null;
+  triage:
+    | import("../../../packages/triage/src/predict.js").TriagePrediction
+    | null;
   boss: {
     sol: readonly DisplayStep[];
     terra: readonly DisplayStep[];
@@ -121,6 +130,7 @@ export interface BroadcastState {
 export function initialBroadcast(): BroadcastState {
   return {
     machine: null,
+    triage: null,
     boss: null,
     bossNote: null,
     roundId: null,
@@ -183,6 +193,11 @@ export function reduceBroadcast(
       return { ...state, machine: null };
     case "machine.load":
       return { ...state, machine: { ...event.machine } };
+    case "round.triage":
+      return state.startedAtMs !== null &&
+        event.revealedAtMs >= state.startedAtMs + state.headStartMs
+        ? { ...state, triage: event.prediction }
+        : state;
     case "boss.note":
       return { ...state, bossNote: event.text };
     case "boss.started":

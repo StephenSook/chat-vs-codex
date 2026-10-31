@@ -5,6 +5,8 @@ import { performance } from "node:perf_hooks";
 import { build } from "esbuild";
 import type { PooledMutant } from "../../mutator/src/gate.js";
 import { goldenResult, HELD_OUT } from "../../replay/src/index.js";
+import { triageHint } from "../../triage/src/hint.js";
+import type { TriagePrediction } from "../../triage/src/predict.js";
 import { confinedBundlePlugin } from "./confined-bundle.js";
 import {
   createLauncher,
@@ -163,6 +165,8 @@ export function isSandboxFailure(message: string): boolean {
 }
 
 export interface TrialOptions extends ModelSpec {
+  /** Isolated A/B only. The baseline harness omits this field. */
+  triage?: TriagePrediction;
   gameId?: "breakout";
   mutant: PooledMutant;
   trialId: string;
@@ -217,7 +221,9 @@ export async function executeTrial(
     const profile = await loadProfile();
     const launcher = join(options.runsDirectory, `${options.trialId}.launcher`);
     await createLauncher(launcher);
-    const ticket = buildTicket(options.mutant, options.gameId);
+    const ticket =
+      buildTicket(options.mutant, options.gameId) +
+      (options.triage ? triageHint(options.triage) : "");
     await log({
       kind: "trial.started",
       mutant: options.mutant.id,

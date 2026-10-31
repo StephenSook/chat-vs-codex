@@ -1,5 +1,6 @@
 import { createHmac, randomBytes, randomUUID } from "node:crypto";
 import type { OverlayEvent } from "../../../apps/overlay/src/events.js";
+import { validPrediction } from "../../triage/src/hint.js";
 import {
   BUG_FAMILIES,
   type BugFamily,
@@ -728,6 +729,13 @@ export class RoundEngine {
       round.headStartFinishedAt = this.now();
       stage = "repair";
       this.phase(round, "repairing");
+      if (prepared.triage && validPrediction(prepared.triage))
+        this.overlay({
+          type: "round.triage",
+          roundId: round.id,
+          prediction: prepared.triage,
+          revealedAtMs: round.headStartFinishedAt,
+        });
       const repaired = await abortable(
         round.boss
           ? prepared.repairBoss

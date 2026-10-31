@@ -18,6 +18,7 @@ import {
   sourceDigest,
 } from "../../mutator/src/gate.js";
 import { selectRoundMutation } from "../../mutator/src/live.js";
+import { triageHint } from "../../triage/src/hint.js";
 import { BUG_FAMILIES, type BugFamily } from "../../twitch/src/events.js";
 import { raceBoss } from "./boss.js";
 import { eventStamp } from "./clocks.js";
@@ -37,6 +38,8 @@ export interface RoundRuntimeOptions {
   fixtureMutantId?: string;
   regressionsDirectory?: string;
   liveGateBudgetMs?: number;
+  triageEnabled?: boolean;
+  triageHint?: boolean;
 }
 
 /** A detached worker bounds SDK hangs, validation loops and bundling independently. */
@@ -223,6 +226,17 @@ export function createRoundRuntime(
           broken.digest,
           proof.brokenSourceDigest,
         );
+        const triage =
+          (options.triageEnabled ?? process.env.TRIAGE_ENABLED === "1")
+            ? await (
+                await import("../../triage/src/runtime.js")
+              ).predictWorkspace(workspace.game, join(ROOT, "bench/triage"))
+            : undefined;
+        const ticket =
+          buildTicket(mutant) +
+          (triage && (options.triageHint ?? process.env.TRIAGE_HINT === "1")
+            ? triageHint(triage)
+            : "");
         if (boss) {
           secondWorkspace = await prepareWorkspace(
             mutant,
@@ -247,6 +261,7 @@ export function createRoundRuntime(
         );
         signal.throwIfAborted();
         return {
+          ...(triage ? { triage } : {}),
           symptom,
           family: mutant.family as BugFamily,
           mutation: provenance,
@@ -285,7 +300,7 @@ export function createRoundRuntime(
                           workspace: selected,
                           launcher,
                           profile,
-                          ticket: buildTicket(mutant),
+                          ticket,
                           hint: repair.hint,
                           model:
                             model === "terra" ? "gpt-6.1-terra" : "gpt-6.1-sol",
@@ -331,7 +346,7 @@ export function createRoundRuntime(
                 workspace,
                 launcher,
                 profile,
-                ticket: buildTicket(mutant),
+                ticket,
                 hint: repair.hint,
                 model: options.model ?? "gpt-6.1-terra",
                 effort: options.effort ?? "low",

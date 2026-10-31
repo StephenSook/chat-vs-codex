@@ -755,3 +755,16 @@ canvas:focus-visible {
   background: var(--cream);
   z-index: 9;
 }
+
+.triage-chip {
+  position: absolute;
+  left: 1340px;
+  top: 280px;
+  width: 484px;
+  padding: 12px 16px;
+  margin: 0;
+  font-size: 33px;
+  line-height: 1.2;
+  z-index: 3;
+  overflow-wrap: anywhere;
+}

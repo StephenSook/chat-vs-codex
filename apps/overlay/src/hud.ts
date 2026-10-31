@@ -27,6 +27,12 @@ export function renderBroadcast(state: BroadcastState): void {
   element("machine-note").hidden = !busyMachine;
   const season = element("season-line");
   season.hidden = busyMachine || !season.textContent;
+  const triage = element("triage-chip");
+  triage.hidden =
+    !state.triage || state.bug !== "active" || state.autopsy !== null;
+  triage.textContent = state.triage
+    ? `MODEL GUESS · ${state.triage.family.split(":")[1]} ${Math.round(state.triage.confidence * 100)}%`
+    : "";
   element("idle-cta").textContent = IDLE_CTA;
   element("idle-cta").hidden = !idleCtaVisible(state);
   element("boss-note").hidden = !state.bossNote;

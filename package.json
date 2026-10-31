@@ -34,7 +34,11 @@
     "ci:local": "pnpm install --frozen-lockfile && pnpm typecheck && pnpm lint && pnpm test",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
     "season:record": "tsx scripts/season.ts",
-    "season:check": "tsx scripts/season.ts --check"
+    "season:check": "tsx scripts/season.ts --check",
+    "triage:setup": "tsx scripts/triage.ts --setup",
+    "triage:record": "tsx scripts/triage.ts --record",
+    "triage:check": "tsx scripts/triage.ts --check",
+    "triage:ab": "tsx scripts/triage-ab.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.4",

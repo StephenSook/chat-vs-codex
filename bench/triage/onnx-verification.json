@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "modelDigest": "69f7b65cb8814e2db0828f61b474665a796acca20b106915ba29378bb6258239",
+  "trainerBridgeDigest": "939d0e2e84e9f03d4a5c8696c607dc87774e88b5888499fc118bcd546343a1c8",
+  "nodeRuntime": "onnxruntime-node",
+  "maximumProbabilityError": 3.23836292781543e-7,
+  "referenceRows": 226,
+  "models": 11
+}
