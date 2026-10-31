@@ -7,6 +7,23 @@ export interface GameArtifact {
   code: string;
   digest: string;
   timings?: RuntimeTimings;
+  diagnosis?: RuntimeDiagnosis;
+  patch?: RuntimePatch;
+}
+
+export interface RuntimeDiagnosis {
+  rootCause: string;
+  file: string;
+  line: number;
+  explanation: string;
+  confidence: number;
+}
+
+export interface RuntimePatch {
+  added: number;
+  removed: number;
+  /** Actual source diff lines, capped at four. Never includes file headers. */
+  preview: string[];
 }
 
 export interface RuntimeTimings {
@@ -16,7 +33,7 @@ export interface RuntimeTimings {
   validationFinishedAtMs: number;
 }
 
-export interface RuntimeObservation {
+export interface RuntimePhaseObservation {
   type: "runtime.phase";
   phase:
     | "thread-started"
@@ -26,6 +43,15 @@ export interface RuntimeObservation {
   atMs: number;
   wallTime: string;
 }
+
+export type RuntimeObservation =
+  | RuntimePhaseObservation
+  | {
+      type: "runtime.patch";
+      patch: RuntimePatch;
+      atMs: number;
+      wallTime: string;
+    };
 
 export interface RoundDurations {
   headStartMs: number | null;

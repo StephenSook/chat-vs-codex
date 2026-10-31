@@ -40,6 +40,7 @@ interface ActiveRound {
   timings: Partial<RuntimeTimings>;
   swapStartedAt: number | null;
   swapFinishedAt: number | null;
+  patchSequence: number;
 }
 
 function abortable<T>(
@@ -158,6 +159,7 @@ export class RoundEngine {
         timings: {},
         swapStartedAt: null,
         swapFinishedAt: null,
+        patchSequence: 0,
       };
       this.current = round;
       this.guessClosesAt = null;
@@ -245,6 +247,29 @@ export class RoundEngine {
       !Number.isFinite(observation.atMs)
     )
       return;
+    if (observation.type === "runtime.patch") {
+      if (
+        !Number.isInteger(observation.patch.added) ||
+        !Number.isInteger(observation.patch.removed) ||
+        observation.patch.added < 0 ||
+        observation.patch.removed < 0
+      )
+        return;
+      this.overlay({
+        type: "codex.step",
+        roundId: round.id,
+        id: `patch-${++round.patchSequence}`,
+        attempt: 1,
+        total: 1,
+        step: {
+          kind: "patch",
+          added: observation.patch.added,
+          removed: observation.patch.removed,
+        },
+        status: "done",
+      });
+      return;
+    }
     const keys = {
       "thread-started": "threadStartedAtMs",
       "patch-ready": "patchReadyAtMs",

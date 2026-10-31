@@ -4,7 +4,7 @@ import type {
   GameArtifact,
   PreparedGame,
   RoundEvent,
-  RuntimeObservation,
+  RuntimePhaseObservation,
 } from "../src/contracts.js";
 import { RoundEngine } from "../src/engine.js";
 import { sdkOverlayEvent } from "../src/sdk-events.js";
@@ -110,6 +110,68 @@ afterEach(async () => {
 });
 
 describe("round race and safe swaps", () => {
+  it("publishes actual patch observations as separate counted steps without claiming tests green", async () => {
+    const { engine, game, events, repair } = setup();
+    breakGame(engine);
+    await vi.advanceTimersByTimeAsync(15_000);
+    const observe = vi.mocked(game.repair).mock.calls[0]?.[0].observe;
+    if (!observe) throw new Error("Missing observation callback");
+    observe({
+      type: "runtime.patch",
+      patch: {
+        added: 7,
+        removed: 3,
+        preview: ["-private old source", "+private new source"],
+      },
+      atMs: Date.now(),
+      wallTime: new Date().toISOString(),
+    });
+    observe({
+      type: "runtime.patch",
+      patch: { added: 8, removed: 3, preview: ["+next edit"] },
+      atMs: Date.now(),
+      wallTime: new Date().toISOString(),
+    });
+    expect(
+      events.filter(
+        (event) =>
+          event.type === "overlay" && event.event.type === "codex.step",
+      ),
+    ).toMatchObject([
+      {
+        event: {
+          id: "patch-1",
+          step: { kind: "patch", added: 7, removed: 3 },
+          status: "done",
+        },
+      },
+      {
+        event: {
+          id: "patch-2",
+          step: { kind: "patch", added: 8, removed: 3 },
+          status: "done",
+        },
+      },
+    ]);
+    expect(JSON.stringify(events)).not.toContain("private old source");
+    expect(
+      events.some(
+        (event) =>
+          event.type === "overlay" && event.event.type === "tests.green",
+      ),
+    ).toBe(false);
+    repair.resolve(repaired);
+    await engine.waitForRound();
+    const count = events.length;
+    observe({
+      type: "runtime.patch",
+      patch: { added: 99, removed: 99, preview: [] },
+      atMs: Date.now(),
+      wallTime: new Date().toISOString(),
+    });
+    expect(events).toHaveLength(count);
+  });
+
   it("measures observed repair, verification and swap separately, excluding head start from time to green", async () => {
     const installed = deferred<void>();
     const { engine, game, repair, events } = setup({
@@ -122,7 +184,7 @@ describe("round race and safe swaps", () => {
     const options = vi.mocked(game.repair).mock.calls[0]?.[0];
     if (!options?.observe)
       throw new Error("Missing runtime observation callback");
-    const observed = (phase: RuntimeObservation["phase"]) =>
+    const observed = (phase: RuntimePhaseObservation["phase"]) =>
       options.observe?.({
         type: "runtime.phase",
         phase,
@@ -620,7 +682,7 @@ describe("SDK presentation honesty", () => {
       sdkOverlayEvent("r", sdk("/bin/zsh -lc 'cat src/step.ts'")),
     ).toMatchObject({
       type: "codex.step",
-      step: { kind: "reading", path: "source" },
+      step: { kind: "reading", path: "step.ts" },
       status: "running",
     });
     expect(sdkOverlayEvent("r", sdk("pnpm test"))).toMatchObject({
@@ -635,8 +697,10 @@ describe("SDK presentation honesty", () => {
     ).toMatchObject({ status: "failed" });
     expect(
       sdkOverlayEvent("r", sdk("pnpm test", "completed", "secret", 0)),
-    ).toBeNull();
-    expect(sdkOverlayEvent("r", sdk("echo vitest"))).toBeNull();
+    ).toMatchObject({ step: { kind: "tests" }, status: "done" });
+    expect(sdkOverlayEvent("r", sdk("echo vitest"))).toMatchObject({
+      step: { kind: "activity", action: "command" },
+    });
     expect(
       sdkOverlayEvent("r", {
         type: "item.completed",
@@ -646,7 +710,7 @@ describe("SDK presentation honesty", () => {
           text: "All tests green. gravity-sign",
         },
       }),
-    ).toBeNull();
+    ).toMatchObject({ step: { kind: "activity", action: "respond" } });
     expect(
       sdkOverlayEvent("r", {
         type: "item.completed",
@@ -657,6 +721,6 @@ describe("SDK presentation honesty", () => {
           status: "completed",
         },
       }),
-    ).toBeNull();
+    ).toMatchObject({ step: { kind: "activity", action: "edit" } });
   });
 });

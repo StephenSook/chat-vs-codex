@@ -261,6 +261,36 @@ describe("ordered round bridge", () => {
 });
 
 describe("artifact integrity", () => {
+  it("accepts only the fixed activity vocabulary from the round wire", () => {
+    const event = {
+      type: "overlay",
+      event: {
+        type: "codex.step",
+        roundId: "r",
+        id: "item",
+        step: { kind: "activity", action: "edit-test" },
+        status: "done",
+        attempt: 1,
+        total: 1,
+      },
+    };
+    expect(
+      parseRoundEnvelope({ sequence: 1, serverTimeMs: 1, event }).event,
+    ).toEqual(event);
+    expect(() =>
+      parseRoundEnvelope({
+        sequence: 1,
+        serverTimeMs: 1,
+        event: {
+          ...event,
+          event: {
+            ...event.event,
+            step: { kind: "activity", action: "private free text" },
+          },
+        },
+      }),
+    ).toThrow("Invalid round event");
+  });
   it("checks SHA-256 bytes before importing and rejects a corrupted response", async () => {
     const code = "export const marker = 1;";
     const digest = Array.from(

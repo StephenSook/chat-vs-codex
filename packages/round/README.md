@@ -52,8 +52,12 @@ because Codex reports success.
 The loopback server sends sequenced events and SHA-256-addressed JavaScript
 artifacts. The overlay verifies downloaded bytes, imports in order, then replaces
 simulation functions without resetting live state, frame, RNG or clock carry.
-SDK command events drive activity rows. Command exit 0 does not claim tests green;
-only the engine publishes green after the full gate and successful activation.
+Every observed SDK item drives a safe activity category, including command
+execution, source reads by basename, edits, tool calls and responses. Completed
+test commands show their command result; actual guarded source diffs provide
+patch line counts. Arguments, command output and arbitrary agent text stay out of
+the ticker. Command exit 0 does not claim tests green; only the engine publishes
+green after the full gate and successful activation.
 Replayed events use the delivery clock so reconnection does not restart the head
 start. Build-load failure blocks that round's later green and score messages.
 

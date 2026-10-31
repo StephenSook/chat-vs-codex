@@ -1,11 +1,26 @@
 /** Local presentation contract. The operator's SDK bridge publishes observed events only.
  * No timer manufactures agent activity, scores, guesses, or a passing test result.
  */
+export const CODEX_ACTIONS = [
+  "discover",
+  "edit",
+  "edit-test",
+  "command",
+  "tool",
+  "respond",
+  "reason",
+  "search",
+  "plan",
+  "error",
+] as const;
+export type CodexAction = (typeof CODEX_ACTIONS)[number];
+
 export type CodexStep =
   | { kind: "reading"; path: string }
   | { kind: "replay" }
   | { kind: "patch"; added: number; removed: number }
-  | { kind: "tests" };
+  | { kind: "tests" }
+  | { kind: "activity"; action: CodexAction };
 
 export type OverlayEvent =
   | {
@@ -98,6 +113,19 @@ export function stepLabel(step: CodexStep): string {
       return `Patch +${step.added} / -${step.removed}`;
     case "tests":
       return "Running tests";
+    case "activity":
+      return {
+        discover: "Inspecting files",
+        edit: "Editing source",
+        "edit-test": "Editing + testing",
+        command: "Running command",
+        tool: "Using tool",
+        respond: "Preparing response",
+        reason: "Reviewing bug",
+        search: "Searching",
+        plan: "Updating plan",
+        error: "Codex reported an error",
+      }[step.action];
   }
 }
 
@@ -138,7 +166,19 @@ export function reduceBroadcast(
     case "bug.named":
       return { ...state, bugName: event.name };
     case "tests.green":
-      return { ...state, bug: "fixed", intensity: 0 };
+      return {
+        ...state,
+        bug: "fixed",
+        intensity: 0,
+        steps: [
+          ...state.steps.filter((row) => row.id !== "validated-tests"),
+          {
+            id: "validated-tests",
+            label: "Tests green",
+            status: "done" as const,
+          },
+        ].slice(-4),
+      };
     case "codex.step": {
       // A late completion from an earlier SDK retry cannot replace the current attempt.
       if (state.attempt !== null && event.attempt < state.attempt) return state;
@@ -148,8 +188,12 @@ export function reduceBroadcast(
           : [];
       const label =
         event.step.kind === "tests" && event.status === "done"
-          ? "Tests green"
-          : stepLabel(event.step);
+          ? "Tests passed"
+          : event.step.kind === "activity" &&
+              event.step.action === "edit-test" &&
+              event.status === "done"
+            ? "Edit/test command passed"
+            : stepLabel(event.step);
       return {
         ...state,
         steps: [...rows, { id: event.id, label, status: event.status }].slice(

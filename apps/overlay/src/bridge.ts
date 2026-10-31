@@ -2,7 +2,11 @@ import type {
   RoundEnvelope,
   RoundEvent,
 } from "../../../packages/round/src/contracts.js";
-import type { OverlayEvent, OverlayEventBus } from "./events.js";
+import {
+  CODEX_ACTIONS,
+  type OverlayEvent,
+  type OverlayEventBus,
+} from "./events.js";
 import type { SimulationPlayer } from "./simulation.js";
 
 type BuildEvent = Extract<RoundEvent, { type: "game.build" }>;
@@ -89,6 +93,8 @@ function validateOverlay(event: unknown): event is OverlayEvent {
         !!step &&
         (step.kind === "replay" ||
           step.kind === "tests" ||
+          (step.kind === "activity" &&
+            CODEX_ACTIONS.some((action) => action === step.action)) ||
           (step.kind === "reading" && typeof step.path === "string") ||
           (step.kind === "patch" &&
             Number.isSafeInteger(step.added) &&

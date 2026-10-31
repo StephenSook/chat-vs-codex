@@ -16,6 +16,52 @@ const started = () =>
   });
 
 describe("broadcast event contract", () => {
+  it("keeps SDK test-command success separate from the trusted full-suite green", () => {
+    let state = reduceBroadcast(started(), {
+      type: "codex.step",
+      roundId: "r1",
+      id: "tests",
+      step: { kind: "tests" },
+      status: "done",
+      attempt: 1,
+      total: 1,
+    });
+    expect(state.steps[0]?.label).toBe("Tests passed");
+    expect(state.bug).not.toBe("fixed");
+    state = reduceBroadcast(state, {
+      type: "codex.step",
+      roundId: "r1",
+      id: "compound",
+      step: { kind: "activity", action: "edit-test" },
+      status: "done",
+      attempt: 1,
+      total: 1,
+    });
+    expect(state.steps.at(-1)?.label).toBe("Edit/test command passed");
+    state = reduceBroadcast(state, { type: "tests.green", roundId: "r1" });
+    expect(state.steps.at(-1)).toEqual({
+      id: "validated-tests",
+      label: "Tests green",
+      status: "done",
+    });
+    expect(state.bug).toBe("fixed");
+    expect(
+      reduceBroadcast(state, { type: "tests.green", roundId: "r1" }).steps,
+    ).toEqual(state.steps);
+  });
+
+  it("uses fixed safe labels for every observed activity category", () => {
+    expect(stepLabel({ kind: "activity", action: "discover" })).toBe(
+      "Inspecting files",
+    );
+    expect(stepLabel({ kind: "activity", action: "edit" })).toBe(
+      "Editing source",
+    );
+    expect(stepLabel({ kind: "activity", action: "respond" })).toBe(
+      "Preparing response",
+    );
+    expect(stepLabel({ kind: "activity", action: "tool" })).toBe("Using tool");
+  });
   it("does not invent activity or a head start before a round starts", () => {
     const state = initialBroadcast();
     expect(state.steps).toEqual([]);

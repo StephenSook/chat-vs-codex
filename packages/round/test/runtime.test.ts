@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   mkdtemp,
@@ -85,6 +86,13 @@ describe("round runtime verification", () => {
       let validationEnteredAtMs = 0;
       let validationFinishedAtMs = 0;
       let bundleFinishedAtMs = 0;
+      const diagnosis = {
+        rootCause: "Gravity acceleration was reversed",
+        file: "src/physics.ts",
+        line: 12,
+        explanation: "Restore downward acceleration",
+        confidence: 0.97,
+      };
       const runtime = vi.fn(async (options) => {
         runtimeEnteredAtMs = monotonicMs();
         order.push("runtime");
@@ -108,7 +116,7 @@ describe("round runtime verification", () => {
           },
         });
         runtimeFinishedAtMs = monotonicMs();
-        return { usage: null, answer: null };
+        return { usage: null, answer: diagnosis };
       });
       const validate = vi.fn(async (workspace, profile, remaining) => {
         validationEnteredAtMs = monotonicMs();
@@ -134,21 +142,32 @@ describe("round runtime verification", () => {
       );
       expect(order).toEqual(["runtime", "validate", "build"]);
       expect(events).toEqual(["turn.completed"]);
-      const { timings, ...artifact } = result;
+      const {
+        timings,
+        patch,
+        diagnosis: actualDiagnosis,
+        ...artifact
+      } = result;
+      expect(actualDiagnosis).toEqual(diagnosis);
+      expect(patch).toMatchObject({ added: 1, removed: 1 });
+      expect(patch?.preview).toHaveLength(2);
       expect(artifact).toEqual(
         await bundleGame(join(ROOT, "packages/sim/src/index.ts")),
       );
-      expect(observations.map((observation) => observation.phase)).toEqual([
+      const phases = observations.filter(
+        (observation) => observation.type === "runtime.phase",
+      );
+      expect(phases.map((observation) => observation.phase)).toEqual([
         "thread-started",
         "patch-ready",
         "validation-started",
         "validation-passed",
       ]);
       expect(timings).toEqual({
-        threadStartedAtMs: observations[0]?.atMs,
-        patchReadyAtMs: observations[1]?.atMs,
-        validationStartedAtMs: observations[2]?.atMs,
-        validationFinishedAtMs: observations[3]?.atMs,
+        threadStartedAtMs: phases[0]?.atMs,
+        patchReadyAtMs: phases[1]?.atMs,
+        validationStartedAtMs: phases[2]?.atMs,
+        validationFinishedAtMs: phases[3]?.atMs,
       });
       if (!timings) throw new Error("Missing actual runtime boundary timings");
       expect(timings.threadStartedAtMs).toBeLessThanOrEqual(runtimeEnteredAtMs);
@@ -171,7 +190,6 @@ describe("round runtime verification", () => {
         timings.validationFinishedAtMs - timings.validationStartedAtMs,
       ).toBeGreaterThanOrEqual(8);
       for (const observation of observations) {
-        expect(observation.type).toBe("runtime.phase");
         expect(Number.isFinite(Date.parse(observation.wallTime))).toBe(true);
       }
       const log = await readFile(context.options.logFile, "utf8");
@@ -186,6 +204,148 @@ describe("round runtime verification", () => {
       expect(context.options.logFile.startsWith(context.workspace.parent)).toBe(
         false,
       );
+    } finally {
+      await context.cleanup();
+    }
+  }, 30000);
+
+  it("observes real compound-command and untracked source diffs, deduplicating unchanged SDK summaries", async () => {
+    const context = await setup();
+    const observations: RuntimeObservation[] = [];
+    try {
+      const result = await executeRepair(
+        context.options,
+        new AbortController().signal,
+        () => {},
+        {
+          runtime: async (options) => {
+            await context.restore();
+            const before = git(context.workspace.game, [
+              "diff",
+              "--numstat",
+              "HEAD",
+              "--",
+              "src",
+            ])
+              .split("\t")
+              .map(Number);
+            execFileSync(
+              "/bin/sh",
+              [
+                "-c",
+                `"$NODE_BINARY" -e 'require("node:fs").appendFileSync("src/index.ts", "\\n// compound edit\\n")' && "$NODE_BINARY" -e 'require("node:fs").writeFileSync("src/extra.ts", "export const extra = 1;\\n")'`,
+              ],
+              {
+                cwd: options.workspace,
+                env: { ...process.env, NODE_BINARY: process.execPath },
+                timeout: 5000,
+              },
+            );
+            const completed = {
+              type: "item.completed",
+              item: {
+                id: "compound",
+                type: "command_execution",
+                command: "node edit.js && node add.js",
+                status: "completed",
+                exit_code: 0,
+                aggregated_output: "private output",
+              },
+            } as const;
+            await options.event(completed);
+            const first = observations.find(
+              (observation) => observation.type === "runtime.patch",
+            );
+            expect(first).toMatchObject({
+              patch: { added: (before[0] ?? 0) + 3, removed: before[1] },
+            });
+            expect(await readFile(context.options.logFile, "utf8")).toContain(
+              "runtime.event",
+            );
+            await options.event({
+              type: "item.completed",
+              item: {
+                type: "file_change",
+                id: "inaccurate-sdk-count",
+                status: "completed",
+                changes: [{ path: "src/index.ts", kind: "update" }],
+              },
+            });
+            await options.event(completed);
+            return { usage: null, answer: null };
+          },
+          validate: async () => {},
+        },
+        (observation) => observations.push(observation),
+      );
+      const patches = observations.filter(
+        (observation) => observation.type === "runtime.patch",
+      );
+      expect(patches).toHaveLength(1);
+      expect(result.patch).toEqual(patches[0]?.patch);
+      expect(result.patch?.preview).toHaveLength(4);
+      expect(
+        result.patch?.preview.every(
+          (line) => /^[+-]/.test(line) && !/^(?:\+\+\+|---) /.test(line),
+        ),
+      ).toBe(true);
+      const log = (await readFile(context.options.logFile, "utf8"))
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line));
+      expect(
+        log.findIndex((record) => record.kind === "runtime.event"),
+      ).toBeLessThan(
+        log.findIndex((record) => record.kind === "runtime.patch"),
+      );
+    } finally {
+      await context.cleanup();
+    }
+  }, 30000);
+
+  it("rejects fixture edits before emitting a source preview or forwarding the completed command", async () => {
+    const context = await setup();
+    const observations: RuntimeObservation[] = [];
+    const forwarded = vi.fn();
+    const validate = vi.fn(async () => {});
+    try {
+      await expect(
+        executeRepair(
+          context.options,
+          new AbortController().signal,
+          forwarded,
+          {
+            runtime: async (options) => {
+              await context.restore();
+              await writeFile(
+                join(options.workspace, "fixtures/goldens.json"),
+                "private fixture alteration",
+              );
+              await options.event({
+                type: "item.completed",
+                item: {
+                  type: "command_execution",
+                  id: "bad",
+                  command: "edit fixtures",
+                  status: "completed",
+                  exit_code: 0,
+                  aggregated_output: "private fixture content",
+                },
+              });
+              return { usage: null, answer: null };
+            },
+            validate,
+          },
+          (observation) => observations.push(observation),
+        ),
+      ).rejects.toThrow("Rejected change to tests, fixtures or tooling");
+      expect(
+        observations.some(
+          (observation) => observation.type === "runtime.patch",
+        ),
+      ).toBe(false);
+      expect(forwarded).not.toHaveBeenCalled();
+      expect(validate).not.toHaveBeenCalled();
     } finally {
       await context.cleanup();
     }
@@ -253,7 +413,9 @@ describe("round runtime verification", () => {
         ).rejects.toThrow();
         expect(build).not.toHaveBeenCalled();
         expect(
-          observations.map((observation) => observation.phase),
+          observations
+            .filter((observation) => observation.type === "runtime.phase")
+            .map((observation) => observation.phase),
         ).not.toContain("validation-passed");
       } finally {
         await context.cleanup();
@@ -401,7 +563,10 @@ describe("round runtime verification", () => {
         ),
       ).resolves.toEqual(artifact);
       expect(observations).toHaveLength(1);
-      expect(observations[0]?.phase).toBe("thread-started");
+      expect(observations[0]).toMatchObject({
+        type: "runtime.phase",
+        phase: "thread-started",
+      });
       expect(observations[0]?.atMs).toBeGreaterThanOrEqual(before);
       expect(observations[0]?.atMs).toBeLessThanOrEqual(monotonicMs());
       const log = JSON.parse(

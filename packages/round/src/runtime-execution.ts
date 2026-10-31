@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { appendFile } from "node:fs/promises";
+import { appendFile, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { ThreadEvent } from "@openai/codex-sdk";
 import { build } from "esbuild";
@@ -15,7 +15,12 @@ import {
 } from "../../bench/src/workspace.js";
 import { BUG_FAMILIES, type BugFamily } from "../../twitch/src/events.js";
 import { eventStamp, monotonicMs } from "./clocks.js";
-import type { GameArtifact, RuntimeObservation } from "./contracts.js";
+import type {
+  GameArtifact,
+  RuntimeObservation,
+  RuntimePatch,
+  RuntimePhaseObservation,
+} from "./contracts.js";
 
 export async function bundleGame(
   entry: string,
@@ -80,7 +85,7 @@ export async function executeRepair(
   };
   const phaseLogs: Promise<void>[] = [];
   let phaseLogFailure: unknown;
-  const phase = (value: RuntimeObservation["phase"]): number => {
+  const phase = (value: RuntimePhaseObservation["phase"]): number => {
     combined.throwIfAborted();
     const observation: RuntimeObservation = {
       type: "runtime.phase",
@@ -99,14 +104,15 @@ export async function executeRepair(
     return observation.atMs;
   };
   const remaining = () => options.budgetMs - (monotonicMs() - started);
-  const check = async () => {
+  const check = async (allowUnchanged = false) => {
     combined.throwIfAborted();
     if (remaining() <= 0) throw new Error("Round repair deadline expired");
     const changes = await inspectChanges(
       options.workspace.game,
       options.workspace.before,
     );
-    if (!changes.filesChanged.length) throw new Error("No source repair");
+    if (!allowUnchanged && !changes.filesChanged.length)
+      throw new Error("No source repair");
     if (changes.filesChanged.some((path) => !/^src\/[^/]+\.ts$/.test(path)))
       throw new Error("Rejected change to tests, fixtures or tooling");
     if (
@@ -116,6 +122,71 @@ export async function executeRepair(
     )
       throw new Error("Rejected rewrite of game history");
     return changes;
+  };
+  let lastPatchFingerprint: string | undefined;
+  const sourcePatch = async (): Promise<RuntimePatch> => {
+    // Snapshot guards run before any source preview leaves the private worker.
+    // SDK file-change summaries and aggregate shell exits are not diff evidence.
+    await check(true);
+    const game = options.workspace.game;
+    const diffArgs = ["diff", "--no-ext-diff", "--no-textconv"];
+    const diff = git(game, [...diffArgs, "--unified=0", "HEAD", "--", "src"]);
+    const patch: RuntimePatch = { added: 0, removed: 0, preview: [] };
+    for (const line of git(game, [
+      ...diffArgs,
+      "--numstat",
+      "HEAD",
+      "--",
+      "src",
+    ])
+      .split("\n")
+      .filter(Boolean)) {
+      const [added, removed] = line.split("\t");
+      if (!/^\d+$/.test(added ?? "") || !/^\d+$/.test(removed ?? ""))
+        throw new Error("Nontext source change");
+      patch.added += Number(added);
+      patch.removed += Number(removed);
+    }
+    const preview = diff
+      .split("\n")
+      .filter((line) => /^[+-]/.test(line) && !/^(?:\+\+\+|---) /.test(line));
+    const untracked: [string, string][] = [];
+    for (const path of git(game, [
+      "ls-files",
+      "--others",
+      "--exclude-standard",
+      "--",
+      "src",
+    ])
+      .split("\n")
+      .filter(Boolean)
+      .sort()) {
+      const source = await readFile(join(game, path), "utf8");
+      const lines = source.length ? source.split("\n") : [];
+      if (source.endsWith("\n")) lines.pop();
+      patch.added += lines.length;
+      preview.push(...lines.map((line) => `+${line}`));
+      untracked.push([path, source]);
+    }
+    patch.preview = preview.slice(0, 4);
+    const fingerprint = createHash("sha256")
+      .update(JSON.stringify([diff, untracked]))
+      .digest("hex");
+    if (
+      fingerprint !== lastPatchFingerprint &&
+      (patch.added || patch.removed || lastPatchFingerprint !== undefined)
+    ) {
+      const observation: RuntimeObservation = {
+        type: "runtime.patch",
+        patch,
+        ...eventStamp(),
+      };
+      await log({ kind: observation.type, ...observation }, observation);
+      combined.throwIfAborted();
+      observe?.(observation);
+    }
+    lastPatchFingerprint = fingerprint;
+    return patch;
   };
   try {
     combined.throwIfAborted();
@@ -136,12 +207,21 @@ export async function executeRepair(
           elapsedMs: monotonicMs() - started,
           event: value,
         });
+        if (
+          value.type === "item.completed" &&
+          (value.item.type === "command_execution" ||
+            value.item.type === "file_change")
+        )
+          await sourcePatch();
         if (!combined.aborted) event(value);
       },
     };
     const threadStartedAtMs = phase("thread-started");
-    await (dependencies.runtime ?? runRuntime)(runtimeOptions);
+    const completed = await (dependencies.runtime ?? runRuntime)(
+      runtimeOptions,
+    );
     await check();
+    const patch = await sourcePatch();
     const submitted = await snapshot(options.workspace.game);
     // This marks the submitted patch after the SDK turn and source guards pass.
     // It does not claim to measure the first source edit during the turn.
@@ -176,6 +256,8 @@ export async function executeRepair(
     });
     return {
       ...artifact,
+      patch,
+      ...(completed.answer === null ? {} : { diagnosis: completed.answer }),
       timings: {
         threadStartedAtMs,
         patchReadyAtMs,
