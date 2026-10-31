@@ -1,5 +1,5 @@
 import { type BroadcastState, headStartSeconds } from "./events.js";
-import { autopsyView } from "./presentation.js";
+import { autopsyView, IDLE_CTA, idleCtaVisible } from "./presentation.js";
 
 export function element<T extends HTMLElement = HTMLElement>(id: string): T {
   const found = document.getElementById(id);
@@ -14,6 +14,8 @@ export function resizeStage(): void {
 }
 
 export function renderBroadcast(state: BroadcastState): void {
+  element("idle-cta").textContent = IDLE_CTA;
+  element("idle-cta").hidden = !idleCtaVisible(state);
   element("raid-banner").hidden = state.raidViewers === null;
   element("raid-banner").textContent =
     state.raidViewers === null ? "" : `RAID · ${state.raidViewers}`;

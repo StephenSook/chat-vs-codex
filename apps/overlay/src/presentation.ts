@@ -15,6 +15,10 @@ import type { BroadcastState } from "./events.js";
 import type { GhostView } from "./ghost.js";
 
 export const VIEWPORT = { width: 1200, height: 560 } as const;
+export const IDLE_CTA = "Type !break to break the game · !guess to beat Codex";
+export function idleCtaVisible(state: BroadcastState): boolean {
+  return state.roundId === null || state.autopsy !== null;
+}
 export function roundSessionLabel(session: RoundSession): string {
   return session.mode === "live-twitch"
     ? `TWITCH CHAT ROUND${session.trigger === "broadcaster-test" ? " · TEST" : ""}`

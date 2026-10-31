@@ -24,6 +24,10 @@ test("real sim renders, reproduces hashes, and keeps HUD readable at both sizes"
   expect(actual.mode).toBe("replay");
   expect(actual.filtersEnabled).toBe(true);
   expect(actual.corruption.treatment).toBe("none");
+  await expect(page.locator("#idle-cta")).toHaveText(
+    "Type !break to break the game · !guess to beat Codex",
+  );
+  await expect(page.locator("#idle-cta")).toBeVisible();
   expect((actual.camera.player.height * 720) / 1080).toBeGreaterThanOrEqual(32);
   const favicon = await page.request.get("/favicon.svg");
   expect(favicon.ok()).toBe(true);
@@ -54,6 +58,7 @@ test("real sim renders, reproduces hashes, and keeps HUD readable at both sizes"
         "#steps li",
         "#playback-label",
         "#run-status",
+        "#idle-cta",
       ];
       return {
         width: rect.width,

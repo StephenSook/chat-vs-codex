@@ -501,6 +501,16 @@ canvas:focus-visible {
   font-size: 33px;
   line-height: 42px;
 }
+#idle-cta {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 1030px;
+  margin: 0;
+  text-align: center;
+  font-size: 33px;
+  line-height: 40px;
+}
 #playback-label {
   border: 3px solid var(--ink);
   border-radius: 16px;

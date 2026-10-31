@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { RULE } from "../src/framing.js";
 import { summarizeSecondGameTrials } from "../src/second-game.js";
 
 test("committed evidence recomputes in a static preview at desktop and phone widths", async ({
@@ -21,6 +22,7 @@ test("committed evidence recomputes in a static preview at desktop and phone wid
   expect(response?.status()).toBe(200);
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
   await expect(page.locator("h1")).toHaveAccessibleName("CHAT vs CODEX");
+  await expect(page.locator("header .lede")).toHaveText(RULE);
   const vs = page.locator(".brand-vs");
   await expect(vs).toBeVisible();
   const vsSize = await vs.boundingBox();

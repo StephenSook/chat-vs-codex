@@ -1,6 +1,6 @@
-# Chat vs Codex
+# Chat never writes code. Codex never sees the answer. The replay tests decide.
 
-Chat breaks the platformer a streamer is playing. Codex races viewers to diagnose
+**Chat vs Codex:** viewers plant a real bug in the platformer a streamer is playing. Codex races viewers to diagnose
 and repair the real TypeScript bug, checked by deterministic replay tests.
 
 The runtime spike repaired 211 of 212 planted bugs. Terra low finished green trials

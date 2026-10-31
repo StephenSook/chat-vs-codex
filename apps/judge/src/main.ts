@@ -20,6 +20,7 @@ import {
   sha256,
 } from "./proof.js";
 import "./style.css";
+import { RULE } from "./framing.js";
 import { summarizeSecondGameTrials } from "./second-game.js";
 
 const REPO = "https://github.com/StephenSook/chat-vs-codex";
@@ -135,7 +136,7 @@ async function start(): Promise<void> {
   header.append(
     element("p", "CHAT BREAKS IT. CODEX FIXES IT.", "eyebrow"),
     brand,
-    element("p", "Watch a bug become a fix. Then replay the proof.", "lede"),
+    element("p", RULE, "lede"),
   );
   const headline = element("div", undefined, "headline-stats");
   headline.append(
