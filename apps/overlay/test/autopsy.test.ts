@@ -37,6 +37,8 @@ export function autopsyFixture(
     },
     previousRoundId: "prior-test",
     deltaMs: -1200,
+    regressionTest: null,
+    regressionError: null,
     ...overrides,
   };
 }
@@ -60,6 +62,88 @@ const wire = (autopsy: RoundAutopsy) => ({
 afterEach(() => vi.unstubAllGlobals());
 
 describe("observed round autopsy", () => {
+  it("credits exactly one persisted test on the current record and never increments from a guess or storage failure", () => {
+    const regressionTest = {
+      path: "chat-found/00000000-0000-4000-8000-000000000001.json",
+      digest: "a".repeat(64),
+    };
+    const saved = autopsyFixture({
+      roundId: "00000000-0000-4000-8000-000000000001",
+      regressionTest,
+    });
+    expect(autopsyView(saved)).toMatchObject({
+      regression: "+1 test",
+      regressionStatus: "saved",
+    });
+    expect(autopsyView(saved).regressionDetail).toContain(
+      `Found by ${saved.breaker}`,
+    );
+    expect(autopsyView(saved).regressionDetail).toContain(regressionTest.path);
+    expect(autopsyView(saved).regressionDetail).toContain(
+      regressionTest.digest,
+    );
+    expect(
+      autopsyView(
+        autopsyFixture({
+          winner: "chat",
+          firstCorrectGuesser: "viewer-1111111111111111",
+        }),
+      ).regression,
+    ).toBeNull();
+    expect(
+      autopsyView(
+        autopsyFixture({ regressionError: "regression-write-failed" }),
+      ),
+    ).toMatchObject({
+      regression: "Test not saved",
+      regressionStatus: "failed",
+    });
+    expect(
+      autopsyView({ ...saved, breaker: null }).regressionDetail,
+    ).not.toContain("Found by");
+    expect(parseRoundEnvelope(wire(saved)).event.type).toBe("overlay");
+  });
+
+  it("binds saved-test metadata to this round UUID and refuses external paths or corrupt digests", () => {
+    const roundId = "00000000-0000-4000-8000-000000000001";
+    const regressionTest = {
+      path: `chat-found/${roundId}.json`,
+      digest: "a".repeat(64),
+    };
+    for (const invalid of [
+      { ...regressionTest, path: `../chat-found/${roundId}.json` },
+      {
+        ...regressionTest,
+        path: `https://example.com/chat-found/${roundId}.json`,
+      },
+      { ...regressionTest, path: `chat-found/${roundId}.json?x=1` },
+      {
+        ...regressionTest,
+        path: "chat-found/00000000-0000-4000-8000-000000000002.json",
+      },
+      { ...regressionTest, digest: "wrong" },
+    ])
+      expect(() =>
+        parseRoundEnvelope(
+          wire(autopsyFixture({ roundId, regressionTest: invalid })),
+        ),
+      ).toThrow("Invalid round event");
+    expect(() =>
+      parseRoundEnvelope(wire(autopsyFixture({ regressionTest }))),
+    ).toThrow("Invalid round event");
+    expect(() =>
+      parseRoundEnvelope(
+        wire(
+          autopsyFixture({
+            roundId,
+            regressionTest,
+            regressionError: "regression-write-failed",
+          }),
+        ),
+      ),
+    ).toThrow("Invalid round event");
+  });
+
   it("preserves long producer explanation and source lines through the actual wire without disconnecting", async () => {
     const explanation = `Actual diagnosis: ${"grounded gravity used the wrong sign. ".repeat(100)}`;
     const line = `- const map = ${JSON.stringify("actual source data ".repeat(100))};`;
@@ -332,6 +416,30 @@ describe("observed round autopsy", () => {
     expect(elements.get("ticker")?.hidden).toBe(true);
     expect(elements.get("countdown")?.hidden).toBe(true);
     expect(elements.get("fuse")?.hidden).toBe(true);
+    expect(elements.get("autopsy-regression")?.hidden).toBe(true);
+    const saved = {
+      ...record,
+      roundId: "00000000-0000-4000-8000-000000000001",
+      regressionTest: {
+        path: "chat-found/00000000-0000-4000-8000-000000000001.json",
+        digest: "a".repeat(64),
+      },
+    };
+    expect(parseRoundEnvelope(wire(saved)).event.type).toBe("overlay");
+    renderBroadcast({ ...state, roundId: saved.roundId, autopsy: saved });
+    expect(elements.get("autopsy-regression")?.textContent).toBe("+1 test");
+    expect(elements.get("autopsy-regression")?.hidden).toBe(false);
+    renderBroadcast({
+      ...state,
+      autopsy: { ...record, regressionError: payload },
+    });
+    expect(elements.get("autopsy-regression")?.textContent).toBe(
+      "Test not saved",
+    );
+    expect(elements.get("autopsy-regression")?.title).toBe(payload);
+    expect(elements.get("autopsy-regression")?.dataset.status).toBe("failed");
+    renderBroadcast(state);
+    expect(elements.get("autopsy-regression")?.hidden).toBe(true);
     const html = readFileSync(
       new URL("../index.html", import.meta.url),
       "utf8",

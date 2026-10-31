@@ -11,6 +11,7 @@ import type {
   GameArtifact,
   PreparedGame,
   PreviousVerifiedRound,
+  RegressionTest,
   RoundAutopsy,
   RoundDurations,
   RoundEvent,
@@ -47,6 +48,7 @@ interface ActiveRound {
   breaker: string | null;
   firstCorrectGuesser: string | null;
   correctGuessRecorded: boolean;
+  completed: boolean;
 }
 
 function abortable<T>(
@@ -176,6 +178,7 @@ export class RoundEngine {
         breaker: this.identify(intent.actor),
         firstCorrectGuesser: null,
         correctGuessRecorded: false,
+        completed: false,
       };
       this.current = round;
       this.autopsy = null;
@@ -223,7 +226,7 @@ export class RoundEngine {
   async stop(): Promise<void> {
     this.stopped = true;
     const round = this.current;
-    if (round) {
+    if (round && !round.completed) {
       round.reason = "stopped";
       round.abort.abort(new Error("stopped"));
     }
@@ -248,6 +251,8 @@ export class RoundEngine {
   private finishAutopsy(
     round: ActiveRound,
     artifact: GameArtifact | null,
+    regressionTest: RegressionTest | null,
+    regressionError: string | null,
   ): void {
     const verified = this.state.phase === "resolved";
     const durations = this.durations(round);
@@ -271,6 +276,8 @@ export class RoundEngine {
       previousRoundId: this.previous?.roundId ?? null,
       deltaMs:
         verified && current !== null && prior !== null ? current - prior : null,
+      regressionTest,
+      regressionError,
     };
     this.overlay({
       type: "round.autopsy",
@@ -278,6 +285,50 @@ export class RoundEngine {
       autopsy: this.autopsy,
     });
     if (verified) this.previous = { roundId: round.id, timeToGreenMs: current };
+  }
+  private async recordRegression(round: ActiveRound): Promise<{
+    test: RegressionTest | null;
+    error: string | null;
+  }> {
+    if (
+      !round.prepared?.recordRegression ||
+      round.breaker === null ||
+      !/^viewer-[a-f0-9]{16}$/.test(round.breaker)
+    )
+      return { test: null, error: null };
+    const record = round.prepared.recordRegression.bind(round.prepared);
+    const credit = Object.freeze({ roundId: round.id, viewer: round.breaker });
+    const deadline = new AbortController();
+    const timer = setTimeout(
+      () => deadline.abort(new Error("regression-timeout")),
+      CLEANUP_BUDGET_MS,
+    );
+    try {
+      const recorded = await abortable(
+        Promise.resolve().then(() => record(credit)),
+        deadline.signal,
+      );
+      if (
+        !recorded ||
+        recorded.path !== `chat-found/${round.id}.json` ||
+        typeof recorded.digest !== "string" ||
+        !/^[a-f0-9]{64}$/.test(recorded.digest)
+      )
+        throw new Error("Invalid regression metadata");
+      return {
+        test: Object.freeze({ path: recorded.path, digest: recorded.digest }),
+        error: null,
+      };
+    } catch {
+      return {
+        test: null,
+        error: deadline.signal.aborted
+          ? "regression-timeout"
+          : "regression-write-failed",
+      };
+    } finally {
+      clearTimeout(timer);
+    }
   }
   private stamp() {
     return { ...eventStamp(), atMs: this.now() };
@@ -483,6 +534,10 @@ export class RoundEngine {
   private async run(round: ActiveRound): Promise<RoundSnapshot> {
     let stage: "prepare" | "activation" | "repair" = "prepare";
     let installed: GameArtifact | null = null;
+    let regression: { test: RegressionTest | null; error: string | null } = {
+      test: null,
+      error: null,
+    };
     this.arm(round, this.hardBudgetMs, "prepare-deadline");
     try {
       const prepared = await abortable(
@@ -591,8 +646,10 @@ export class RoundEngine {
           });
         this.overlay({ type: "tests.green", roundId: round.id });
         this.phase(round, "resolved");
+        round.completed = true;
+        regression = await this.recordRegression(round);
       }
-      this.finishAutopsy(round, installed);
+      this.finishAutopsy(round, installed, regression.test, regression.error);
       if (this.current === round) this.current = null;
     }
     return this.snapshot();

@@ -196,7 +196,7 @@ test("UI-only terminal autopsy fixture stays off the game at 720p and renders re
   await page.waitForFunction(() => Boolean(window.chatVsCodex));
   // Presentation fixture only. These values are not a round, SDK trace or measured evidence.
   const autopsy: RoundAutopsy = {
-    roundId: "ui-autopsy-only",
+    roundId: "00000000-0000-4000-8000-000000000001",
     status: "verified",
     reason: null,
     breaker: "viewer-0123456789abcdef",
@@ -218,6 +218,11 @@ test("UI-only terminal autopsy fixture stays off the game at 720p and renders re
     },
     previousRoundId: "ui-previous-only",
     deltaMs: -1200,
+    regressionTest: {
+      path: "chat-found/00000000-0000-4000-8000-000000000001.json",
+      digest: "a".repeat(64),
+    },
+    regressionError: null,
   };
   await page.evaluate((record) => {
     window.chatVsCodex.events.publish({
@@ -247,6 +252,11 @@ test("UI-only terminal autopsy fixture stays off the game at 720p and renders re
     autopsy.firstCorrectGuesser ?? "",
   );
   await expect(page.locator("#autopsy-family")).toHaveText("gravity-sign");
+  await expect(page.locator("#autopsy-regression")).toHaveText("+1 test");
+  await expect(page.locator("#autopsy-regression")).toHaveAttribute(
+    "title",
+    new RegExp(`Found by ${autopsy.breaker}`),
+  );
   await expect(page.locator("#autopsy-diff")).toHaveText(
     autopsy.patch?.preview.join("\n") ?? "",
   );
@@ -290,6 +300,28 @@ test("UI-only terminal autopsy fixture stays off the game at 720p and renders re
     unsafe.explanation ?? "",
   );
   await expect(page.locator("#autopsy img, #autopsy script")).toHaveCount(0);
+  await expect(page.locator("#autopsy a")).toHaveCount(0);
+  for (const regressionError of ["regression-write-failed", null]) {
+    const record: RoundAutopsy = {
+      ...autopsy,
+      regressionTest: null,
+      regressionError,
+    };
+    await page.evaluate(
+      (value) =>
+        window.chatVsCodex.events.publish({
+          type: "round.autopsy",
+          roundId: value.roundId,
+          autopsy: value,
+        }),
+      record,
+    );
+    if (regressionError)
+      await expect(page.locator("#autopsy-regression")).toHaveText(
+        "Test not saved",
+      );
+    else await expect(page.locator("#autopsy-regression")).toBeHidden();
+  }
 });
 
 test("keyboard input changes the actual sim and reduced motion disables filters", async ({

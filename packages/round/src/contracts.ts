@@ -74,6 +74,11 @@ export interface RoundDurations {
   timeToGreenMs: number | null;
 }
 
+export interface RegressionTest {
+  path: string;
+  digest: string;
+}
+
 /** Terminal evidence. Missing runtime metadata remains unavailable, never inferred. */
 export interface RoundAutopsy {
   roundId: string;
@@ -89,6 +94,8 @@ export interface RoundAutopsy {
   previousRoundId: string | null;
   /** Current minus previous compatible time to green; negative means faster. */
   deltaMs: number | null;
+  regressionTest: RegressionTest | null;
+  regressionError: string | null;
 }
 
 export interface PreviousVerifiedRound {
@@ -110,6 +117,11 @@ export interface PreparedGame {
     observe?: (observation: RuntimeObservation) => void;
   }): Promise<GameArtifact>;
   close(): Promise<void>;
+  /** Host-owned persistence after verified install and cleanup. Never runs in Codex. */
+  recordRegression?(credit: {
+    roundId: string;
+    viewer: string;
+  }): Promise<RegressionTest>;
 }
 
 export interface RoundRuntime {

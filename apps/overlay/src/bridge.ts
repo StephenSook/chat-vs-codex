@@ -132,6 +132,9 @@ function validAutopsy(value: unknown): value is RoundAutopsy {
   const nullableText = (text: unknown) =>
     text === null || typeof text === "string";
   const patch = record.patch;
+  const regression = record.regressionTest;
+  const safeRoundId =
+    /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
   return (
     typeof record.roundId === "string" &&
     ["verified", "rolled-back"].includes(record.status) &&
@@ -169,6 +172,15 @@ function validAutopsy(value: unknown): value is RoundAutopsy {
       measured(record.durations[key as keyof typeof record.durations]),
     ) &&
     nullableText(record.previousRoundId) &&
+    nullableText(record.regressionError) &&
+    (regression === null ||
+      (!!regression &&
+        typeof record.roundId === "string" &&
+        safeRoundId.test(record.roundId) &&
+        regression.path === `chat-found/${record.roundId}.json` &&
+        typeof regression.digest === "string" &&
+        /^[a-f0-9]{64}$/.test(regression.digest) &&
+        record.regressionError === null)) &&
     (record.deltaMs === null ||
       (typeof record.deltaMs === "number" && Number.isFinite(record.deltaMs)))
   );

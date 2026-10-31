@@ -76,6 +76,19 @@ export function autopsyView(record: RoundAutopsy) {
             ? "slower"
             : "equal",
     reason: record.reason,
+    regression: record.regressionTest
+      ? "+1 test"
+      : record.regressionError
+        ? "Test not saved"
+        : null,
+    regressionStatus: record.regressionTest
+      ? "saved"
+      : record.regressionError
+        ? "failed"
+        : null,
+    regressionDetail: record.regressionTest
+      ? `${record.breaker ? `Found by ${record.breaker}\n` : ""}${record.regressionTest.path}\nSHA-256 ${record.regressionTest.digest}`
+      : record.regressionError,
   };
 }
 

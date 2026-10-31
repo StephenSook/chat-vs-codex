@@ -7,6 +7,11 @@ validation, preserved game state during replacement, and CODEX 1. The private
 source evidence remains under `.local/round-runs/`. This round predates monotonic
 phase stamps: missing durations are unavailable, not reconstructed from the late
 legacy `validating` event. New rounds record actual runtime boundaries.
+Its [regression replay](../chat-found/65e06ea8-d2bd-4e40-9ec7-79f4318c2b02.json)
+was generated afterward from the original pooled mutant, with both browser
+build hashes matching the returned evidence. The real canary survives 1,200
+frames and diverges at frame 48. This is marked retroactive; the original
+recorded overlay had no autopsy, ghost or `+1 test` badge.
 
 The autopsy implementation has contract, reducer, safe DOM rendering and local
 integration coverage. A single Playwright attempt in the build sandbox stopped

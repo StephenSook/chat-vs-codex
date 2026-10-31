@@ -14,6 +14,10 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "esbuild";
 import {
+  eligibleMutants,
+  loadRegressions,
+} from "../../bench/src/regressions.js";
+import {
   compareReplay,
   type ReplayEvidence,
   type ReplayResult,
@@ -244,12 +248,23 @@ export async function generatePool(): Promise<void> {
     }
     if (!candidates.length) throw new Error("No enumerated candidates");
     const accepted: PooledMutant[] = [];
+    const unlearned = new Set(
+      eligibleMutants(candidates, digest, await loadRegressions()).map(
+        (candidate) => candidate.id,
+      ),
+    );
     const rejected: { id: string; stage: string; detail: string }[] = [];
     for (const [index, candidate] of candidates.entries()) {
       const path = join(workspace, candidate.file);
       const original = await readFile(path, "utf8");
       let stage = "typecheck";
       try {
+        stage = "learned-regression";
+        if (!unlearned.has(candidate.id))
+          throw new Error(
+            "Original mutation is already killed by a credited regression",
+          );
+        stage = "typecheck";
         await writeFile(path, applyCandidate(original, candidate));
         checkTypes();
         stage = "equivalent";

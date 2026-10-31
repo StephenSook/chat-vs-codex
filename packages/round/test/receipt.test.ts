@@ -289,6 +289,8 @@ it("retains terminal autopsy evidence without copying unrelated fields or raw vi
     },
     previousRoundId: null,
     deltaMs: null,
+    regressionTest: null,
+    regressionError: null,
   };
   Object.assign(input.result.autopsy, { privateNote: "private-name" });
   const receipt = publicReceipt(input);
@@ -299,6 +301,34 @@ it("retains terminal autopsy evidence without copying unrelated fields or raw vi
     preview: ["-before", "+after"],
   });
   expect(receipt.autopsy?.explanation).toBe("The actual explanation");
+  input.result.autopsy.regressionTest = {
+    path: `chat-found/${input.result.roundId}.json`,
+    digest: "a".repeat(64),
+  };
+  Object.assign(input.result.autopsy.regressionTest, {
+    privateNote: "private-name",
+  });
+  const credited = publicReceipt(input);
+  expect(credited.autopsy?.regressionTest).toEqual({
+    path: `chat-found/${input.result.roundId}.json`,
+    digest: "a".repeat(64),
+  });
+  expect(JSON.stringify(credited)).not.toContain("private-name");
+  input.result.autopsy.regressionTest = {
+    path: "chat-found/raw-name.json",
+    digest: "a".repeat(64),
+  };
+  expect(() => publicReceipt(input)).toThrow("verified");
+  input.result.autopsy.regressionTest = null;
+  input.result.autopsy.regressionError = "regression-write-failed";
+  expect(publicReceipt(input).autopsy).toMatchObject({
+    status: "verified",
+    regressionTest: null,
+    regressionError: "regression-write-failed",
+  });
+  input.result.autopsy.regressionError = "token=private-name";
+  expect(() => publicReceipt(input)).toThrow("verified");
+  input.result.autopsy.regressionError = null;
   expect(JSON.stringify(receipt)).not.toContain("private-name");
   input.result.autopsy.firstCorrectGuesser = "raw-user";
   expect(() => publicReceipt(input)).toThrow("verified");

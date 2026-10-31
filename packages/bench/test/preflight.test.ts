@@ -11,6 +11,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, it } from "vitest";
 import { runPreflight } from "../src/preflight.js";
+import { loadRegressions } from "../src/regressions.js";
 
 // CI lacks the macOS host's Codex/Seatbelt setup. The mandatory outside-sandbox
 // canary runs this same validator with the real profile before issuing a receipt.
@@ -73,7 +74,8 @@ it.each([false, true])(
       expect(log).toContain(fail ? "preflight.failed" : "preflight.passed");
       if (fail) expect(log).not.toContain("preflight.passed");
       else {
-        expect(log).toContain("21 passed");
+        const testCount = 21 + (await loadRegressions()).length;
+        expect(log).toContain(`${testCount} passed`);
         expect(log).toContain("Held-out replay passed");
       }
     } finally {

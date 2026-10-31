@@ -18,6 +18,12 @@ import { type PooledMutant, ROOT } from "../../mutator/src/gate.js";
 import { applyCandidate } from "../../mutator/src/index.js";
 import { TRACKS } from "../../replay/src/index.js";
 import { copyDependencies } from "./dependencies.js";
+import {
+  loadRegressions,
+  neutralRegressions,
+  REGRESSIONS_DIRECTORY,
+  sourceFingerprint,
+} from "./regressions.js";
 
 export type Snapshot = Record<string, string>;
 export const neutralReplayName = (name: string): string => {
@@ -155,6 +161,7 @@ for (const track of tracks) it(track.name, () => {
 
 export async function prepareWorkspace(
   mutant: PooledMutant | null,
+  regressionsDirectory = REGRESSIONS_DIRECTORY,
 ): Promise<TrialWorkspace> {
   const parent = await mkdtemp(join(tmpdir(), "cv-"));
   const game = join(parent, "game");
@@ -178,6 +185,38 @@ export async function prepareWorkspace(
       cleanSources[`src/${file}`] = await readFile(
         join(game, "src", file),
         "utf8",
+      );
+    const regressions = neutralRegressions(
+      await loadRegressions(regressionsDirectory),
+      sourceFingerprint(cleanSources),
+    );
+    await writeFile(
+      join(game, "fixtures/regressions.json"),
+      JSON.stringify(regressions),
+    );
+    if (regressions.length)
+      await writeFile(
+        join(game, "test/regressions.test.ts"),
+        `import { readFileSync } from 'node:fs';
+import { expect, it } from 'vitest';
+import { createState, hashState, step } from '../src/index.js';
+const records = JSON.parse(readFileSync(new URL('../fixtures/regressions.json', import.meta.url), 'utf8'));
+for (const record of records) it(record.name, () => {
+  for (const {track,expected} of record.routes) {
+    if (!track.inputs.length || track.inputs.length > 3600) throw new Error('frame budget');
+    let state = createState(track.seed); const hashes = []; const checkpoints = [];
+    for (const input of track.inputs) {
+      state = step(state,input);
+      if (![state.x,state.y,state.vx,state.vy].every(Number.isSafeInteger)) throw new Error('noninteger state');
+      const hash = hashState(state);
+      if (state.frame%60===0) hashes.push({frame:state.frame,hash});
+      if (expected.checkpoints.some((point: {frame:number})=>point.frame===state.frame)) checkpoints.push({frame:state.frame,hash});
+    }
+    const outcome = {frame:state.frame,x:state.x,y:state.y,alive:state.alive,won:state.won};
+    expect({hashes,outcome,checkpoints}).toEqual(expected);
+  }
+});
+`,
       );
     if (mutant) {
       const localFile = mutant.file.replace(/^packages\/sim\//, "");

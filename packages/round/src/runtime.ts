@@ -3,6 +3,13 @@ import { randomInt, randomUUID } from "node:crypto";
 import { appendFile, mkdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import type { ThreadEvent } from "@openai/codex-sdk";
+import {
+  captureRegression,
+  eligibleMutants,
+  loadRegressions,
+  persistRegression,
+  REGRESSIONS_DIRECTORY,
+} from "../../bench/src/regressions.js";
 import { createLauncher, loadProfile } from "../../bench/src/runtime.js";
 import { buildTicket, HARD_BUDGET_MS } from "../../bench/src/trial.js";
 import { prepareWorkspace } from "../../bench/src/workspace.js";
@@ -26,6 +33,7 @@ export interface RoundRuntimeOptions {
   effort?: "low" | "high";
   /** Offline fixture selection only. Never included in the SDK ticket or workspace. */
   fixtureMutantId?: string;
+  regressionsDirectory?: string;
 }
 
 /** A detached worker bounds SDK hangs, validation loops and bundling independently. */
@@ -140,8 +148,13 @@ export async function superviseRepair(
   }
 }
 
-export function createRoundRuntime(options: RoundRuntimeOptions): RoundRuntime {
+export function createRoundRuntime(
+  options: RoundRuntimeOptions,
+  dependencies: { repair?: typeof superviseRepair } = {},
+): RoundRuntime {
   const runs = resolve(options.runsDirectory);
+  const regressionsDirectory =
+    options.regressionsDirectory ?? REGRESSIONS_DIRECTORY;
   return {
     async prepare(roundId, signal) {
       signal.throwIfAborted();
@@ -150,21 +163,30 @@ export function createRoundRuntime(options: RoundRuntimeOptions): RoundRuntime {
       ) as { sourceDigest: string; mutants: PooledMutant[] };
       if (pool.sourceDigest !== (await sourceDigest()))
         throw new Error("Mutation pool is stale");
-      const eligible = pool.mutants.filter((mutant) =>
-        BUG_FAMILIES.includes(mutant.family as BugFamily),
-      );
+      const eligible = eligibleMutants(
+        pool.mutants,
+        pool.sourceDigest,
+        await loadRegressions(regressionsDirectory),
+      ).filter((mutant) => BUG_FAMILIES.includes(mutant.family as BugFamily));
       const mutant = options.fixtureMutantId
         ? eligible.find((item) => item.id === options.fixtureMutantId)
         : eligible[randomInt(eligible.length || 1)];
       if (!mutant) throw new Error("No eligible pooled mutant");
       await mkdir(runs, { recursive: true, mode: 0o700 });
       const logFile = join(runs, `${randomUUID()}.jsonl`);
-      const workspace = await prepareWorkspace(mutant);
+      const workspace = await prepareWorkspace(mutant, regressionsDirectory);
       let closed = false;
       let repairStarted = false;
       const closing = new AbortController();
       let active: Promise<GameArtifact> | undefined;
+      let verified = false;
       try {
+        signal.throwIfAborted();
+        const proof = await captureRegression(
+          workspace,
+          mutant,
+          pool.sourceDigest,
+        );
         signal.throwIfAborted();
         const clean = await bundleGame(join(ROOT, "packages/sim/src/index.ts"));
         const broken = await bundleGame(
@@ -179,7 +201,7 @@ export function createRoundRuntime(options: RoundRuntimeOptions): RoundRuntime {
         const stamp = eventStamp();
         await appendFile(
           logFile,
-          `${JSON.stringify({ ...stamp, timestamp: stamp.wallTime, kind: "round.prepared", roundId, mutantId: mutant.id, family: mutant.family })}\n`,
+          `${JSON.stringify({ ...stamp, timestamp: stamp.wallTime, kind: "round.prepared", roundId, mutantId: mutant.id, family: mutant.family, sourceDigest: pool.sourceDigest, cleanSourceDigest: proof.cleanSourceDigest, brokenSourceDigest: proof.brokenSourceDigest, cleanBuildDigest: clean.digest, brokenBuildDigest: broken.digest })}\n`,
           { mode: 0o600 },
         );
         signal.throwIfAborted();
@@ -198,7 +220,7 @@ export function createRoundRuntime(options: RoundRuntimeOptions): RoundRuntime {
               repair.signal,
               closing.signal,
             ]);
-            active = superviseRepair(
+            active = (dependencies.repair ?? superviseRepair)(
               {
                 workspace,
                 launcher,
@@ -214,8 +236,18 @@ export function createRoundRuntime(options: RoundRuntimeOptions): RoundRuntime {
               repair.event,
               undefined,
               repair.observe,
-            );
+            ).then((artifact) => {
+              verified = true;
+              return artifact;
+            });
             return active;
+          },
+          async recordRegression(credit: { roundId: string; viewer: string }) {
+            if (!verified)
+              throw new Error("Regression credit requires a verified repair");
+            if (credit.roundId !== roundId)
+              throw new Error("Regression credit round mismatch");
+            return persistRegression(regressionsDirectory, proof, credit);
           },
           async close() {
             if (closed) return;

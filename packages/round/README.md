@@ -25,7 +25,7 @@ deny intact. Add `--serve` to keep the local overlay open after the round:
 
 The engine owns phase, scoring and timers. One active round is allowed. Bare
 break requests choose a server-side mutant from the six enum families; the
-fixture deliberately selects a gated gravity mutant for repeatability. Two-bug
+fixture selects an unlearned gated gravity mutant. Two-bug
 raid requests and private family selection are explicitly declined in this
 checkpoint. No live listener, chat writes or reward creation starts here.
 
@@ -64,6 +64,13 @@ explanation, phase durations and a signed time-to-green delta. Prior verified
 receipts supply the comparison across runner invocations. A legacy or incompatible
 prior measurement leaves the delta unavailable. Rollback cards carry no green
 split; failed cleanup rolls back before publishing a success or Codex point.
+After successful cleanup, a verified fix saves one credited regression under
+[`chat-found/`](../../chat-found/README.md). The original planted mutant must
+survive the canary and differ from clean replay expectations; a first-divergence
+checkpoint preserves failures between 60-frame hashes. One record becomes one
+immutable test in later workspaces. A saved record adds the autopsy's `+1 test`;
+storage failure shows `Test not saved` while retaining the actual fix. Exact
+learned mutation fingerprints are excluded from future selection and pool gates.
 During validation, the held-out validator records the patched build's actual
 per-frame positions and state hashes. After that run passes, its bounded trace
 drives a translucent ghost and overview trail before the swap; playback may

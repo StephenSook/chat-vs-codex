@@ -12,6 +12,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it, vi } from "vitest";
+import { loadRegressions } from "../../bench/src/regressions.js";
 import { loadProfile } from "../../bench/src/runtime.js";
 import { buildTicket } from "../../bench/src/trial.js";
 import { git, prepareWorkspace } from "../../bench/src/workspace.js";
@@ -788,6 +789,81 @@ describe("round runtime verification", () => {
     } finally {
       if (priorPath === undefined) delete process.env.PATH;
       else process.env.PATH = priorPath;
+      await rm(logs, { recursive: true, force: true });
+    }
+  }, 30000);
+
+  it("records a factory regression only after verified repair, survives close, and excludes learned fixture selection (repair is a test double)", async () => {
+    const pool = JSON.parse(
+      await readFile(join(ROOT, "packages/mutator/pool.json"), "utf8"),
+    ) as { mutants: PooledMutant[] };
+    const mutant = pool.mutants.find(
+      (item) => item.family === "swapped-controls",
+    );
+    if (!mutant) throw new Error("Missing controls fixture");
+    const logs = await mkdtemp(join(tmpdir(), "round-credit-factory-"));
+    const directory = join(logs, "records");
+    const oldPath = process.env.PATH;
+    await writeFile(join(logs, "codex"), "#!/bin/sh\nexit 99\n", {
+      mode: 0o700,
+    });
+    process.env.PATH = `${logs}:${oldPath ?? ""}`;
+    let prepared:
+      | Awaited<ReturnType<ReturnType<typeof createRoundRuntime>["prepare"]>>
+      | undefined;
+    try {
+      let finish!: (value: Awaited<ReturnType<typeof bundleGame>>) => void;
+      const pending = new Promise<Awaited<ReturnType<typeof bundleGame>>>(
+        (resolve) => {
+          finish = resolve;
+        },
+      );
+      const repair = vi.fn(async () => pending);
+      const runtime = createRoundRuntime(
+        {
+          runsDirectory: logs,
+          regressionsDirectory: directory,
+          fixtureMutantId: mutant.id,
+        },
+        { repair },
+      );
+      const roundId = "00000000-0000-0000-0000-000000000003";
+      prepared = await runtime.prepare(roundId, new AbortController().signal);
+      const recordRegression = prepared.recordRegression;
+      if (!recordRegression) throw new Error("Missing regression hook");
+      const credit = { roundId, viewer: "viewer-dddddddddddddddd" };
+      await expect(recordRegression(credit)).rejects.toThrow("verified repair");
+      const repaired = prepared.repair({
+        hint: null,
+        signal: new AbortController().signal,
+        event: () => {},
+      });
+      await expect(recordRegression(credit)).rejects.toThrow("verified repair");
+      finish(prepared.clean);
+      await repaired;
+      await prepared.close();
+      await expect(
+        recordRegression({ ...credit, roundId: "wrong" }),
+      ).rejects.toThrow("round mismatch");
+      await writeFile(directory, "persistence unavailable");
+      await expect(recordRegression(credit)).rejects.toThrow();
+      await rm(directory);
+      const receipt = await recordRegression(credit);
+      expect(receipt.path).toBe(`chat-found/${roundId}.json`);
+      expect(receipt.digest).toMatch(/^[a-f0-9]{64}$/);
+      expect(await recordRegression(credit)).toEqual(receipt);
+      const records = await loadRegressions(directory);
+      expect(records).toHaveLength(1);
+      expect(records[0]?.mutantId).toBe(mutant.id);
+      expect(records[0]?.viewer).toBe(credit.viewer);
+      await expect(
+        runtime.prepare("another-round", new AbortController().signal),
+      ).rejects.toThrow("No eligible pooled mutant");
+      expect(repair).toHaveBeenCalledOnce();
+    } finally {
+      await prepared?.close();
+      if (oldPath === undefined) delete process.env.PATH;
+      else process.env.PATH = oldPath;
       await rm(logs, { recursive: true, force: true });
     }
   }, 30000);

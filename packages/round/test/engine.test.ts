@@ -647,6 +647,166 @@ describe("terminal round autopsy", () => {
   });
 });
 
+describe("verified regression credit", () => {
+  it("credits the hashed breaker exactly once after installation and successful cleanup with immutable metadata", async () => {
+    const order: string[] = [];
+    const viewer = "viewer-aaaaaaaaaaaaaaaa";
+    const context = setup({
+      identify: () => viewer,
+      activate: async (_artifact, phase) => {
+        order.push(phase);
+      },
+    });
+    context.game.close = async () => {
+      order.push("cleanup");
+    };
+    const record = vi.fn(
+      async (credit: { roundId: string; viewer: string }) => {
+        order.push("regression");
+        expect(Object.isFrozen(credit)).toBe(true);
+        expect(Reflect.set(credit, "viewer", "raw-user")).toBe(false);
+        expect(credit.viewer).toBe(viewer);
+        return {
+          path: `chat-found/${credit.roundId}.json`,
+          digest: "a".repeat(64),
+        };
+      },
+    );
+    context.game.recordRegression = record;
+    breakGame(context.engine);
+    await vi.advanceTimersByTimeAsync(15000);
+    context.repair.resolve(repaired);
+    const result = await context.engine.waitForRound();
+    expect(order).toEqual(["broken", "repaired", "cleanup", "regression"]);
+    expect(record).toHaveBeenCalledTimes(1);
+    expect(record).toHaveBeenCalledWith({ roundId: result.roundId, viewer });
+    expect(result.autopsy).toMatchObject({
+      status: "verified",
+      regressionTest: {
+        path: `chat-found/${result.roundId}.json`,
+        digest: "a".repeat(64),
+      },
+      regressionError: null,
+    });
+    expect(
+      Reflect.set(result.autopsy?.regressionTest ?? {}, "path", "raw-user"),
+    ).toBe(false);
+    await context.engine.waitForRound();
+    await context.engine.stop();
+    expect(record).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(["write", "invalid", "timeout"])(
+    "keeps the valid fix green without regression credit on %s failure",
+    async (kind) => {
+      const context = setup();
+      const record = vi.fn(async () => {
+        if (kind === "write") throw new Error("private-name token=secret");
+        if (kind === "timeout")
+          return new Promise<{ path: string; digest: string }>(() => {});
+        return { path: "chat-found/raw-user.json", digest: "a".repeat(64) };
+      });
+      context.game.recordRegression = record;
+      breakGame(context.engine);
+      await vi.advanceTimersByTimeAsync(15000);
+      context.repair.resolve(repaired);
+      await vi.advanceTimersByTimeAsync(kind === "timeout" ? 5000 : 0);
+      const result = await context.engine.waitForRound();
+      expect(result).toMatchObject({
+        phase: "resolved",
+        scores: { codex: 1 },
+        autopsy: {
+          status: "verified",
+          regressionTest: null,
+          regressionError:
+            kind === "timeout"
+              ? "regression-timeout"
+              : "regression-write-failed",
+        },
+      });
+      expect(context.activate.mock.calls.map(([, phase]) => phase)).toEqual([
+        "broken",
+        "repaired",
+      ]);
+      expect(
+        context.events.filter(
+          (event) =>
+            event.type === "overlay" && event.event.type === "tests.green",
+        ),
+      ).toHaveLength(1);
+      expect(JSON.stringify(context.events)).not.toMatch(
+        /token=|raw-user|private-name/,
+      );
+      expect(record).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it("finishes pending host persistence during stop without changing an already verified fix", async () => {
+    const context = setup();
+    const saved = deferred<void>();
+    const record = vi.fn(
+      async (credit: { roundId: string; viewer: string }) => {
+        await saved.promise;
+        return {
+          path: `chat-found/${credit.roundId}.json`,
+          digest: "a".repeat(64),
+        };
+      },
+    );
+    context.game.recordRegression = record;
+    breakGame(context.engine);
+    await vi.advanceTimersByTimeAsync(15000);
+    context.repair.resolve(repaired);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(context.engine.snapshot().phase).toBe("resolved");
+    const stopping = context.engine.stop();
+    saved.resolve();
+    await stopping;
+    const result = await context.engine.waitForRound();
+    expect(result).toMatchObject({
+      phase: "resolved",
+      reason: null,
+      autopsy: { status: "verified", regressionError: null },
+    });
+    expect(result.autopsy?.regressionTest).not.toBeNull();
+    expect(record).toHaveBeenCalledTimes(1);
+    expect(context.activate.mock.calls.map(([, phase]) => phase)).toEqual([
+      "broken",
+      "repaired",
+    ]);
+  });
+
+  it.each(["repair", "cleanup", "identity"])(
+    "does not call host persistence after %s refusal",
+    async (kind) => {
+      const context = setup({
+        ...(kind === "identity" ? { identify: (actor: string) => actor } : {}),
+      });
+      const record = vi.fn(async () => ({
+        path: "should-not-be-created",
+        digest: "a".repeat(64),
+      }));
+      context.game.recordRegression = record;
+      if (kind === "cleanup")
+        context.game.close = async () => {
+          throw new Error("cleanup failed");
+        };
+      breakGame(context.engine);
+      await vi.advanceTimersByTimeAsync(15000);
+      if (kind === "repair")
+        context.repair.reject(new Error("verification failed"));
+      else context.repair.resolve(repaired);
+      const result = await context.engine.waitForRound();
+      expect(record).not.toHaveBeenCalled();
+      expect(result.autopsy).toMatchObject({
+        regressionTest: null,
+        regressionError: null,
+      });
+      if (kind !== "identity") expect(result.phase).toBe("rolled-back");
+    },
+  );
+});
+
 describe("abort and failure boundaries", () => {
   it("rolls back a failed repair and never publishes a green or Codex score", async () => {
     const { engine, repair, events, activate, close } = setup();

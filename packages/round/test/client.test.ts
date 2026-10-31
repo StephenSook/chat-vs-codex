@@ -101,6 +101,8 @@ describe("real headless hot-swap client with a test-only sandbox launcher", () =
       steps: [],
     });
     const autopsy: RoundAutopsy = {
+      regressionTest: null,
+      regressionError: null,
       roundId,
       status: "rolled-back",
       reason: "prepare-failed",

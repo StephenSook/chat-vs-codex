@@ -91,6 +91,11 @@ export function renderBroadcast(state: BroadcastState): void {
     element("autopsy-reason").hidden = view.reason === null;
     element("autopsy-reason").textContent = view.reason;
     element("autopsy-delta").dataset.trend = view.trend;
+    const regression = element("autopsy-regression");
+    regression.hidden = view.regression === null;
+    regression.textContent = view.regression;
+    regression.dataset.status = view.regressionStatus ?? "";
+    regression.title = view.regressionDetail ?? "";
   }
 }
 

@@ -2,6 +2,10 @@ import { randomUUID } from "node:crypto";
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { runPreflight } from "../../bench/src/preflight.js";
+import {
+  eligibleMutants,
+  loadRegressions,
+} from "../../bench/src/regressions.js";
 import { type PooledMutant, ROOT } from "../../mutator/src/gate.js";
 import { TwitchHandler } from "../../twitch/src/events.js";
 import { parseFixture, replayFixtures } from "../../twitch/src/fixtures.js";
@@ -47,9 +51,14 @@ async function main() {
     await client.snapshot();
     const pool = JSON.parse(
       await readFile(join(ROOT, "packages/mutator/pool.json"), "utf8"),
-    ) as { mutants: PooledMutant[] };
-    const mutant = pool.mutants.find((item) => item.family === "gravity-sign");
-    if (!mutant) throw new Error("Fixture requires a gated gravity mutant");
+    ) as { sourceDigest: string; mutants: PooledMutant[] };
+    const mutant = eligibleMutants(
+      pool.mutants,
+      pool.sourceDigest,
+      await loadRegressions(),
+    ).find((item) => item.family === "gravity-sign");
+    if (!mutant)
+      throw new Error("Fixture requires an unlearned gated gravity mutant");
     const raw = JSON.parse(
       await readFile(
         join(ROOT, "packages/twitch/fixtures/session.json"),
@@ -175,7 +184,8 @@ async function main() {
       snapshot.broadcast.bug !== "fixed" ||
       snapshot.installs.length < 2 ||
       snapshot.installs.some((item) => !item.statePreserved) ||
-      ghost === null
+      ghost === null ||
+      !result.autopsy?.regressionTest
     )
       throw new Error(
         "Local fixture round did not complete a verified hot swap",

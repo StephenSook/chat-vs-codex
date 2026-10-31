@@ -158,7 +158,17 @@ export function publicReceipt(input: {
         (autopsy.breaker !== null &&
           !/^viewer-[a-f0-9]{16}$/.test(autopsy.breaker)) ||
         (autopsy.firstCorrectGuesser !== null &&
-          !/^viewer-[a-f0-9]{16}$/.test(autopsy.firstCorrectGuesser))))
+          !/^viewer-[a-f0-9]{16}$/.test(autopsy.firstCorrectGuesser)) ||
+        (autopsy.regressionTest !== null &&
+          (autopsy.breaker === null ||
+            autopsy.regressionError !== null ||
+            autopsy.regressionTest.path !==
+              `chat-found/${result.roundId}.json` ||
+            !/^[a-f0-9]{64}$/.test(autopsy.regressionTest.digest))) ||
+        (autopsy.regressionError !== null &&
+          !["regression-write-failed", "regression-timeout"].includes(
+            autopsy.regressionError,
+          ))))
   )
     throw new Error(
       "Public receipts require a verified state-preserving round",
@@ -207,6 +217,14 @@ export function publicReceipt(input: {
             durations: { ...autopsy.durations },
             previousRoundId: autopsy.previousRoundId,
             deltaMs: autopsy.deltaMs,
+            regressionTest:
+              autopsy.regressionTest === null
+                ? null
+                : {
+                    path: autopsy.regressionTest.path,
+                    digest: autopsy.regressionTest.digest,
+                  },
+            regressionError: autopsy.regressionError,
           },
     family: client.broadcast.bugName,
     winner: result.winner,

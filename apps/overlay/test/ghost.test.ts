@@ -143,6 +143,8 @@ describe("recorded held-out ghost", () => {
       },
       previousRoundId: null,
       deltaMs: null,
+      regressionTest: null,
+      regressionError: null,
     };
     const ghost = observedGhost();
     const event = { type: "round.autopsy", roundId: "r", autopsy } as const;

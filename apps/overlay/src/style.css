@@ -400,6 +400,25 @@ h2 {
 #autopsy-delta[data-trend="slower"] {
   color: #9b321f;
 }
+#autopsy-regression {
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: #e1eee5;
+  color: #176345;
+  font-size: 22px;
+  line-height: 26px;
+  white-space: nowrap;
+}
+.autopsy-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+#autopsy-regression[data-status="failed"] {
+  background: #fae5de;
+  color: #9b321f;
+}
 .autopsy[data-status="verified"] {
   border-top: 8px solid var(--green);
 }
