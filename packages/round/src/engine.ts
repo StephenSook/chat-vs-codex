@@ -1,0 +1,418 @@
+import { randomUUID } from "node:crypto";
+import type { OverlayEvent } from "../../../apps/overlay/src/events.js";
+import {
+  BUG_FAMILIES,
+  type BugFamily,
+  type PrivateIntent,
+  type PublicIntent,
+} from "../../twitch/src/events.js";
+import type {
+  GameArtifact,
+  PreparedGame,
+  RoundEvent,
+  RoundRuntime,
+} from "./contracts.js";
+import { sdkOverlayEvent } from "./sdk-events.js";
+
+const CLEANUP_BUDGET_MS = 5_000;
+
+type PublicState = Extract<RoundEvent, { type: "round.state" }>;
+export interface RoundSnapshot extends PublicState {
+  scores: { chat: number; codex: number };
+  guessClosesAt: number | null;
+  active: boolean;
+}
+interface ActiveRound {
+  id: string;
+  abort: AbortController;
+  prepared: PreparedGame | null;
+  votes: Map<string, BugFamily>;
+  startedAt: number | null;
+  winner: "chat" | "codex" | null;
+  reason: string | null;
+  timer: ReturnType<typeof setTimeout> | null;
+  visible: boolean;
+}
+
+function abortable<T>(
+  promise: Promise<T>,
+  signal: AbortSignal,
+  late?: (value: T) => void,
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    let abandoned = false;
+    const aborted = () => {
+      abandoned = true;
+      reject(signal.reason);
+    };
+    if (signal.aborted) aborted();
+    else signal.addEventListener("abort", aborted, { once: true });
+    promise.then(
+      (value) => {
+        signal.removeEventListener("abort", aborted);
+        if (abandoned) late?.(value);
+        else resolve(value);
+      },
+      (error: unknown) => {
+        signal.removeEventListener("abort", aborted);
+        if (!abandoned) reject(error);
+      },
+    );
+  });
+}
+
+export class RoundEngine {
+  private current: ActiveRound | null = null;
+  private task: Promise<RoundSnapshot> | null = null;
+  private activation = Promise.resolve();
+  private stopped = false;
+  private number = 0;
+  private scores = { chat: 0, codex: 0 };
+  private state: PublicState = {
+    type: "round.state",
+    roundId: null,
+    phase: "idle",
+    headStartEndsAt: null,
+    winner: null,
+    reason: null,
+  };
+  private guessClosesAt: number | null = null;
+  private readonly now: () => number;
+  private readonly headStartMs: number;
+  private readonly roundLimitMs: number;
+  private readonly hardBudgetMs: number;
+
+  constructor(
+    private readonly options: {
+      runtime: RoundRuntime;
+      publish(event: RoundEvent): void;
+      activate(
+        artifact: GameArtifact,
+        phase: "broken" | "repaired" | "rollback",
+        roundId: string,
+        signal: AbortSignal,
+      ): Promise<void>;
+      now?: () => number;
+      headStartMs?: number;
+      roundLimitMs?: number;
+      hardBudgetMs?: number;
+    },
+  ) {
+    this.now = options.now ?? Date.now;
+    this.headStartMs = options.headStartMs ?? 15_000;
+    this.roundLimitMs = options.roundLimitMs ?? 60_000;
+    this.hardBudgetMs = options.hardBudgetMs ?? 240_000;
+    if (
+      ![this.headStartMs, this.roundLimitMs, this.hardBudgetMs].every(
+        Number.isFinite,
+      ) ||
+      this.headStartMs < 0 ||
+      this.roundLimitMs <= this.headStartMs ||
+      this.hardBudgetMs < this.roundLimitMs
+    )
+      throw new Error("Invalid round timing configuration");
+  }
+
+  snapshot(): RoundSnapshot {
+    return {
+      ...this.state,
+      scores: { ...this.scores },
+      guessClosesAt: this.guessClosesAt,
+      active: this.current !== null,
+    };
+  }
+  waitForRound(): Promise<RoundSnapshot> {
+    return this.task ?? Promise.resolve(this.snapshot());
+  }
+
+  handlePublic(intent: PublicIntent): void {
+    if (this.stopped) return;
+    if (intent.kind === "break-requested") {
+      if (this.current) return;
+      if (intent.bugCount !== 1) {
+        this.options.publish({
+          ...this.state,
+          reason: "unsupported-bug-count",
+        });
+        return;
+      }
+      const round: ActiveRound = {
+        id: randomUUID(),
+        abort: new AbortController(),
+        prepared: null,
+        votes: new Map(),
+        startedAt: null,
+        winner: null,
+        reason: null,
+        timer: null,
+        visible: false,
+      };
+      this.current = round;
+      this.guessClosesAt = null;
+      this.phase(round, "preparing");
+      this.task = this.run(round);
+      return;
+    }
+    const round = this.current;
+    if (
+      intent.kind !== "guess-submitted" ||
+      !round ||
+      round.abort.signal.aborted ||
+      !round.prepared ||
+      round.startedAt === null ||
+      this.now() >= round.startedAt + this.roundLimitMs
+    )
+      return;
+    if (!BUG_FAMILIES.includes(intent.word as BugFamily)) return;
+    const family = intent.word as BugFamily;
+    if (this.now() < round.startedAt + this.headStartMs)
+      round.votes.set(intent.actor, family);
+    if (family === round.prepared.family && round.winner === null) {
+      round.winner = "chat";
+      this.scores.chat++;
+      this.overlay({ type: "bug.named", roundId: round.id, name: family });
+      this.overlay({ type: "score.changed", ...this.scores });
+      this.phase(round, this.state.phase);
+    }
+  }
+
+  /** Selection is private. Runtime mutation choice is server-owned in this phase. */
+  handlePrivate(_intent: PrivateIntent): {
+    accepted: false;
+    reason: "private-selection-unavailable";
+  } {
+    return { accepted: false, reason: "private-selection-unavailable" };
+  }
+
+  async stop(): Promise<void> {
+    this.stopped = true;
+    const round = this.current;
+    if (round) {
+      round.reason = "stopped";
+      round.abort.abort(new Error("stopped"));
+    }
+    await this.task;
+  }
+
+  private overlay(event: OverlayEvent): void {
+    this.options.publish({ type: "overlay", event });
+  }
+  private phase(round: ActiveRound, phase: PublicState["phase"]): void {
+    this.state = {
+      type: "round.state",
+      roundId: round.id,
+      phase,
+      headStartEndsAt:
+        round.startedAt === null ? null : round.startedAt + this.headStartMs,
+      winner: round.winner,
+      reason: round.reason,
+    };
+    this.options.publish({ ...this.state });
+  }
+  private arm(round: ActiveRound, milliseconds: number, reason: string): void {
+    if (round.timer) clearTimeout(round.timer);
+    round.timer = setTimeout(() => {
+      round.reason = reason;
+      round.abort.abort(new Error(reason));
+    }, milliseconds);
+  }
+  private async activate(
+    round: ActiveRound,
+    artifact: GameArtifact,
+    phase: "broken" | "repaired" | "rollback",
+  ): Promise<void> {
+    const rollback = phase === "rollback" ? new AbortController() : null;
+    const signal = rollback?.signal ?? round.abort.signal;
+    const timer = rollback
+      ? setTimeout(
+          () => rollback.abort(new Error("rollback-timeout")),
+          CLEANUP_BUDGET_MS,
+        )
+      : null;
+    const task = this.activation.then(async () => {
+      signal.throwIfAborted();
+      // Installers must honor this signal before committing or publishing a build.
+      // Abort releases the queue even when a callback does not resolve; a stale
+      // callback cannot receive permission to commit after a rollback starts.
+      await abortable(
+        Promise.resolve().then(() =>
+          this.options.activate(artifact, phase, round.id, signal),
+        ),
+        signal,
+      );
+      signal.throwIfAborted();
+    });
+    this.activation = task.catch(() => {});
+    try {
+      await task;
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+  private async closePrepared(prepared: PreparedGame): Promise<void> {
+    const cleanup = new AbortController();
+    const timer = setTimeout(
+      () => cleanup.abort(new Error("cleanup-timeout")),
+      CLEANUP_BUDGET_MS,
+    );
+    try {
+      await abortable(
+        Promise.resolve().then(() => prepared.close()),
+        cleanup.signal,
+      );
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  private async headStart(round: ActiveRound): Promise<void> {
+    const remaining = Math.max(
+      0,
+      (round.startedAt ?? this.now()) + this.headStartMs - this.now(),
+    );
+    if (remaining === 0) return;
+    await new Promise<void>((resolve, reject) => {
+      const done = () => {
+        clearTimeout(timer);
+        round.abort.signal.removeEventListener("abort", aborted);
+        resolve();
+      };
+      const aborted = () => {
+        clearTimeout(timer);
+        reject(round.abort.signal.reason);
+      };
+      const timer = setTimeout(done, remaining);
+      round.abort.signal.addEventListener("abort", aborted, { once: true });
+      if (round.abort.signal.aborted) aborted();
+    });
+  }
+  private hint(round: ActiveRound): BugFamily | null {
+    const counts = new Map<BugFamily, number>();
+    for (const family of round.votes.values())
+      counts.set(family, (counts.get(family) ?? 0) + 1);
+    let result: BugFamily | null = null;
+    let highest = 0;
+    for (const family of [...counts.keys()].sort()) {
+      const count = counts.get(family) ?? 0;
+      if (count > highest) {
+        highest = count;
+        result = family;
+      }
+    }
+    return result;
+  }
+  private async run(round: ActiveRound): Promise<RoundSnapshot> {
+    let stage: "prepare" | "activation" | "repair" = "prepare";
+    this.arm(round, this.hardBudgetMs, "prepare-deadline");
+    try {
+      const prepared = await abortable(
+        this.options.runtime.prepare(round.id, round.abort.signal),
+        round.abort.signal,
+        (late) => {
+          void this.closePrepared(late).catch(() => {
+            this.stopped = true;
+          });
+        },
+      );
+      round.prepared = prepared;
+      stage = "activation";
+      // The callback installs code without replacing the browser's world state.
+      // It also publishes game.build. Presentation time begins only after install.
+      round.visible = true;
+      await this.activate(round, prepared.broken, "broken");
+      round.startedAt = this.now();
+      this.guessClosesAt = round.startedAt + this.roundLimitMs;
+      this.arm(round, this.hardBudgetMs, "hard-budget");
+      this.overlay({
+        type: "round.started",
+        id: round.id,
+        number: ++this.number,
+        atMs: round.startedAt,
+        headStartMs: this.headStartMs,
+      });
+      this.overlay({ type: "bug.active", roundId: round.id, intensity: 1 });
+      this.phase(round, "head-start");
+      await this.headStart(round);
+      stage = "repair";
+      this.phase(round, "repairing");
+      const repaired = await abortable(
+        prepared.repair({
+          hint: this.hint(round),
+          signal: round.abort.signal,
+          event: (event) => {
+            if (
+              this.current !== round ||
+              round.abort.signal.aborted ||
+              this.state.phase !== "repairing"
+            )
+              return;
+            const observed = sdkOverlayEvent(round.id, event);
+            if (observed) this.overlay(observed);
+          },
+        }),
+        round.abort.signal,
+      );
+      round.abort.signal.throwIfAborted();
+      // Runtime resolution guarantees full immutable visible + held-out validation.
+      this.phase(round, "validating");
+      this.phase(round, "swapping");
+      stage = "activation";
+      await this.activate(round, repaired, "repaired");
+      if (
+        round.winner === null &&
+        this.now() < (round.startedAt ?? 0) + this.roundLimitMs
+      ) {
+        round.winner = "codex";
+        this.scores.codex++;
+        this.overlay({ type: "score.changed", ...this.scores });
+      }
+      if (round.winner === null) round.reason = "round-limit";
+      this.overlay({
+        type: "bug.named",
+        roundId: round.id,
+        name: prepared.family,
+      });
+      this.overlay({ type: "tests.green", roundId: round.id });
+      this.phase(round, "resolved");
+    } catch {
+      round.reason ??=
+        stage === "prepare"
+          ? "prepare-failed"
+          : stage === "activation"
+            ? "activation-failed"
+            : "repair-failed";
+      round.abort.abort(new Error(round.reason));
+      if (round.prepared && round.visible) {
+        try {
+          await this.activate(round, round.prepared.clean, "rollback");
+          this.overlay({ type: "bug.active", roundId: round.id, intensity: 0 });
+        } catch (error) {
+          round.reason =
+            error instanceof Error && error.message === "rollback-timeout"
+              ? "rollback-timeout"
+              : "rollback-failed";
+          this.stopped = true;
+        }
+        this.overlay({
+          type: "bug.named",
+          roundId: round.id,
+          name: round.prepared.family,
+        });
+      }
+      this.phase(round, "rolled-back");
+    } finally {
+      if (round.timer) clearTimeout(round.timer);
+      try {
+        if (round.prepared) await this.closePrepared(round.prepared);
+      } catch (error) {
+        round.reason =
+          error instanceof Error && error.message === "cleanup-timeout"
+            ? "cleanup-timeout"
+            : "cleanup-failed";
+        this.stopped = true;
+        this.phase(round, this.state.phase);
+      }
+      if (this.current === round) this.current = null;
+    }
+    return this.snapshot();
+  }
+}

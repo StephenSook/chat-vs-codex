@@ -18,6 +18,7 @@
     "bench": "tsx scripts/bench.ts",
     "bench:canary": "tsx scripts/bench-canary.ts",
     "bench:summary": "tsx scripts/bench.ts --summary",
+    "round:fixture": "pnpm --filter @chat-vs-codex/round fixture",
     "ci:local": "pnpm install --frozen-lockfile && pnpm typecheck && pnpm lint && pnpm test",
     "check": "pnpm typecheck && pnpm lint && pnpm test"
   },

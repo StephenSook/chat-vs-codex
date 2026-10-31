@@ -12,8 +12,11 @@ alternate fixes and per-family timings. Raw [results](bench/results.jsonl) and
 The [broadcast overlay](apps/overlay/README.md) renders the shared simulation with
 a follow camera, keyboard play and a typed event contract. The
 [Twitch foundation](packages/twitch/README.md) provides device authorization,
-inbound EventSub routing and offline fixture replay. Connecting these to live
-rounds and runtime Codex remains unfinished.
+inbound EventSub routing and offline fixture replay. The [local round loop](packages/round/README.md)
+connects those fixtures to runtime Codex, enum-only hint voting, replay validation,
+state-preserving hot swap and rollback. Live-stream rounds remain unverified.
+The real [Twitch authorization and subscription check](docs/TWITCH-VERIFICATION.md)
+verified the broadcaster and all nine subscriptions without sending chat.
 
 Requires Node 22 and pnpm. Run `pnpm ci:local` to mirror the workflow: frozen
 install, typecheck, lint, test. `pnpm check` repeats the checks without installing.

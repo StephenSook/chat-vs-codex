@@ -4,7 +4,11 @@
   "private": true,
   "type": "module",
   "exports": {
+    ".": "./src/engine.ts",
     "./runtime": "./src/runtime.ts",
     "./contracts": "./src/contracts.ts"
+  },
+  "scripts": {
+    "fixture": "tsx src/cli.ts"
   }
 }

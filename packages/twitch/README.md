@@ -1,8 +1,9 @@
 # Twitch foundation
 
 Pinned Twurple 8.2.0 device authorization, one broadcaster=bot EventSub WebSocket,
-typed intents, and offline fixtures. The round engine adapter is not attached.
-Receiving an intent does not claim a bug was injected, a guess scored, or a fix landed.
+typed intents, and offline fixtures. The [local round fixture runner](../round/README.md)
+attaches this handler to the round engine. The standalone `listen` command prints
+intents; it does not run rounds or claim a bug was injected, a guess scored or a fix landed.
 No clips, markers, pins or rewards are created by these commands.
 
 Set the public application Client ID as `TWITCH_CLIENT_ID`. No client secret is used.
@@ -55,5 +56,6 @@ an explicit create succeeds as app-owned/refundable; only the documented 403
 selected path. The CLI does not call this helper or create anything during auth.
 
 API signatures verified from the published 8.2.0 package type definitions and source.
-Live behavior, account eligibility and the final round loop require the authorized
-Twitch account and are not established by fixture tests.
+Real authorization and all nine subscription registrations passed the
+[Twitch check](../../docs/TWITCH-VERIFICATION.md). Live event delivery, account
+reward eligibility and a live-stream round remain unverified.
