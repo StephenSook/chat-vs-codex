@@ -1,0 +1,14 @@
+default_permissions = "hotfix"
+[permissions.hotfix.filesystem]
+":root" = "deny"
+":minimal" = "read"
+"/opt/homebrew" = "read"
+"/private/tmp" = "deny"
+"/tmp" = "deny"
+"/private/var/folders" = "deny"
+[permissions.hotfix.filesystem.":workspace_roots"]
+"." = "write"
+"test" = "read"
+"fixtures" = "read"
+[permissions.hotfix.network]
+enabled = false

@@ -4,9 +4,10 @@ Chat breaks the platformer a streamer is playing. Codex races viewers to diagnos
 and repair the real TypeScript bug, checked by deterministic replay tests.
 
 This repository starts with the timing spike's simulation, replay fixtures and
-offline mutation gate. Twitch, rendering and runtime Codex are later steps.
+offline mutation gate and runtime Codex benchmark. Twitch and rendering are later steps.
 
-Requires Node 22 and pnpm. Run `pnpm install`, then `pnpm check`.
+Requires Node 22 and pnpm. Run `pnpm ci:local` to mirror the workflow: frozen
+install, typecheck, lint, test. `pnpm check` repeats the checks without installing.
 
 `packages/sim` is a DOM-free 60 Hz platformer using Q8 integers (256 units per
 pixel). State and the level live outside paired mutation regions. The replay
@@ -33,7 +34,49 @@ execute representatives.
 Regenerate it after changing simulation, replay inputs, goldens or the lockfile.
 Minification is an equivalence filter, not a proof of semantic equivalence.
 
-Runtime Codex and benchmark statistics are pending. No timing or fix-rate claim
-has been measured by this repository yet.
+`pnpm bench --plan` prints the approved budget without making model calls. The
+53-mutant pool currently requires 212 trials: three per mutant on
+`gpt-6.1-terra` low and one on `gpt-6.1-sol` high. All qualified mutants, including
+the other-family entries, are included. `pnpm bench --dry-run` attempts exactly
+one Terra trial, excluded from scores, and never retries a sandbox denial.
+
+Before a full run, use the existing local ChatGPT sign-in and Codex CLI 0.163.0:
+
+```sh
+pnpm ci:local
+pnpm bench:canary && pnpm bench --run
+```
+
+The isolation canary is one separate runtime check, excluded from the 212 repair
+trials. Its dedicated fixture puts a test file above the workspace and verifies
+parent and host-skill reads, test/fixture writes, and network access are denied,
+with positive controls. A trusted sandbox execution corroborates the SDK thread's
+output. The full bench requires its fresh local receipt. Timing trial parents
+contain only `game`; dependencies are copied inside it, no clean source or
+held-out inputs are present, and logs stay outside. Each game has one Git commit
+containing the already-mutated source. Tests and fixtures are read-only under
+the exact profile in `packages/bench/hotfix.toml`.
+
+The pinned SDK uses `runStreamed`, a final output schema, raw permission overrides
+and an exec launcher for flags the SDK does not expose. Runtime processes receive
+an empty HOME and the real CODEX_HOME. The build process keeps its normal config.
+The 240-second deadline aborts the SDK and has an independent worker-group kill.
+Repairs pass the full visible suite and an unrevealed replay under the same
+permission profile. Changes to tests, fixtures or tools are losses; source byte
+equality against the clean build is recorded separately as exact-revert rate.
+
+Events, validation stdout/stderr and run manifests go to `bench/runs/*.jsonl`;
+each trial appends to `bench/results.jsonl`. Return these files for committing
+after an outside-sandbox run. No measured timing or fix-rate claim exists yet.
+Recompute with `pnpm bench --summary` (add `--batch <id>` for multiple batches).
+Use `--head-start 15` to select the chat head start in seconds.
+
+Reports separate models and families. Timing medians and nearest-rank p90 use
+green trials; fix rates count every scored trial. Median confidence intervals
+resample trials 5,000 times with a fixed seed. Reports include exact-revert rates,
+greens before the head start and within 60 seconds, and the 120-second/70% gate.
+Incomplete model schedules cannot earn GO. Camera qualification requires at least
+10 observations and 80% green within 60 seconds; smaller groups say insufficient
+sample. The confidence intervals describe these trials, not independent users.
 
 MIT license, copyright Stephen Sookra.

@@ -4,6 +4,7 @@ build/
 .env*
 !.env.example
 bench/tmp/
+bench/runs/*.launcher
 film/
 *.log
 *.tsbuildinfo
