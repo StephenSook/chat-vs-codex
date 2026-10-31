@@ -7,6 +7,10 @@ import type {
 } from "../../../packages/round/src/contracts.js";
 import { isRoundInput } from "../../../packages/round/src/contracts.js";
 import {
+  parseViewerSeason,
+  type SeasonTotals,
+} from "../../../packages/round/src/season.js";
+import {
   CODEX_ACTIONS,
   type OverlayEvent,
   type OverlayEventBus,
@@ -333,6 +337,7 @@ export function parseRoundEnvelope(value: unknown): RoundEnvelope {
 
 export interface RoundBridgeOptions {
   onSession?: (session: RoundSession) => void;
+  onSeason?: (season: SeasonTotals) => void;
   onCommentary?: (event: CommentaryAudio) => void;
   simulation: SimulationPlayer;
   events: OverlayEventBus;
@@ -494,6 +499,15 @@ export function connectRoundBridge(
       );
     } catch {
       options.onError?.(new Error("Invalid round session identity"));
+    }
+  });
+  source.addEventListener("season", (message) => {
+    try {
+      options.onSeason?.(
+        parseViewerSeason(JSON.parse((message as MessageEvent<string>).data)),
+      );
+    } catch {
+      options.onError?.(new Error("Invalid viewer season"));
     }
   });
   source.addEventListener("open", () => options.onConnection?.(true));

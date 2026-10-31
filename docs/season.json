@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "roundIds": [
+    "1b4285af-fd5a-42a1-ad46-038d72959f96",
+    "382e1376-4d6e-477a-86b8-5ceffe629f43",
+    "65e06ea8-d2bd-4e40-9ec7-79f4318c2b02",
+    "82589ac9-1b1b-4393-8085-9bed5d88ee2b",
+    "b403faf1-abc9-4c89-9a2a-c3a67fd4d105",
+    "c81bdc19-304f-47d5-800e-5098b9a1b5e2",
+    "dbf91971-4ef0-4f39-9a90-d84d14a5535c",
+    "e14e58f2-dc2f-4f3d-b4bc-eac401989634"
+  ],
+  "viewers": {
+    "rounds": 0,
+    "chatWins": 0,
+    "codexWins": 0,
+    "unawarded": 0,
+    "byInput": {
+      "chat": 0,
+      "channel-points": 0,
+      "whisper": 0,
+      "raid": 0,
+      "power-up": 0,
+      "unknown": 0
+    }
+  },
+  "tests": {
+    "rounds": 8,
+    "chatWins": 0,
+    "codexWins": 8,
+    "unawarded": 0,
+    "byInput": {
+      "chat": 0,
+      "channel-points": 0,
+      "whisper": 0,
+      "raid": 0,
+      "power-up": 0,
+      "unknown": 8
+    },
+    "fixtures": 2,
+    "broadcasterTests": 6
+  }
+}

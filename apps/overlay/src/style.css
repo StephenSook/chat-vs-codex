@@ -579,3 +579,14 @@ canvas:focus-visible {
   background: #f7914e;
   z-index: 8;
 }
+
+.season-line {
+  position: absolute;
+  top: 350px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}

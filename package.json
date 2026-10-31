@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit && pnpm -r --if-present typecheck",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "test": "vitest run",
+    "test": "pnpm season:check && vitest run",
     "replay:record": "tsx packages/replay/src/record.ts",
     "replay:check": "tsx packages/replay/src/record.ts --check",
     "mutator:pool": "tsx packages/mutator/src/cli.ts",
@@ -32,7 +32,9 @@
     "sound:generate": "tsx scripts/sound-synth.ts",
     "chat-found:pr": "tsx scripts/chat-found-pr.ts",
     "ci:local": "pnpm install --frozen-lockfile && pnpm typecheck && pnpm lint && pnpm test",
-    "check": "pnpm typecheck && pnpm lint && pnpm test"
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "season:record": "tsx scripts/season.ts",
+    "season:check": "tsx scripts/season.ts --check"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.4",

@@ -4,6 +4,7 @@ import {
   summarizeResults,
 } from "../../../packages/bench/src/statistics.js";
 import type { ValidatedReplayFrame } from "../../../packages/bench/src/validated-replay.js";
+import { deriveSeason } from "../../../packages/round/src/season.js";
 import {
   greenSplit,
   isEarlierTestRound,
@@ -252,6 +253,30 @@ async function start(): Promise<void> {
   );
   numbers.append(details("Recompute + retained losses", method));
   app.append(numbers);
+  const season = deriveSeason(evidence.rounds.map(({ receipt }) => receipt));
+  const seasonCard = section("season", "SEASON", "Chat vs Codex");
+  seasonCard.dataset.testid = "season-scoreboard";
+  seasonCard.append(
+    element(
+      "strong",
+      `CHAT ${season.viewers.chatWins} : CODEX ${season.viewers.codexWins}`,
+      "big-number",
+    ),
+  );
+  seasonCard.append(
+    element(
+      "p",
+      `${season.viewers.rounds} viewer rounds · ${season.tests.rounds} test rounds kept separate`,
+    ),
+  );
+  seasonCard.append(
+    details(
+      "Inputs and test rounds",
+      json({ viewers: season.viewers, tests: season.tests }),
+      element("code", "pnpm season:check"),
+    ),
+  );
+  app.append(seasonCard);
   if (evidence.secondGame) {
     const game = evidence.secondGame;
     const second = section(

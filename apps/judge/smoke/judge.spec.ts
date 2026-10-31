@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { deriveSeason } from "../../../packages/round/src/season.js";
 import { RULE } from "../src/framing.js";
 import { summarizeSecondGameTrials } from "../src/second-game.js";
 
@@ -66,6 +67,22 @@ test("committed evidence recomputes in a static preview at desktop and phone wid
   const evidence = await (
     await page.request.get("/evidence/index.json")
   ).json();
+  const season = deriveSeason(
+    evidence.rounds.map(
+      (round: { receipt: Parameters<typeof deriveSeason>[0][number] }) =>
+        round.receipt,
+    ),
+  );
+  const scoreboard = page.getByTestId("season-scoreboard");
+  await expect(scoreboard).toContainText(
+    `CHAT ${season.viewers.chatWins} : CODEX ${season.viewers.codexWins}`,
+  );
+  await expect(scoreboard).toContainText(
+    `${season.viewers.rounds} viewer rounds`,
+  );
+  await expect(scoreboard).toContainText(
+    `${season.tests.rounds} test rounds kept separate`,
+  );
   if (evidence.secondGame) {
     const second = page.getByTestId("second-game-card");
     await expect(second).toContainText("Breakout");

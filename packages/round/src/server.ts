@@ -11,6 +11,7 @@ import type {
   RoundEvent,
   RoundSession,
 } from "./contracts.js";
+import { parseViewerSeason, type SeasonTotals } from "./season.js";
 
 export async function startRoundServer(
   options: {
@@ -18,6 +19,7 @@ export async function startRoundServer(
     overlayDirectory?: string;
     now?: () => number;
     session?: RoundSession;
+    season?: SeasonTotals;
     commentary?: ReturnType<typeof createCommentary>;
     record?: (envelope: RoundEnvelope) => void;
     /** Presentation only. Recorded evidence and sandbox client retain canonical hashes. */
@@ -33,6 +35,7 @@ export async function startRoundServer(
   let origin = "";
   let closing = false;
   let activation = 0;
+  let season = options.season ? parseViewerSeason(options.season) : undefined;
   let trigger: RoundEvent["trigger"];
   let input: RoundEvent["input"];
   const send = (client: ServerResponse, envelope: RoundEnvelope) => {
@@ -76,6 +79,8 @@ export async function startRoundServer(
         response.write(
           `event: session\ndata: ${JSON.stringify(options.session ?? { mode: "local-fixture" })}\n\n`,
         );
+        if (season)
+          response.write(`event: season\ndata: ${JSON.stringify(season)}\n\n`);
         const after = Number(request.headers["last-event-id"] ?? 0);
         for (const envelope of ring)
           if (envelope.sequence > after) send(response, envelope);
@@ -211,6 +216,11 @@ export async function startRoundServer(
   return {
     origin,
     publish,
+    updateSeason(value: SeasonTotals) {
+      season = parseViewerSeason(value);
+      for (const client of clients)
+        client.write(`event: season\ndata: ${JSON.stringify(season)}\n\n`);
+    },
     async activate(
       artifact: GameArtifact,
       phase: "broken" | "repaired" | "rollback",

@@ -15,6 +15,7 @@ import {
   type RunCommand,
   runCommand,
 } from "../../../scripts/chat-found-pr.js";
+import { recordSeason } from "../src/season-store.js";
 
 const roundId = "82589ac9-1b1b-4393-8085-9bed5d88ee2b";
 const regressionPath = `chat-found/${roundId}.json`;
@@ -37,7 +38,9 @@ async function fixture() {
   await git("config", "user.email", "test@example.invalid");
   await writeFile(join(root, ".gitignore"), ".local/\nnode_modules/\n");
   await writeFile(join(root, "README.md"), "Base\n");
-  await git("add", ".gitignore", "README.md");
+  await mkdir(join(root, "docs/rounds"), { recursive: true });
+  await recordSeason(root, false);
+  await git("add", ".gitignore", "README.md", "docs/season.json");
   await git("commit", "-m", "Initial source");
   await git("init", "--bare", remote);
   await git("remote", "add", "origin", remote);
@@ -56,6 +59,7 @@ async function fixture() {
       expect(
         await readFile(join(options.cwd, regressionPath), "utf8"),
       ).toContain(roundId);
+      await recordSeason(options.cwd, true);
       if (ciFailure) throw new Error("CI rejected");
       return "All checks passed";
     }
@@ -136,7 +140,18 @@ it("publishes one isolated, fully gated evidence commit and reuses its existing 
       .trim()
       .split("\n")
       .sort(),
-  ).toEqual([regressionPath, receiptPath].sort());
+  ).toEqual([regressionPath, receiptPath, "docs/season.json"].sort());
+  const publishedSeason = JSON.parse(
+    await f.git("show", `origin/${result.branch}:docs/season.json`),
+  );
+  expect(publishedSeason).toMatchObject({
+    viewers: { rounds: 0 },
+    tests: { rounds: 1, broadcasterTests: 1 },
+  });
+  for (const path of [regressionPath, receiptPath])
+    expect(await f.git("show", `origin/${result.branch}:${path}`)).toBe(
+      await readFile(join(f.root, path), "utf8"),
+    );
   expect(
     await f.git("log", "-1", "--format=%B", `origin/${result.branch}`),
   ).not.toMatch(/Co-Authored-By|AI attribution/);
@@ -352,4 +367,21 @@ it("accepts input enums on public receipts and refuses names in their place", as
   await expect(collectNewRegressions(f.root, f.run)).rejects.toThrow(
     "recognized enum",
   );
+});
+
+it("refuses a CI change to the regenerated season and includes it in exact retry verification", async () => {
+  const f = await fixture();
+  await f.addEvidence();
+  const run: RunCommand = async (program, args, options) => {
+    const result = await f.run(program, args, options);
+    if (program === "pnpm")
+      await writeFile(join(options.cwd, "docs/season.json"), "{}");
+    return result;
+  };
+  await expect(createChatFoundPr({ root: f.root, run })).rejects.toThrow(
+    "CI modified selected evidence",
+  );
+  expect(
+    f.calls.some((call) => call.includes("commit") || call.includes("push")),
+  ).toBe(false);
 });

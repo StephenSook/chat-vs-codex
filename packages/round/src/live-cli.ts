@@ -30,6 +30,7 @@ import {
   viewerLabel,
 } from "./receipt.js";
 import { createRoundRuntime } from "./runtime.js";
+import { loadSeason } from "./season-store.js";
 import { startRoundServer } from "./server.js";
 
 export function parseLiveArguments(args: readonly string[]): {
@@ -307,6 +308,7 @@ export async function runLiveCli(
     });
     const live = controller;
     server = await startRoundServer({
+      season: (await loadSeason(join(ROOT, "docs/rounds"))).viewers,
       commentary: createCommentary({
         cacheDirectory: join(ROOT, ".local/polly"),
         report: (message) => console.log(message),
@@ -384,6 +386,9 @@ export async function runLiveCli(
             mode: "live-twitch",
           });
           const path = await saveReceipt(join(ROOT, "docs/rounds"), receipt);
+          server?.updateSeason(
+            (await loadSeason(join(ROOT, "docs/rounds"))).viewers,
+          );
           console.log(
             `Verified round ${result.roundId}; public receipt: ${path}`,
           );

@@ -14,6 +14,11 @@ import { promisify } from "node:util";
 import { parseRegression } from "../packages/bench/src/regressions.js";
 import { isRoundInput } from "../packages/round/src/contracts.js";
 import type { publicReceipt } from "../packages/round/src/receipt.js";
+import {
+  deriveSeason,
+  type SeasonReceipt,
+} from "../packages/round/src/season.js";
+import { recordSeason } from "../packages/round/src/season-store.js";
 
 const REPOSITORY = "StephenSook/chat-vs-codex";
 const UUID = "[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}";
@@ -352,6 +357,44 @@ export async function createChatFoundPr(
   }
   if (!paths.some((path) => path.startsWith("chat-found/")))
     throw new Error("No new regressions remain after fetching origin/main");
+  // Derive the aggregate from fetched, committed receipts plus this exact batch.
+  // The caller's unrelated receipts and working-tree season never enter the PR.
+  const seasonReceipts = new Map<string, SeasonReceipt>();
+  const baseReceipts = (
+    await git("ls-tree", "-r", "--name-only", base, "--", "docs/rounds")
+  )
+    .split("\n")
+    .filter((path) => new RegExp(`^docs/rounds/${UUID}\\.json$`).test(path));
+  for (const path of baseReceipts) {
+    const row = JSON.parse(
+      await git("show", `${base}:${path}`),
+    ) as SeasonReceipt;
+    seasonReceipts.set(row.roundId, row);
+  }
+  for (const record of records) {
+    const receiptFile = record.files.find((file) =>
+      file.path.startsWith("docs/rounds/"),
+    );
+    if (!receiptFile) throw new Error("Missing selected round receipt");
+    const row = JSON.parse(receiptFile.bytes.toString("utf8")) as SeasonReceipt;
+    seasonReceipts.set(row.roundId, row);
+  }
+  const seasonFile = {
+    path: "docs/season.json",
+    bytes: Buffer.from(
+      `${JSON.stringify(deriveSeason([...seasonReceipts.values()]), null, 2)}\n`,
+    ),
+  };
+  files.push(seasonFile);
+  const hasSeason = (
+    await git("ls-tree", "--name-only", base, "--", seasonFile.path)
+  ).trim();
+  if (
+    !hasSeason ||
+    (await git("show", `${base}:${seasonFile.path}`)) !==
+      seasonFile.bytes.toString("utf8")
+  )
+    paths.push(seasonFile.path);
   const remoteRef = `refs/heads/${branch}`;
   const advertised = (
     await git("ls-remote", "--heads", "origin", remoteRef)
@@ -409,21 +452,28 @@ export async function createChatFoundPr(
       for (const file of files.filter((file) => paths.includes(file.path))) {
         await mkdir(dirname(join(worktree, file.path)), { recursive: true });
         await writeFile(join(worktree, file.path), file.bytes, {
-          flag: "wx",
+          flag: file.path === "docs/season.json" ? "w" : "wx",
           mode: 0o644,
         });
       }
+    await recordSeason(worktree, true);
+    const expectedTrackedChanges = await localGit(
+      "diff",
+      "--name-only",
+      "HEAD",
+    );
     await command("pnpm", ["ci:local"]);
-    if ((await localGit("diff", "--name-only", "HEAD")).trim())
+    if (
+      (await localGit("diff", "--name-only", "HEAD")) !== expectedTrackedChanges
+    )
       throw new Error(
         "CI modified tracked source; refusing to publish a different tree",
       );
-    for (const record of records)
-      for (const file of record.files)
-        if (!(await readFile(join(worktree, file.path))).equals(file.bytes))
-          throw new Error(
-            "CI modified selected evidence; refusing to publish different bytes",
-          );
+    for (const file of files)
+      if (!(await readFile(join(worktree, file.path))).equals(file.bytes))
+        throw new Error(
+          "CI modified selected evidence; refusing to publish different bytes",
+        );
     if (!previousCommit) {
       await localGit("add", "--", ...paths);
       const staged = (await localGit("diff", "--cached", "--name-only", "-z"))

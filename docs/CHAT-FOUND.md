@@ -9,8 +9,9 @@ pnpm chat-found:pr
 
 The script verifies the replay proof, hashed viewer credit and receipt digest.
 It fetches `origin/main`, creates an isolated worktree, runs `pnpm ci:local` and
-a staged secret scan, commits only the new evidence, pushes a new branch and
-opens one pull request listing its rounds. Git, pnpm, gitleaks and authenticated
+a staged secret scan, commits the new evidence and its regenerated season
+scoreboard, pushes a new branch and opens one pull request listing its rounds.
+Git, pnpm, gitleaks and authenticated
 `gh` must be available. It uses the configured Git author and never merges.
 
 The original branch, staged changes and new evidence remain untouched. Repeating
@@ -22,3 +23,7 @@ Existing evidence cannot be modified. No new regression files means refusal
 before any network call.
 If a gate fails, the script retains its worktree under `.local/chat-found-pr-*`
 for inspection and prints the path.
+
+For a manual evidence commit, run `pnpm season:record` and include `docs/season.json`.
+CI runs `pnpm season:check` before the test suite. The PR script does this
+inside its isolated worktree.

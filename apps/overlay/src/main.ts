@@ -1,3 +1,4 @@
+import { seasonLine } from "../../../packages/round/src/season.js";
 import "@fontsource/baloo-2/latin-800.css";
 import "@fontsource/plus-jakarta-sans/latin-700.css";
 import "@fontsource/bungee/latin-400.css";
@@ -157,6 +158,10 @@ async function start(): Promise<void> {
   };
   const disconnectBridge = bridgeUrl
     ? connectRoundBridge(bridgeUrl, {
+        onSeason(season) {
+          element("season-line").textContent = seasonLine(season);
+          element("season-line").hidden = false;
+        },
         onSession(session) {
           element("playback-label").textContent = roundSessionLabel(session);
         },
