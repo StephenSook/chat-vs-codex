@@ -10,6 +10,8 @@ private. The runner reads the public Client ID from `TWITCH_CLIENT_ID`.
 The generated OBS browser-source URL includes `sound=on`, which arms sound without
 a click at 15% volume on each page load. In the browser source's **Properties**,
 enable **Control audio via OBS**, then press **Refresh cache of current page**.
+If the browser source was imported earlier, reopen **Properties** and apply both
+steps there. Confirm its Audio Mixer meter moves during a real bug-in sound.
 The source appears in OBS's Audio Mixer. Keep the browser-source fader at unity
 initially; the overlay already applies the stream-safe volume.
 
@@ -90,7 +92,18 @@ split baseline. Return to plain `pnpm round:live` for viewer participation.
 
 A bare break keeps the selected family secret. For a known secret test, whisper
 exactly `gravity-sign` to `steve_sociall` from that other account instead of sending
-`!break`. Whispers depend on Twitch's sender verification and delivery rules.
+`!break`. Before testing a whisper:
+
+- The sender must have a verified phone number in Twitch's Security and Privacy
+  settings.
+- The receiving streamer must accept that viewer's whispers. Check **Block
+  Whispers from Strangers** and accept the sender or establish a conversation
+  first. A sent message is not evidence of EventSub delivery.
+
+See [Twitch's whisper requirements](https://dev.twitch.tv/docs/chat/whispers/)
+and [recipient privacy settings](https://help.twitch.tv/s/article/how-to-use-whispers).
+Our [live verification](LIVE-VERIFICATION.md) records this delivery caveat.
+
 An enum whisper starts one round immediately when idle. Invalid enum guesses and
 free text are ignored. Each viewer has a 60 s start cooldown, and a new round must
 wait for the active round's recording to finish.
@@ -128,6 +141,11 @@ lines, with all Twitch writes disabled. It is not a model-free rehearsal.
    jump, and **R** to restart after a death or goal. Play in this Interact window:
    it controls the exact browser source viewers see. A separate browser preview
    has its own player state. Keep Interact open and focused during play.
+   After three seconds without game input, **AUTOPILOT** follows the canonical
+   route. Any arrow, Space or R immediately restores manual control. During the
+   head start, **FAILING REPLAY · LOOP** shows the actual planted build's recorded
+   failing route; it does not replace the streamer's state. The validated blue
+   ghost after the repair remains a separate recording.
 5. Confirm the OBS preview responds to those keys and the HUD fits at 720p before
    recording. Do a local recording and inspect playback. Do not claim live
    delivery, clip publication or encode performance from fixture tests.
