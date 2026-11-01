@@ -368,3 +368,51 @@ test("committed evidence recomputes in a static preview at desktop and phone wid
     ),
   ).toBe(true);
 });
+
+test("phone hero has one VS, one scrolling nav row and readable labels", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("data-ready", "true");
+  await expect(
+    page.getByTestId("featured-replay").getByTestId("comparison-view"),
+  ).toHaveAttribute("data-state", "match");
+  await expect(page.locator(".brand-vs")).toHaveCount(1);
+  await expect(page.locator("nav")).not.toContainText(/\bvs\b/i);
+  const nav = await page.locator("nav").evaluate((node) => {
+    const rows = [...node.querySelectorAll("a")].map((link) => {
+      const box = link.getBoundingClientRect();
+      return box.y + box.height / 2;
+    });
+    return {
+      rows,
+      overflow: getComputedStyle(node).overflowX,
+      height: node.getBoundingClientRect().height,
+    };
+  });
+  expect(Math.max(...nav.rows) - Math.min(...nav.rows)).toBeLessThan(1);
+  expect(nav.overflow).toBe("auto");
+  expect(nav.height).toBeLessThan(70);
+  const labels = await page
+    .locator(
+      ".eyebrow, .stat span, .badge, .race-summary span, .comparison-panes figcaption, nav a, .brand-vs",
+    )
+    .evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        text: node.textContent,
+        size: Number.parseFloat(getComputedStyle(node).fontSize),
+      })),
+    );
+  expect(labels.length).toBeGreaterThan(10);
+  expect(labels.filter((label) => label.size < 14)).toEqual([]);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > innerWidth,
+    ),
+  ).toBe(false);
+  await page.screenshot({
+    path: "../../.local/judge-smoke/judge-phone-390x844.png",
+    fullPage: false,
+  });
+});

@@ -39,10 +39,13 @@ nav {
   padding: 1rem 5vw;
   background: #fffdf9f5;
   border-bottom: 3px solid var(--ink);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 nav a {
   font-size: 0.88rem;
+  flex: 0 0 auto;
+  white-space: nowrap;
   text-decoration: none;
 }
 nav a:first-child {
@@ -63,7 +66,7 @@ header {
 .eyebrow {
   color: var(--muted);
   font:
-    700 0.8rem "Courier New",
+    700 0.875rem "Courier New",
     monospace;
   letter-spacing: 0.12em;
 }
@@ -110,7 +113,7 @@ h1 {
   flex: 0 0 auto;
   min-width: 2.4em;
   padding: 0.45em 0.35em;
-  font-size: 0.35em;
+  font-size: max(14px, 0.35em);
   line-height: 1;
   white-space: nowrap;
 }
@@ -160,7 +163,7 @@ p {
 }
 .stat span {
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.875rem;
 }
 .stat strong {
   font-family: "Courier New", monospace;
@@ -210,7 +213,7 @@ p {
   border-radius: 8px;
   padding: 0.3rem 0.55rem;
   font:
-    700 0.8rem "Courier New",
+    700 0.875rem "Courier New",
     monospace;
   box-shadow: 0 3px 0 var(--ink);
 }
@@ -240,7 +243,7 @@ code,
 pre,
 .mono {
   font-family: "Courier New", monospace;
-  font-size: 0.86rem;
+  font-size: 0.875rem;
 }
 code {
   display: block;
@@ -260,7 +263,7 @@ table {
   min-width: 700px;
   border-collapse: collapse;
   font:
-    0.76rem "Courier New",
+    0.875rem "Courier New",
     monospace;
 }
 th,
@@ -289,7 +292,7 @@ th {
   gap: 0.25rem;
   min-width: 0;
   overflow-wrap: anywhere;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
 }
 .round-time {
   display: block;
@@ -417,7 +420,7 @@ input[type="range"] {
 .comparison-controls p {
   grid-column: 1 / -1;
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
 }
 .canary-controls {
   display: grid;
@@ -431,7 +434,7 @@ section {
 }
 footer {
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.875rem;
 }
 @media (max-width: 760px) {
   .comparison-panes {
@@ -443,9 +446,6 @@ footer {
   }
   nav {
     gap: 0.9rem;
-  }
-  nav a:first-child {
-    width: 100%;
   }
   header {
     padding-top: 3rem;

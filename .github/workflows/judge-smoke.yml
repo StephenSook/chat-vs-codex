@@ -34,9 +34,9 @@ jobs:
           CI: "true"
           JUDGE_SMOKE_HOSTED: ${{ github.event_name == 'workflow_dispatch' && inputs.target == 'preview' && '0' || '1' }}
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
-          name: judge-smoke-failure
+          name: judge-smoke-evidence
           path: .local/judge-smoke/
           include-hidden-files: true
           retention-days: 7

@@ -108,7 +108,7 @@ async function start(): Promise<void> {
   const green = selected.filter((row) => row.status === "green").length;
   const nav = element("nav");
   nav.setAttribute("aria-label", "Evidence pages");
-  nav.append(link("CHAT vs CODEX", "#top"));
+  nav.append(link("CHAT / CODEX", "#top"));
   for (const [label, id] of [
     ["The numbers", "numbers"],
     ["Rounds", "rounds"],
