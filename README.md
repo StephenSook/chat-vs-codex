@@ -78,7 +78,7 @@ reachable commit count at build time; the current test count above comes from `p
 - Shared Chat is fixture-only.
 - Triage is off by default at 25.7% held-out accuracy.
 - No committed raid-round receipt exists. The [live boss receipt](docs/rounds/d4c4ec5f-b7e8-420e-bb16-91df94677f09.json) records Terra's win.
-- The iOS Live Activity was verified on one iPhone on Nov 1. Android device behavior and its ongoing notification remain unverified.
+- The iOS Live Activity was verified on one iPhone on Nov 1. Pit Wall on Android was verified on an emulator in a Nov 1 TEST round (dry-chat, round `37fc0072`): the heads-up notification, the head-start countdown, Codex's steps and the fix. It has not been tested on a physical Android phone.
 - Game Inspector is available to Codex; no committed receipt records an Inspector call.
 
 Requires Node 22 and pnpm. Run `pnpm ci:local` to mirror the workflow: frozen
