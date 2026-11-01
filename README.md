@@ -1,24 +1,34 @@
 # Chat never writes code. Codex never sees the answer. The replay tests decide.
 
+## For judges
+
+| Criterion                                    | Proof                                                                                                                                                                      | Film |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
+| Innovation                                   | [Viewer win](https://chat-vs-codex-judge.vercel.app/#r=ac8b50c7-1012-4f20-af7e-10dd718b9f1c), [live playtests](docs/PLAYTESTS.md)                                          | TBD  |
+| Potential Impact                             | [Second game](https://chat-vs-codex-judge.vercel.app/#second-game), [reusable game preparation](.agents/skills/hotfix-ready/SKILL.md)                                      | TBD  |
+| Technological implementation including Codex | [Benchmark](bench/SUMMARY.md), [browser recomputation](https://chat-vs-codex-judge.vercel.app/#numbers), [sandbox canary](https://chat-vs-codex-judge.vercel.app/#sandbox) | TBD  |
+| Design                                       | [Judge site](https://chat-vs-codex-judge.vercel.app/), [streaming and OBS](docs/STREAMING.md)                                                                              | TBD  |
+
 **Chat vs Codex:** viewers plant a real bug in the platformer a streamer is playing. Codex races viewers to diagnose
 and repair the real TypeScript bug, checked by deterministic replay tests.
 
-## For judges
-
-| Criterion                                | Proof                                                                                                                                                                      | Film |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| Innovation                               | [Real Twitch rounds](docs/LIVE-VERIFICATION.md), [round autopsies](https://chat-vs-codex-judge.vercel.app/#rounds)                                                         | TBD  |
-| Potential Impact                         | [Second game](https://chat-vs-codex-judge.vercel.app/#second-game), [reusable game preparation](.agents/skills/hotfix-ready/SKILL.md)                                      | TBD  |
-| Technological implementation incl. Codex | [Benchmark](bench/SUMMARY.md), [browser recomputation](https://chat-vs-codex-judge.vercel.app/#numbers), [sandbox canary](https://chat-vs-codex-judge.vercel.app/#sandbox) | TBD  |
-| Design                                   | [Judge site](https://chat-vs-codex-judge.vercel.app/), [streaming and OBS](docs/STREAMING.md)                                                                              | TBD  |
+**Codex receipts at `c113b85`:** 16 turns, 1,831 commands, 167 file changes, 27 sub-agents and 7 MCP calls; 92 commits on main; 763 tests. [Recount and definitions](docs/BUILD-RECEIPT.json).
 
 211/212 fixes. Recompute: `pnpm bench:summary`.
 
 Terra median 14.5 s across green trials. Recompute: `pnpm bench:summary`.
 
-745 tests. Recompute: `pnpm test`.
+787 tests. Recompute: `pnpm test`.
 
-Sol high finished green trials in a 29.40 second median. Both pass the GO gate.
+Real benchmark time to green, measured across green trials:
+
+| Model     | n (green / trials) | Minimum | Median  | Maximum |
+| --------- | ------------------ | ------- | ------- | ------- |
+| Terra low | 158 / 159          | 11.65 s | 14.52 s | 29.14 s |
+| Sol high  | 53 / 53            | 21.61 s | 29.40 s | 54.72 s |
+
+Recompute from committed `bench/results.jsonl`: `pnpm bench:ranges`. The single scored
+infrastructure loss stays in the fix-rate denominator. Both models pass the GO gate.
 [Results and limits](bench/SUMMARY.md) include the retained infrastructure loss,
 alternate fixes and per-family timings. Raw [results](bench/results.jsonl) and
 [run logs](bench/runs/) are retained for recomputation.
@@ -28,9 +38,9 @@ a follow camera, keyboard play and a typed event contract. The
 [Twitch foundation](packages/twitch/README.md) provides device authorization,
 inbound EventSub routing and offline fixture replay. The [round loop](packages/round/README.md)
 connects fixtures or `pnpm round:live` to runtime Codex, enum-only hint voting,
-replay validation, state-preserving hot swap and rollback. Real fixture rounds
-and an [offline Twitch broadcaster test](docs/rounds/82589ac9-1b1b-4393-8085-9bed5d88ee2b.json)
-are verified. Broadcaster tests are labelled separately from viewer rounds.
+replay validation, state-preserving hot swap and rollback. A [real viewer won the race](docs/rounds/ac8b50c7-1012-4f20-af7e-10dd718b9f1c.json), and a
+[live boss round](docs/rounds/d4c4ec5f-b7e8-420e-bb16-91df94677f09.json) verified Terra against Sol.
+[Playtest sessions](docs/PLAYTESTS.md) keep viewer, boss and TEST evidence separate.
 The [streaming guide](docs/STREAMING.md) covers the offline channel test, OBS scene
 import, keyboard play and Twitch account connection without a stored stream key.
 The optional [Pit Wall phone app](apps/pit-wall/README.md) pairs over the LAN on
@@ -45,18 +55,26 @@ verified the broadcaster and all nine subscriptions without sending chat.
 ## Build receipt
 
 Main Codex thread: `01a19004-23e3-7883-89a7-f08faee625a5`.
-Through turn 10, the thread ran 12 completed turns, 1,184 command executions and
-146 file changes. Stephen counted the completed-turn, command-execution and
-file-change records in the thread's JSON event logs outside this repository.
-These are historical event counts, not unique files or current totals. The
-private logs are not published here.
+The [sanitized checkpoint receipt](docs/BUILD-RECEIPT.json) binds the counted log
+prefix to its SHA-256 and the completed turn at `2026-10-31T23:28:25.242Z`.
+Counts come from `task_complete` and completed-item event types. Commands include
+133 failed events; MCP calls include six failed attempts and one completed call.
+File changes count events, not unique paths. The private transcript is not published.
 
-At that checkpoint, main had 54 commits, all authored by Stephen Sookra through
-Codex. Recompute the checkpoint's reachable commits with
-`git rev-list --count af1e0fe` and inspect authors with
-`git log af1e0fe --format='%an'`. The judge site's
-[build section](https://chat-vs-codex-judge.vercel.app/#build) computes the current
-reachable commit count at build time with `git rev-list --count HEAD`.
+Recount with `pnpm build:recount <private-session.jsonl> 2026-10-31T23:28:25.242Z`.
+Recompute the checkpoint graph with `git rev-list --count c113b85`.
+The checkpoint's 763-test count comes from its linked CI log. The
+[build card](https://chat-vs-codex-judge.vercel.app/#build) recomputes the current
+reachable commit count at build time; the current test count above comes from `pnpm test`.
+
+## Known limits
+
+- The Twitch Extension is packaged and has not been submitted for review.
+- Shared Chat is fixture-only.
+- Triage is off by default at 25.7% held-out accuracy.
+- No committed raid-round receipt exists. The [live boss receipt](docs/rounds/d4c4ec5f-b7e8-420e-bb16-91df94677f09.json) records Terra's win.
+- The iOS Live Activity was verified on one iPhone on Nov 1. Android device behavior and its ongoing notification remain unverified.
+- Game Inspector is available to Codex; no committed receipt records an Inspector call.
 
 Requires Node 22 and pnpm. Run `pnpm ci:local` to mirror the workflow: frozen
 install, typecheck, lint, test and both Pit Wall bundles. `pnpm check` repeats

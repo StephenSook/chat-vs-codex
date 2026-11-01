@@ -5,9 +5,14 @@ real runner state over the local network, gives a local notification and haptic
 when a bug arrives, and sends a round-bound veto or one enum hint back to the Mac.
 No Twitch credentials, source code or Codex logs go to the phone.
 
-Stephen verified the Android preview native build at `eeae759` on 2026-10-31
-(EAS build `380e3f3e`). iOS native compilation and physical-device behaviour
-remain unverified. Both JavaScript bundles are checked in CI.
+Stephen verified iOS through TestFlight on 2026-10-31: pairing, a full round,
+the notification banner and haptic. On Nov 1, build 3 verified the no-scroll
+layout and lock-screen Live Activity (score, last result and deaths), plus the
+banner and haptic, on one real iPhone. See [playtest notes](../../docs/PLAYTESTS.md).
+
+The Android preview native build at `eeae759` was verified on 2026-10-31
+(EAS build `380e3f3e`); Android physical-device behavior remains unverified.
+Both JavaScript bundles are checked in CI.
 
 ## Build and install
 
@@ -71,11 +76,12 @@ Anyone observing the LAN can intercept it. Use a trusted network, never expose
 the port to the internet, and stop the runner when finished. The token is held
 in Expo SecureStore and bound to the saved Mac address. The code is not saved.
 
-## Device checks still required
+## Device verification
 
 Unit tests cover the protocol, state ordering, reconnect deduplication, clock
 translation and round-bound action receipts. They do not prove physical-device
-delivery or native compilation. Before filming, verify on the actual build:
+delivery or native compilation. The iPhone observations above are from the real
+TestFlight build. For another device or build, repeat these checks before filming:
 
 - Pair, turn Wi-Fi off and back on, and confirm reconnect uses the saved token.
   A disconnected screen is labelled **Last received** and its actions are disabled.

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "sourceKind": "private Codex session JSONL event records",
+  "sessionId": "01a19004-23e3-7883-89a7-f08faee625a5",
+  "cutoff": "2026-10-31T23:28:25.242Z",
+  "checkpointPrefixSha256": "9b29a5fd32ac3b07b3df0a74d876e0998bf1406bd4557fc1a53a00d33c08c3dd",
+  "metrics": {
+    "commandExecutions": 1831,
+    "fileChanges": 167,
+    "subAgentStarts": 27,
+    "completedTurns": 16,
+    "mcpCalls": 7
+  },
+  "commandStatuses": {
+    "completed": 1698,
+    "failed": 133
+  },
+  "mcpStatuses": {
+    "failed": 6,
+    "completed": 1
+  },
+  "distinctStartedAgents": 27,
+  "definitions": {
+    "completedTurns": "event_msg payload.type task_complete through cutoff",
+    "commandExecutions": "item_completed item.type CommandExecution, including failed events",
+    "fileChanges": "item_completed item.type FileChange events, not unique paths",
+    "subAgentStarts": "item_completed SubAgentActivity kind started",
+    "mcpCalls": "item_completed McpToolCall, including failed calls"
+  },
+  "checkpoint": {
+    "commit": "c113b85cf918d6627ef36b5d0182e943c8c6663f",
+    "reachableCommits": 92,
+    "tests": 763,
+    "testFiles": 95,
+    "testsSource": {
+      "kind": "GitHub Actions CI log",
+      "runId": 41268801792,
+      "jobId": 124737095490,
+      "url": "https://github.com/StephenSook/chat-vs-codex/actions/runs/41268801792/job/124737095490"
+    }
+  },
+  "bench": {
+    "batchId": "0fb7de68-5526-4ddc-bcf2-d88368d9282a",
+    "sourcePath": "bench/results.jsonl",
+    "sourceSha256": "e244c8bb8bcd5d3275a1f8e49e46227163e0b2729609e4bd12b11229883ee9d6",
+    "timingPopulation": "green trials only; all scored trials retained for fix rates",
+    "excludedOtherBatchRecords": 2,
+    "models": {
+      "gpt-6.1-terra": {
+        "trials": 159,
+        "fixed": 158,
+        "statuses": {
+          "green": 158,
+          "loss": 1
+        },
+        "minimumMs": 11647.07975,
+        "medianMs": 14521.0729795,
+        "maximumMs": 29140.045583
+      },
+      "gpt-6.1-sol": {
+        "trials": 53,
+        "fixed": 53,
+        "statuses": {
+          "green": 53
+        },
+        "minimumMs": 21607.104833,
+        "medianMs": 29398.723665999998,
+        "maximumMs": 54715.18825
+      }
+    }
+  }
+}

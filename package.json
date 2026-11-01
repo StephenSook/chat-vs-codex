@@ -18,6 +18,8 @@
     "bench": "tsx scripts/bench.ts",
     "bench:canary": "tsx scripts/bench-canary.ts",
     "bench:summary": "tsx scripts/bench.ts --summary",
+    "bench:ranges": "tsx scripts/bench-ranges.ts",
+    "build:recount": "tsx scripts/recount-build.ts",
     "round:fixture": "pnpm --filter @chat-vs-codex/round fixture",
     "round:live": "pnpm --filter @chat-vs-codex/round live",
     "obs:scene": "tsx scripts/obs-scene.ts",
