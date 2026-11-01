@@ -477,3 +477,17 @@ footer {
     scroll-behavior: auto;
   }
 }
+
+#watch {
+  padding-top: 0;
+}
+#watch h2 {
+  font-size: clamp(1.35rem, 2.5vw, 2rem);
+}
+#watch .comparison-view {
+  margin-top: 1rem;
+}
+.race-line {
+  font-size: 1.25rem;
+  color: var(--ink);
+}

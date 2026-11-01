@@ -94,7 +94,12 @@ export function drawComparisonFrame(
 export function createComparisonView(): {
   element: HTMLElement;
   reset(reason?: string): void;
-  show(brokenGame: GameModule, fixedGame: GameModule, result: Comparison): void;
+  show(
+    brokenGame: GameModule,
+    fixedGame: GameModule,
+    result: Comparison,
+    options?: { autoplay?: boolean; fromStart?: boolean },
+  ): void;
 } {
   const element = document.createElement("div");
   element.className = "comparison-view";
@@ -174,15 +179,11 @@ export function createComparisonView(): {
     frameLabel.textContent = `Frame ${fixed.frame} of ${comparison?.fixed.length}`;
     frameLabel.dataset.frame = String(fixed.frame);
   };
-  play.addEventListener("click", () => {
-    if (playing) {
-      pause();
-      return;
-    }
+  const beginPlayback = (fromFirstPaint = false) => {
     if (!comparison || document.visibilityState === "hidden") return;
     if (index === comparison.fixed.length - 1) index = 0;
     const startIndex = index;
-    const startedAt = performance.now();
+    let startedAt = fromFirstPaint ? null : performance.now();
     const turn = ++generation;
     playing = true;
     play.textContent = "Pause";
@@ -190,6 +191,7 @@ export function createComparisonView(): {
     render();
     const advance = (now: number) => {
       if (turn !== generation || !playing || !comparison) return;
+      startedAt ??= now;
       index = Math.min(
         comparison.fixed.length - 1,
         startIndex + Math.floor((Math.max(0, now - startedAt) * 60) / 1000),
@@ -199,6 +201,10 @@ export function createComparisonView(): {
       else animation = requestAnimationFrame(advance);
     };
     animation = requestAnimationFrame(advance);
+  };
+  play.addEventListener("click", () => {
+    if (playing) pause();
+    else beginPlayback();
   });
   scrubber.addEventListener("input", () => {
     pause();
@@ -232,7 +238,7 @@ export function createComparisonView(): {
   return {
     element,
     reset,
-    show(brokenGame, fixedGame, result) {
+    show(brokenGame, fixedGame, result, options = {}) {
       reset();
       if (
         !result.fixed.length ||
@@ -247,18 +253,21 @@ export function createComparisonView(): {
       comparison = result;
       brokenModule = brokenGame;
       fixedModule = fixedGame;
-      index = Math.max(
-        0,
-        Math.min(
-          result.fixed.length - 1,
-          (result.visibleFrame ?? result.firstDivergence + 15) - 1,
-        ),
-      );
+      index = options.fromStart
+        ? 0
+        : Math.max(
+            0,
+            Math.min(
+              result.fixed.length - 1,
+              (result.visibleFrame ?? result.firstDivergence + 15) - 1,
+            ),
+          );
       scrubber.max = String(result.fixed.length - 1);
       status.textContent = "";
       content.hidden = false;
       try {
         render();
+        if (options.autoplay) beginPlayback(true);
       } catch (error) {
         reset("Comparison canvas is unavailable.");
         throw error;

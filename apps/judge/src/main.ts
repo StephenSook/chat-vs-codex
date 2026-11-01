@@ -24,6 +24,7 @@ import {
 } from "./proof.js";
 import "./style.css";
 import { RULE } from "./framing.js";
+import { benchmarkRaceLine, featuredRound } from "./hero.js";
 import { RACE_RULE, raceSummary } from "./race-summary.js";
 import { summarizeSecondGameTrials } from "./second-game.js";
 
@@ -150,6 +151,15 @@ async function start(): Promise<void> {
   );
   header.append(headline);
   app.replaceChildren(nav, header);
+  const featured = section(
+    "watch",
+    "THE RACE",
+    "Watch the glitch. Watch the fix.",
+  );
+  featured.dataset.testid = "featured-replay";
+  const featuredLabel = element("p", undefined, "eyebrow");
+  featured.append(featuredLabel);
+  app.append(featured);
 
   const numbers = section(
     "numbers",
@@ -186,7 +196,7 @@ async function start(): Promise<void> {
           "unavailable",
       ),
     );
-    card.append(splits, element("span", model.overall.gate, "badge"));
+    card.append(splits);
     const table = element("table");
     const head = element("tr");
     for (const label of [
@@ -225,7 +235,9 @@ async function start(): Promise<void> {
     );
     modelGrid.append(card);
   }
-  numbers.append(modelGrid);
+  const raceLine = element("p", benchmarkRaceLine(summary), "race-line");
+  raceLine.dataset.testid = "benchmark-race-line";
+  numbers.append(raceLine, modelGrid);
   const method = element("div");
   method.append(
     element(
@@ -269,17 +281,21 @@ async function start(): Promise<void> {
   seasonCard.append(
     element(
       "p",
-      `${season.viewers.rounds} viewer rounds · ${season.tests.rounds} test rounds kept separate`,
+      `${season.viewers.rounds} viewer rounds · ${season.tests.rounds} test rounds kept separate · ${season.bosses.rounds} boss rounds`,
     ),
   );
   seasonCard.append(
     details(
       "Inputs and test rounds",
-      json({ viewers: season.viewers, tests: season.tests }),
+      json({
+        viewers: season.viewers,
+        bosses: season.bosses,
+        tests: season.tests,
+      }),
       element("code", "pnpm season:check"),
     ),
   );
-  app.append(seasonCard);
+  if (season.viewers.rounds > 0) app.append(seasonCard);
   if (evidence.secondGame) {
     const game = evidence.secondGame;
     const second = section(
@@ -398,13 +414,8 @@ async function start(): Promise<void> {
     option.value = round.receipt.roundId;
     select.append(option);
   }
-  select.value =
-    evidence.rounds.find(
-      (round) =>
-        proofAvailability(round.receipt, evidence.replay.buildDigest) === null,
-    )?.receipt.roundId ??
-    evidence.rounds[0]?.receipt.roundId ??
-    "";
+  const featuredId = featuredRound(evidence.rounds);
+  select.value = featuredId ?? evidence.rounds[0]?.receipt.roundId ?? "";
   const run = element("button", "Recompute replay");
   run.type = "button";
   run.dataset.testid = "recompute-replay";
@@ -431,11 +442,24 @@ async function start(): Promise<void> {
   const comparisonView = createComparisonView();
   comparisonView.element.dataset.state = "idle";
   comparisonView.reset("Recompute replay to compare BROKEN / FIXED.");
+  featured.append(comparisonView.element);
   controls.append(select, run);
+  let autoplayNext = false;
+  function openReplay(roundId: string, autoplay = false): boolean {
+    if (
+      run.disabled ||
+      !evidence.rounds.some((row) => row.receipt.roundId === roundId)
+    )
+      return false;
+    select.value = roundId;
+    select.dispatchEvent(new Event("change"));
+    autoplayNext = autoplay;
+    run.click();
+    return true;
+  }
   replay.append(
     controls,
     result,
-    comparisonView.element,
     canvas,
     slider,
     frameLabel,
@@ -506,6 +530,10 @@ async function start(): Promise<void> {
       (row) => row.receipt.roundId === select.value,
     );
     if (!round) return;
+    const autoplay = autoplayNext;
+    autoplayNext = false;
+    featuredLabel.textContent = `${roundLabel(round.receipt)} / ${round.receipt.roundId.slice(0, 8)}`;
+    featured.dataset.roundId = round.receipt.roundId;
     run.disabled = true;
     select.disabled = true;
     comparisonView.reset("Verifying original and repaired builds...");
@@ -573,7 +601,10 @@ async function start(): Promise<void> {
           JSON.parse(text),
           round.receipt,
         );
-        comparisonView.show(broken, game, compared);
+        comparisonView.show(broken, game, compared, {
+          autoplay,
+          fromStart: autoplay,
+        });
         comparisonView.element.dataset.state = "match";
         evidenceDetail.append(
           json({
@@ -698,11 +729,7 @@ async function start(): Promise<void> {
     const replayRound = element("button", "Recompute this round");
     replayRound.type = "button";
     replayRound.addEventListener("click", () => {
-      if (run.disabled) return;
-      select.value = receipt.roundId;
-      select.dispatchEvent(new Event("change"));
-      location.hash = "replay";
-      run.click();
+      if (openReplay(receipt.roundId)) location.hash = "watch";
     });
     card.append(
       details(`Autopsy / ${receipt.roundId.slice(0, 8)}`, detail),
@@ -799,6 +826,7 @@ async function start(): Promise<void> {
     link("Source on GitHub", REPO),
   );
   app.append(footer);
+  if (featuredId) openReplay(featuredId, true);
   document.documentElement.dataset.ready = "true";
 }
 

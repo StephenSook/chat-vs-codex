@@ -3,6 +3,13 @@ on:
   schedule:
     - cron: "19 15 * * *"
   workflow_dispatch:
+    inputs:
+      target:
+        description: Check the hosted deployment or a committed preview
+        type: choice
+        required: true
+        default: hosted
+        options: [hosted, preview]
 permissions:
   contents: read
 concurrency:
@@ -25,7 +32,7 @@ jobs:
       - run: pnpm judge:smoke
         env:
           CI: "true"
-          JUDGE_SMOKE_HOSTED: "1"
+          JUDGE_SMOKE_HOSTED: ${{ github.event_name == 'workflow_dispatch' && inputs.target == 'preview' && '0' || '1' }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

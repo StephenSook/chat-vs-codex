@@ -21,7 +21,12 @@ it("schedules an offset daily public smoke with manual dispatch and no secrets",
   );
   expect(workflow).toContain('cron: "19 15 * * *"');
   expect(workflow).toContain("workflow_dispatch:");
-  expect(workflow).toContain('JUDGE_SMOKE_HOSTED: "1"');
+  expect(workflow).toContain("default: hosted");
+  expect(workflow).toContain("options: [hosted, preview]");
+  expect(workflow).toContain("inputs.target == 'preview' && '0' || '1'");
+  expect(
+    judgeSmokeConfig({ CI: "true", JUDGE_SMOKE_HOSTED: "0" }).webServer,
+  ).toBeDefined();
   expect(workflow).toContain("pnpm judge:smoke");
   expect(workflow).toContain(
     "pnpm exec playwright install --with-deps chromium",

@@ -224,6 +224,26 @@ describe("BROKEN / FIXED comparison presentation", () => {
     expect(byId("fixed-view").dataset.hash).toBe(result.fixed[39]?.stateHash);
   });
 
+  it("autoplays from the first actual replay frame without a click", () => {
+    const { view, byId, button, callbacks } = setup();
+    const result = { ...comparison(), visibleFrame: 40 };
+    view.show(game, game, result, { autoplay: true, fromStart: true });
+    expect(byId("comparison-frame").dataset.frame).toBe("1");
+    expect(byId("broken-view").dataset.hash).toBe(result.broken[0]?.stateHash);
+    expect(button.textContent).toBe("Pause");
+    expect(callbacks.size).toBe(1);
+    const first = [...callbacks.entries()][0];
+    if (!first) throw new Error("No first paint scheduled");
+    callbacks.delete(first[0]);
+    first[1](1000);
+    expect(byId("comparison-frame").dataset.frame).toBe("1");
+    const second = [...callbacks.entries()][0];
+    if (!second) throw new Error("No playback tick scheduled");
+    callbacks.delete(second[0]);
+    second[1](1000 + 1000 / 60 + 0.001);
+    expect(byId("comparison-frame").dataset.frame).toBe("2");
+  });
+
   it("plays exact 60 Hz indices, never interpolated positions, and pauses", () => {
     const { view, byId, slider, button, callbacks } = setup();
     const result = comparison();

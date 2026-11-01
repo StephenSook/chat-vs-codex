@@ -55,3 +55,8 @@ The `Judge smoke` workflow runs daily at 15:19 UTC and supports manual dispatch:
 It uses no secrets and retains screenshots/traces on failure. A newly deployed
 build must include the matching UI changes before dispatching. Scheduled Actions
 can be delayed; inspect the workflow's state and newest run age as well as its result.
+
+When a local browser cannot start, run the same preview smoke on GitHub:
+`gh workflow run judge-smoke.yml --repo StephenSook/chat-vs-codex -f target=preview`.
+The manual target builds the selected commit and opens its local Vite preview.
+The scheduled check and default manual target still check the hosted deployment.

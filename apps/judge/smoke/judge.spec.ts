@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
+import {
+  parseResultsJsonl,
+  summarizeResults,
+} from "../../../packages/bench/src/statistics.js";
 import { deriveSeason } from "../../../packages/round/src/season.js";
 import { isEarlierTestRound, type JudgeEvidence } from "../src/evidence.js";
 import { RULE } from "../src/framing.js";
+import { benchmarkRaceLine, featuredRound } from "../src/hero.js";
 import { RACE_RULE, raceSummary } from "../src/race-summary.js";
 import { summarizeSecondGameTrials } from "../src/second-game.js";
 
@@ -69,6 +74,33 @@ test("committed evidence recomputes in a static preview at desktop and phone wid
   const evidence: JudgeEvidence = await (
     await page.request.get("/evidence/index.json")
   ).json();
+  const featuredId = featuredRound(evidence.rounds);
+  expect(featuredId).toBeTruthy();
+  const featured = page.getByTestId("featured-replay");
+  await expect(featured).toHaveAttribute("data-round-id", featuredId ?? "");
+  await expect(featured.getByTestId("comparison-view")).toHaveAttribute(
+    "data-state",
+    "match",
+  );
+  await expect(
+    featured.getByRole("button", { name: "Pause", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page
+      .locator("header")
+      .evaluate((header) => header.nextElementSibling?.id),
+  ).toBe("watch");
+  await featured.getByRole("button", { name: "Pause", exact: true }).click();
+  const benchmark = summarizeResults(
+    parseResultsJsonl(
+      await (await page.request.get(evidence.benchmark.path)).text(),
+    ),
+    { batchId: evidence.benchmark.batchId },
+  );
+  await expect(page.getByTestId("benchmark-race-line")).toHaveText(
+    benchmarkRaceLine(benchmark),
+  );
+  await expect(page.locator("#numbers .badge")).toHaveCount(0);
   await expect(page.locator("#rounds .race-rule")).toHaveText(RACE_RULE);
   await expect(page.locator("#rounds .race-rule")).toBeVisible();
   for (const { receipt } of evidence.rounds) {
@@ -89,15 +121,17 @@ test("committed evidence recomputes in a static preview at desktop and phone wid
     ),
   );
   const scoreboard = page.getByTestId("season-scoreboard");
-  await expect(scoreboard).toContainText(
-    `CHAT ${season.viewers.chatWins} : CODEX ${season.viewers.codexWins}`,
-  );
-  await expect(scoreboard).toContainText(
-    `${season.viewers.rounds} viewer rounds`,
-  );
-  await expect(scoreboard).toContainText(
-    `${season.tests.rounds} test rounds kept separate`,
-  );
+  if (season.viewers.rounds > 0) {
+    await expect(scoreboard).toContainText(
+      `CHAT ${season.viewers.chatWins} : CODEX ${season.viewers.codexWins}`,
+    );
+    await expect(scoreboard).toContainText(
+      `${season.viewers.rounds} viewer rounds`,
+    );
+    await expect(scoreboard).toContainText(
+      `${season.tests.rounds} test rounds kept separate`,
+    );
+  } else await expect(scoreboard).toHaveCount(0);
   if (evidence.secondGame) {
     const second = page.getByTestId("second-game-card");
     await expect(second).toContainText("Breakout");
