@@ -31,6 +31,7 @@
     "breakout:bench": "tsx games/breakout/bench.ts",
     "sound:generate": "tsx scripts/sound-synth.ts",
     "chat-found:pr": "tsx scripts/chat-found-pr.ts",
+    "pit-wall:icons": "tsx scripts/pit-wall-icons.ts",
     "pit-wall:bundle": "pnpm --filter @chat-vs-codex/pit-wall-app exec expo export --platform ios --output-dir dist/ios && pnpm --filter @chat-vs-codex/pit-wall-app exec expo export --platform android --output-dir dist/android",
     "ci:local": "pnpm install --frozen-lockfile && pnpm typecheck && pnpm lint && pnpm test && pnpm pit-wall:bundle",
     "check": "pnpm typecheck && pnpm lint && pnpm test",
@@ -44,6 +45,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.6.4",
     "@openai/codex-sdk": "0.163.0",
+    "@resvg/resvg-js": "2.6.2",
     "@types/node": "22.20.5",
     "esbuild": "0.28.2",
     "tsx": "4.23.15",
