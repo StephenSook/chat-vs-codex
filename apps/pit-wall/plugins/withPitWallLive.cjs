@@ -125,9 +125,9 @@ function configureWidgetTarget(project, config, platformProjectRoot) {
       CODE_SIGN_STYLE: "Automatic",
       GENERATE_INFOPLIST_FILE: "NO",
       MARKETING_VERSION:
-        appSettings.MARKETING_VERSION ?? config.version ?? "1.0.0",
+        config.version ?? appSettings.MARKETING_VERSION ?? "1.0.0",
       CURRENT_PROJECT_VERSION:
-        appSettings.CURRENT_PROJECT_VERSION ?? config.ios?.buildNumber ?? "1",
+        config.ios?.buildNumber ?? appSettings.CURRENT_PROJECT_VERSION ?? "1",
     });
     const team = config.ios?.appleTeamId ?? appSettings.DEVELOPMENT_TEAM;
     if (team) item.buildSettings.DEVELOPMENT_TEAM = team;

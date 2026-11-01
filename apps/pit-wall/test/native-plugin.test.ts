@@ -65,6 +65,34 @@ afterEach(() => {
 });
 
 describe("Pit Wall Live Activity config plugin", () => {
+  it("uses explicit Expo versions when the Xcode template has different defaults", () => {
+    const { folder, project } = projectFixture();
+    withPitWallLive.configureWidgetTarget(
+      project,
+      {
+        version: "1.0.0",
+        ios: { bundleIdentifier: "com.example.pitwall", buildNumber: "2" },
+      },
+      folder,
+    );
+    const objects = project.hash.project.objects;
+    const widget = Object.values(objects.PBXNativeTarget).find(
+      (entry: unknown) =>
+        typeof entry === "object" &&
+        (entry as { name: string }).name === '"PitWallLiveWidget"',
+    ) as { buildConfigurationList: string };
+    const list = objects.XCConfigurationList[widget.buildConfigurationList];
+    expect(list.buildConfigurations).toHaveLength(2);
+    for (const entry of list.buildConfigurations) {
+      expect(
+        objects.XCBuildConfiguration[entry.value].buildSettings,
+      ).toMatchObject({
+        CURRENT_PROJECT_VERSION: "2",
+        MARKETING_VERSION: "1.0.0",
+      });
+    }
+  });
+
   it("resolves serialized widget sources and Info.plist inside the target folder", () => {
     const { folder, file, project } = projectFixture();
     withPitWallLive.configureWidgetTarget(
