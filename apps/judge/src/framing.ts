@@ -1,2 +1,2 @@
 export const RULE =
-  "Chat never writes code. Codex never sees the answer. The replay tests decide.";
+  "Chat never writes code. Codex never sees the original code. The replay tests decide.";
