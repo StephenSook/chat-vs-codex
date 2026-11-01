@@ -1,13 +1,15 @@
 # Chat never writes code. Codex never sees the original code. The replay tests decide.
 
+Watch the 2:43 film: https://youtu.be/4smuOyRr_ds
+
 ## For judges
 
-| Criterion                                    | Proof                                                                                                                                                                      | Film |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---- |
-| Innovation                                   | [Viewer win](https://chat-vs-codex-judge.vercel.app/#r=ac8b50c7-1012-4f20-af7e-10dd718b9f1c), [live playtests](docs/PLAYTESTS.md)                                          | TBD  |
-| Potential Impact                             | [Second game](https://chat-vs-codex-judge.vercel.app/#second-game), [reusable game preparation](.agents/skills/hotfix-ready/SKILL.md)                                      | TBD  |
-| Technological implementation including Codex | [Benchmark](bench/SUMMARY.md), [browser recomputation](https://chat-vs-codex-judge.vercel.app/#numbers), [sandbox canary](https://chat-vs-codex-judge.vercel.app/#sandbox) | TBD  |
-| Design                                       | [Judge site](https://chat-vs-codex-judge.vercel.app/), [streaming and OBS](docs/STREAMING.md)                                                                              | TBD  |
+| Criterion                                    | Proof                                                                                                                                                                      | Film                                                                                         |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Innovation                                   | [Viewer win](https://chat-vs-codex-judge.vercel.app/#r=ac8b50c7-1012-4f20-af7e-10dd718b9f1c), [live playtests](docs/PLAYTESTS.md)                                          | [0:00](https://youtu.be/4smuOyRr_ds?t=0)                                                     |
+| Potential Impact                             | [Second game](https://chat-vs-codex-judge.vercel.app/#second-game), [reusable game preparation](.agents/skills/hotfix-ready/SKILL.md)                                      | [2:13](https://youtu.be/4smuOyRr_ds?t=133)                                                   |
+| Technological implementation including Codex | [Benchmark](bench/SUMMARY.md), [browser recomputation](https://chat-vs-codex-judge.vercel.app/#numbers), [sandbox canary](https://chat-vs-codex-judge.vercel.app/#sandbox) | [1:19](https://youtu.be/4smuOyRr_ds?t=79), [1:57](https://youtu.be/4smuOyRr_ds?t=117)        |
+| Design                                       | [Judge site](https://chat-vs-codex-judge.vercel.app/), [streaming and OBS](docs/STREAMING.md)                                                                              | [0:00 to 0:57](https://youtu.be/4smuOyRr_ds?t=0), [2:34](https://youtu.be/4smuOyRr_ds?t=154) |
 
 **Chat vs Codex:** viewers plant a real bug in the platformer a streamer is playing. Codex races viewers to diagnose
 and repair the real TypeScript bug, checked by deterministic replay tests.
