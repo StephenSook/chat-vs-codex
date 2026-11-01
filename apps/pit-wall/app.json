@@ -10,7 +10,7 @@
     "scheme": "pit-wall",
     "ios": {
       "bundleIdentifier": "com.stephensookra.chatvscodex.pitwall",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "supportsTablet": true,
       "infoPlist": {
         "NSLocalNetworkUsageDescription": "Connect to the round runner on your Mac.",
@@ -20,7 +20,7 @@
     },
     "android": {
       "package": "com.stephensookra.chatvscodex.pitwall",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1f1d1b"

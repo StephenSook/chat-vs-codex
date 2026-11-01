@@ -1,5 +1,11 @@
 # Pit Wall changes
 
+## Native build 3
+
+Advance the iOS build number and Android version code to 3 for the layout fix.
+Verification: `pnpm ci:local` and the explicit build counters in `app.json`.
+EAS builds and TestFlight device verification remain outside the sandbox.
+
 ## Live-round layout
 
 Stephen's build 2 iPhone recording showed controls overflowing a 402x874-point
