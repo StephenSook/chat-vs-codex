@@ -12,7 +12,9 @@
 **Chat vs Codex:** viewers plant a real bug in the platformer a streamer is playing. Codex races viewers to diagnose
 and repair the real TypeScript bug, checked by deterministic replay tests.
 
-**Codex receipts at `c113b85`:** 16 turns, 1,831 commands, 167 file changes, 27 sub-agents and 7 MCP calls; 92 commits on main; 763 tests. [Recount and definitions](docs/BUILD-RECEIPT.json).
+**Codex receipts:** 16 turns, 1,831 commands, 167 file changes, 27 sub-agents and
+7 MCP calls at the [recorded session checkpoint](docs/BUILD-RECEIPT.json);
+105 commits on main and 787 tests at this documentation update.
 
 211/212 fixes. Recompute: `pnpm bench:summary`.
 
@@ -71,6 +73,7 @@ Recompute the checkpoint graph with `git rev-list --count c113b85`.
 The checkpoint's 763-test count comes from its linked CI log. The
 [build card](https://chat-vs-codex-judge.vercel.app/#build) recomputes the current
 reachable commit count at build time; the current test count above comes from `pnpm test`.
+Recompute the current main count with `git rev-list --count main`.
 
 ## Known limits
 
