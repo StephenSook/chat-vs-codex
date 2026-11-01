@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>Orange and blue racers at a white finish line</title>
+  <rect id="background" width="1024" height="1024" fill="#1f1d1b"/>
+  <g id="mark">
+    <polygon points="224,344 368,344 488,512 368,680 224,680 344,512" fill="#f7914e"/>
+    <polygon points="800,344 656,344 536,512 656,680 800,680 680,512" fill="#0477bd"/>
+    <rect x="488" y="432" width="48" height="160" fill="#ffffff"/>
+  </g>
+</svg>
