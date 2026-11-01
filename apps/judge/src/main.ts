@@ -618,7 +618,7 @@ async function start(): Promise<void> {
     const card = element("article", undefined, "round-card");
     card.dataset.roundId = receipt.roundId;
     card.append(
-      element("p", roundLabel(receipt), "eyebrow"),
+      element("p", roundLabel(receipt, round.note), "eyebrow"),
       element("p", roundInputLabel(receipt), "eyebrow"),
       element("h3", receipt.family ?? "Unrecorded family"),
     );

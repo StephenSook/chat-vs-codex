@@ -5,19 +5,36 @@
     "382e1376-4d6e-477a-86b8-5ceffe629f43",
     "65e06ea8-d2bd-4e40-9ec7-79f4318c2b02",
     "82589ac9-1b1b-4393-8085-9bed5d88ee2b",
+    "8a34be05-c8b6-45b1-b8ee-a04735d68cc4",
+    "ac8b50c7-1012-4f20-af7e-10dd718b9f1c",
     "b403faf1-abc9-4c89-9a2a-c3a67fd4d105",
     "c37736fc-52d2-4ca0-9eee-dae78a5eff7b",
     "c81bdc19-304f-47d5-800e-5098b9a1b5e2",
+    "d4c4ec5f-b7e8-420e-bb16-91df94677f09",
     "dbf91971-4ef0-4f39-9a90-d84d14a5535c",
     "e14e58f2-dc2f-4f3d-b4bc-eac401989634"
   ],
   "viewers": {
-    "rounds": 0,
-    "chatWins": 0,
+    "rounds": 1,
+    "chatWins": 1,
     "codexWins": 0,
     "unawarded": 0,
     "byInput": {
-      "chat": 0,
+      "chat": 1,
+      "channel-points": 0,
+      "whisper": 0,
+      "raid": 0,
+      "power-up": 0,
+      "unknown": 0
+    }
+  },
+  "bosses": {
+    "rounds": 1,
+    "chatWins": 0,
+    "codexWins": 1,
+    "unawarded": 0,
+    "byInput": {
+      "chat": 1,
       "channel-points": 0,
       "whisper": 0,
       "raid": 0,
@@ -26,12 +43,12 @@
     }
   },
   "tests": {
-    "rounds": 9,
+    "rounds": 10,
     "chatWins": 0,
-    "codexWins": 8,
+    "codexWins": 9,
     "unawarded": 1,
     "byInput": {
-      "chat": 1,
+      "chat": 2,
       "channel-points": 0,
       "whisper": 0,
       "raid": 0,
@@ -39,6 +56,6 @@
       "unknown": 8
     },
     "fixtures": 2,
-    "broadcasterTests": 7
+    "broadcasterTests": 8
   }
 }

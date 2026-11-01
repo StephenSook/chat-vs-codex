@@ -1,0 +1,552 @@
+{
+  "schemaVersion": 1,
+  "machine": {
+    "load1m": 1.31201171875,
+    "coreCount": 8,
+    "busy": false,
+    "atMs": 1469139229.990583,
+    "wallTime": "2026-11-01T01:37:12.690Z"
+  },
+  "mutation": {
+    "path": "live-gated",
+    "sourceDigest": "640b912fe080f84003f4b3b90855a3acfe7a9d25a17d7c4b1218bb3c51bb9dfb",
+    "candidateDigest": "58e03dab9aed51b0b8fced61ba7567bf9d8bb7904126f348d44badaa116576b3",
+    "enumerated": 160,
+    "eligible": 39,
+    "attempted": 5,
+    "budgetMs": 10000,
+    "elapsedMs": 4969.635624999995,
+    "gates": {
+      "typecheck": true,
+      "differentMinifiedOutput": true,
+      "killed": true,
+      "visible": true,
+      "frameBudget": 3600,
+      "processBudgetMs": 3000,
+      "canaryFrames": 1200
+    }
+  },
+  "roundId": "8a34be05-c8b6-45b1-b8ee-a04735d68cc4",
+  "input": "chat",
+  "trigger": "broadcaster-test",
+  "mode": "live-twitch",
+  "model": "gpt-6.1-terra",
+  "effort": "low",
+  "breaker": "viewer-f63d9bfb0ac0120f",
+  "firstCorrectGuesser": null,
+  "validationReplay": {
+    "sourceDigest": "403c76c51327cb44d95d16b9ea2a6e7cefb331df83b775158f83fe2a9e63c28e",
+    "trackDigest": "bcca810f6178004b27e9befc22021e596ec847697710987ae493af1626d8d0ce",
+    "buildDigest": "4715351bcb89d1a766bac1607c4579201fd2d5c28e2a42227ead259d47d1b6ed",
+    "frameCount": 600,
+    "framesDigest": "bb3cc82edf8131ee1bb65c3bc0f8de96ab9dd34fe1c547a52f0dfecc7ba5ffd3"
+  },
+  "autopsy": {
+    "roundId": "8a34be05-c8b6-45b1-b8ee-a04735d68cc4",
+    "input": "chat",
+    "trigger": "broadcaster-test",
+    "status": "verified",
+    "reason": null,
+    "breaker": "viewer-f63d9bfb0ac0120f",
+    "firstCorrectGuesser": null,
+    "family": "gravity-sign",
+    "winner": "codex",
+    "patch": {
+      "added": 1,
+      "removed": 1,
+      "preview": [
+        "-  if (vy < 0) return vy - RISE_GRAVITY;",
+        "+  if (vy < 0) return vy + RISE_GRAVITY;"
+      ]
+    },
+    "explanation": "Changed the rising calculation to add RISE_GRAVITY. At frame 42, this produces the recorded golden vertical velocity of -2464 rather than -2656. The requested Vitest run passed all 30 tests.",
+    "headline": "Airborne ascent now slows under gravity",
+    "durations": {
+      "headStartMs": 15000.832083940506,
+      "repairMs": 26568.222957849503,
+      "validationMs": 2343.924334049225,
+      "swapMs": 5.877000093460083,
+      "timeToGreenMs": 28928.16508293152
+    },
+    "previousRoundId": "c37736fc-52d2-4ca0-9eee-dae78a5eff7b",
+    "deltaMs": -45495.455333948135,
+    "regressionTest": {
+      "path": "chat-found/8a34be05-c8b6-45b1-b8ee-a04735d68cc4.json",
+      "digest": "de81c6d4c6231b8377500c88f3afccba4e83659f75de033e04081813837c8311"
+    },
+    "regressionError": null
+  },
+  "family": "gravity-sign",
+  "winner": "codex",
+  "reason": null,
+  "scores": {
+    "chat": 0,
+    "codex": 1
+  },
+  "clock": "host-monotonic-ms",
+  "timingVersion": 1,
+  "durations": {
+    "headStartMs": 15000.832083940506,
+    "repairMs": 26568.222957849503,
+    "validationMs": 2343.924334049225,
+    "swapMs": 5.877000093460083,
+    "timeToGreenMs": 28928.16508293152
+  },
+  "timingDefinition": "Time to green starts immediately before the SDK call and ends after verified build installation; head start is separate. Repair ends at submitted patch verification after the SDK turn.",
+  "completedAt": "2026-11-01T01:38:03.892Z",
+  "events": [
+    {
+      "sequence": 1,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "preparing",
+      "atMs": 1469139230.358,
+      "wallTime": "2026-11-01T01:37:12.690Z"
+    },
+    {
+      "sequence": 2,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "machine.reset",
+      "atMs": 1469139231.378375,
+      "wallTime": "2026-11-01T01:37:12.691Z"
+    },
+    {
+      "sequence": 3,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "round.machine",
+      "atMs": 1469139231.426583,
+      "wallTime": "2026-11-01T01:37:12.691Z"
+    },
+    {
+      "sequence": 4,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "machine.load",
+      "atMs": 1469139231.457416,
+      "wallTime": "2026-11-01T01:37:12.691Z"
+    },
+    {
+      "sequence": 5,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "round.mutation",
+      "atMs": 1469145973.620125,
+      "wallTime": "2026-11-01T01:37:19.434Z"
+    },
+    {
+      "sequence": 6,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "game.build",
+      "phase": "broken",
+      "atMs": 1469145978.793916,
+      "wallTime": "2026-11-01T01:37:19.439Z"
+    },
+    {
+      "sequence": 7,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "round.started",
+      "atMs": 1469145983.32125,
+      "wallTime": "2026-11-01T01:37:19.443Z"
+    },
+    {
+      "sequence": 8,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "bug.active",
+      "atMs": 1469145983.438625,
+      "wallTime": "2026-11-01T01:37:19.443Z"
+    },
+    {
+      "sequence": 9,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "round.symptom",
+      "atMs": 1469145983.574583,
+      "wallTime": "2026-11-01T01:37:19.444Z"
+    },
+    {
+      "sequence": 10,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "head-start",
+      "atMs": 1469145983.710208,
+      "wallTime": "2026-11-01T01:37:19.444Z"
+    },
+    {
+      "sequence": 11,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1469160984.46175,
+      "wallTime": "2026-11-01T01:37:34.444Z"
+    },
+    {
+      "sequence": 12,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1469161471.670333,
+      "wallTime": "2026-11-01T01:37:34.932Z"
+    },
+    {
+      "sequence": 13,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469166504.084625,
+      "wallTime": "2026-11-01T01:37:39.964Z"
+    },
+    {
+      "sequence": 14,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469168839.706458,
+      "wallTime": "2026-11-01T01:37:42.300Z"
+    },
+    {
+      "sequence": 15,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469168840.268625,
+      "wallTime": "2026-11-01T01:37:42.300Z"
+    },
+    {
+      "sequence": 16,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469168840.55525,
+      "wallTime": "2026-11-01T01:37:42.301Z"
+    },
+    {
+      "sequence": 17,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469168842.242666,
+      "wallTime": "2026-11-01T01:37:42.302Z"
+    },
+    {
+      "sequence": 18,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469168842.60375,
+      "wallTime": "2026-11-01T01:37:42.303Z"
+    },
+    {
+      "sequence": 19,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469168843.013666,
+      "wallTime": "2026-11-01T01:37:42.303Z"
+    },
+    {
+      "sequence": 20,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469168941.7285,
+      "wallTime": "2026-11-01T01:37:42.402Z"
+    },
+    {
+      "sequence": 21,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469169191.41375,
+      "wallTime": "2026-11-01T01:37:42.651Z"
+    },
+    {
+      "sequence": 22,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469170824.627958,
+      "wallTime": "2026-11-01T01:37:44.285Z"
+    },
+    {
+      "sequence": 23,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469170825.132,
+      "wallTime": "2026-11-01T01:37:44.285Z"
+    },
+    {
+      "sequence": 24,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469170869.751958,
+      "wallTime": "2026-11-01T01:37:44.330Z"
+    },
+    {
+      "sequence": 25,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469170870.051916,
+      "wallTime": "2026-11-01T01:37:44.330Z"
+    },
+    {
+      "sequence": 26,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469171009.702166,
+      "wallTime": "2026-11-01T01:37:44.470Z"
+    },
+    {
+      "sequence": 27,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469171309.230291,
+      "wallTime": "2026-11-01T01:37:44.769Z"
+    },
+    {
+      "sequence": 28,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469171467.132708,
+      "wallTime": "2026-11-01T01:37:44.927Z"
+    },
+    {
+      "sequence": 29,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469171598.214583,
+      "wallTime": "2026-11-01T01:37:45.058Z"
+    },
+    {
+      "sequence": 30,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469171758.898791,
+      "wallTime": "2026-11-01T01:37:45.219Z"
+    },
+    {
+      "sequence": 31,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469175129.904375,
+      "wallTime": "2026-11-01T01:37:48.590Z"
+    },
+    {
+      "sequence": 32,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469177196.637083,
+      "wallTime": "2026-11-01T01:37:50.657Z"
+    },
+    {
+      "sequence": 33,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469177354.047041,
+      "wallTime": "2026-11-01T01:37:50.814Z"
+    },
+    {
+      "sequence": 34,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469179728.57675,
+      "wallTime": "2026-11-01T01:37:53.189Z"
+    },
+    {
+      "sequence": 35,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469180068.629708,
+      "wallTime": "2026-11-01T01:37:53.529Z"
+    },
+    {
+      "sequence": 36,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469180218.234875,
+      "wallTime": "2026-11-01T01:37:53.678Z"
+    },
+    {
+      "sequence": 37,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469181468.535875,
+      "wallTime": "2026-11-01T01:37:54.929Z"
+    },
+    {
+      "sequence": 38,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469181671.424958,
+      "wallTime": "2026-11-01T01:37:55.132Z"
+    },
+    {
+      "sequence": 39,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469181829.576125,
+      "wallTime": "2026-11-01T01:37:55.290Z"
+    },
+    {
+      "sequence": 40,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469183163.242,
+      "wallTime": "2026-11-01T01:37:56.623Z"
+    },
+    {
+      "sequence": 41,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469184793.667125,
+      "wallTime": "2026-11-01T01:37:58.254Z"
+    },
+    {
+      "sequence": 42,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "codex.step",
+      "atMs": 1469186399.579291,
+      "wallTime": "2026-11-01T01:37:59.860Z"
+    },
+    {
+      "sequence": 43,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1469188029.568166,
+      "wallTime": "2026-11-01T01:38:01.490Z"
+    },
+    {
+      "sequence": 44,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "validating",
+      "atMs": 1469188029.77275,
+      "wallTime": "2026-11-01T01:38:01.490Z"
+    },
+    {
+      "sequence": 45,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "round.ghost",
+      "atMs": 1469189747.948125,
+      "wallTime": "2026-11-01T01:38:03.208Z"
+    },
+    {
+      "sequence": 46,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "validating",
+      "atMs": 1469190373.689,
+      "wallTime": "2026-11-01T01:38:03.834Z"
+    },
+    {
+      "sequence": 47,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "swapping",
+      "atMs": 1469190383.481125,
+      "wallTime": "2026-11-01T01:38:03.844Z"
+    },
+    {
+      "sequence": 48,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "game.build",
+      "phase": "repaired",
+      "atMs": 1469190385.819541,
+      "wallTime": "2026-11-01T01:38:03.846Z"
+    },
+    {
+      "sequence": 49,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "score.changed",
+      "atMs": 1469190431.238708,
+      "wallTime": "2026-11-01T01:38:03.891Z"
+    },
+    {
+      "sequence": 50,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "bug.named",
+      "atMs": 1469190431.369541,
+      "wallTime": "2026-11-01T01:38:03.892Z"
+    },
+    {
+      "sequence": 51,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "tests.green",
+      "atMs": 1469190431.403291,
+      "wallTime": "2026-11-01T01:38:03.892Z"
+    },
+    {
+      "sequence": 52,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "round.state",
+      "phase": "resolved",
+      "atMs": 1469190431.448291,
+      "wallTime": "2026-11-01T01:38:03.892Z"
+    },
+    {
+      "sequence": 53,
+      "input": "chat",
+      "trigger": "broadcaster-test",
+      "type": "round.autopsy",
+      "atMs": 1469190441.082333,
+      "wallTime": "2026-11-01T01:38:03.901Z"
+    }
+  ],
+  "verification": {
+    "fullReplaySuite": true,
+    "heldOutReplay": true,
+    "statePreserved": true,
+    "finalStateHash": "605edfe1",
+    "builds": [
+      {
+        "digest": "ff38fb74ea3590b5c83ab983ec3a91208fb64c50fb7e5e1b735cdda302fc2829",
+        "frame": 11110,
+        "statePreserved": true
+      },
+      {
+        "digest": "4715351bcb89d1a766bac1607c4579201fd2d5c28e2a42227ead259d47d1b6ed",
+        "frame": 13774,
+        "statePreserved": true
+      }
+    ]
+  }
+}

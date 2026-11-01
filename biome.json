@@ -5,7 +5,7 @@
   "formatter": { "indentStyle": "space" },
   "overrides": [
     {
-      "includes": ["chat-found/*.json"],
+      "includes": ["chat-found/*.json", "docs/rounds/*.json"],
       "formatter": { "enabled": false }
     }
   ],

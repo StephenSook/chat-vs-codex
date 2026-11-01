@@ -38,6 +38,12 @@ export type ComparisonEvidence =
     }
   | { status: "unavailable"; reason: string };
 
+export interface RoundNote {
+  startedBy: "streamer";
+  source: "operator-notes";
+  date: string;
+}
+
 export interface JudgeEvidence {
   schemaVersion: 1;
   commit: string;
@@ -48,6 +54,7 @@ export interface JudgeEvidence {
   regressionCommits: string[];
   rounds: {
     comparison?: ComparisonEvidence;
+    note?: RoundNote;
     path: string;
     digest: string;
     receipt: Receipt;
@@ -58,13 +65,17 @@ export interface JudgeEvidence {
   secondGame?: SecondGameEvidence | null;
 }
 
-export function roundLabel(receipt: Receipt): string {
+export function roundLabel(receipt: Receipt, note?: RoundNote): string {
   if (
     receipt.trigger === "broadcaster-test" ||
     receipt.autopsy?.trigger === "broadcaster-test" ||
     receipt.events.some((event) => event.trigger === "broadcaster-test")
   )
     return "TWITCH CHAT ROUND / TEST";
+  if (receipt.mode === "live-twitch" && receipt.autopsy?.boss)
+    return note?.startedBy === "streamer"
+      ? "TWITCH BOSS ROUND / STREAMER START"
+      : "TWITCH BOSS ROUND";
   return receipt.mode === "live-twitch"
     ? "TWITCH CHAT ROUND / VIEWER"
     : "LOCAL ROUND / FIXTURE";

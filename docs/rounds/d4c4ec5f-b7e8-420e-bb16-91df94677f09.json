@@ -1,0 +1,799 @@
+{
+  "schemaVersion": 1,
+  "machine": {
+    "load1m": 3.60302734375,
+    "coreCount": 8,
+    "busy": false,
+    "atMs": 1528869183.117125,
+    "wallTime": "2026-11-01T18:12:42.579Z"
+  },
+  "mutation": {
+    "path": "live-gated",
+    "sourceDigest": "640b912fe080f84003f4b3b90855a3acfe7a9d25a17d7c4b1218bb3c51bb9dfb",
+    "candidateDigest": "91881df86474eff3e29d8bb21959c7d0664b59c3d1075847acfbe471310338dd",
+    "enumerated": 160,
+    "eligible": 37,
+    "attempted": 2,
+    "budgetMs": 10000,
+    "elapsedMs": 2946.783582999953,
+    "gates": {
+      "typecheck": true,
+      "differentMinifiedOutput": true,
+      "killed": true,
+      "visible": true,
+      "frameBudget": 3600,
+      "processBudgetMs": 3000,
+      "canaryFrames": 1200
+    }
+  },
+  "roundId": "d4c4ec5f-b7e8-420e-bb16-91df94677f09",
+  "input": "chat",
+  "mode": "live-twitch",
+  "model": "gpt-6.1-terra",
+  "effort": "low",
+  "breaker": "viewer-f63d9bfb0ac0120f",
+  "firstCorrectGuesser": null,
+  "validationReplay": {
+    "sourceDigest": "403c76c51327cb44d95d16b9ea2a6e7cefb331df83b775158f83fe2a9e63c28e",
+    "trackDigest": "bcca810f6178004b27e9befc22021e596ec847697710987ae493af1626d8d0ce",
+    "buildDigest": "4715351bcb89d1a766bac1607c4579201fd2d5c28e2a42227ead259d47d1b6ed",
+    "frameCount": 600,
+    "framesDigest": "bb3cc82edf8131ee1bb65c3bc0f8de96ab9dd34fe1c547a52f0dfecc7ba5ffd3"
+  },
+  "autopsy": {
+    "roundId": "d4c4ec5f-b7e8-420e-bb16-91df94677f09",
+    "input": "chat",
+    "boss": {
+      "winner": "terra",
+      "memory": {
+        "freeBytes": 147849216,
+        "availableBytes": 1803829248,
+        "rssBytes": 31948800,
+        "minimumFreeBytes": 1610612736,
+        "measuredAtMs": 1528869181.629333
+      },
+      "threads": [
+        {
+          "model": "terra",
+          "status": "validated",
+          "timings": {
+            "threadStartedAtMs": 1528891307.512541,
+            "patchReadyAtMs": 1528910420.4865,
+            "validationStartedAtMs": 1528910420.579958,
+            "validationFinishedAtMs": 1528913371.421125
+          },
+          "failure": null,
+          "patch": {
+            "added": 1,
+            "removed": 1,
+            "preview": [
+              "-    a.y + a.height >= b.y",
+              "+    a.y + a.height > b.y"
+            ]
+          }
+        },
+        {
+          "model": "sol",
+          "status": "validated",
+          "timings": {
+            "threadStartedAtMs": 1528891307.108041,
+            "patchReadyAtMs": 1528946022.753666,
+            "validationStartedAtMs": 1528946022.992541,
+            "validationFinishedAtMs": 1528949008.628166
+          },
+          "failure": null,
+          "patch": {
+            "added": 1,
+            "removed": 1,
+            "preview": [
+              "-    a.y + a.height >= b.y",
+              "+    a.y + a.height > b.y"
+            ]
+          }
+        }
+      ]
+    },
+    "status": "verified",
+    "reason": null,
+    "breaker": "viewer-f63d9bfb0ac0120f",
+    "firstCorrectGuesser": null,
+    "family": "collision-off-by-one",
+    "winner": "codex",
+    "patch": {
+      "added": 1,
+      "removed": 1,
+      "preview": [
+        "-    a.y + a.height >= b.y",
+        "+    a.y + a.height > b.y"
+      ]
+    },
+    "explanation": "Changed the vertical boundary comparison to require actual overlap. The player now survives edge contact. The requested Vitest command passed all 32 tests.",
+    "headline": "Player survives contact with hazard edges",
+    "durations": {
+      "headStartMs": 15000.566667079926,
+      "repairMs": 19112.973958969116,
+      "validationMs": 2950.841166973114,
+      "swapMs": 9.787375211715698,
+      "timeToGreenMs": 22091.743375062943
+    },
+    "previousRoundId": "ac8b50c7-1012-4f20-af7e-10dd718b9f1c",
+    "deltaMs": -6379.508416891098,
+    "regressionTest": {
+      "path": "chat-found/d4c4ec5f-b7e8-420e-bb16-91df94677f09.json",
+      "digest": "0c462df1180b73538c95fa77f26c4540804f7b382062c5ffe622b3f6c157ccb8"
+    },
+    "regressionError": null
+  },
+  "family": "collision-off-by-one",
+  "winner": "codex",
+  "reason": null,
+  "scores": {
+    "chat": 1,
+    "codex": 1
+  },
+  "clock": "host-monotonic-ms",
+  "timingVersion": 1,
+  "durations": {
+    "headStartMs": 15000.566667079926,
+    "repairMs": 19112.973958969116,
+    "validationMs": 2950.841166973114,
+    "swapMs": 9.787375211715698,
+    "timeToGreenMs": 22091.743375062943
+  },
+  "timingDefinition": "Time to green starts immediately before the SDK call and ends after verified build installation; head start is separate. Repair ends at submitted patch verification after the SDK turn.",
+  "completedAt": "2026-11-01T18:13:26.795Z",
+  "events": [
+    {
+      "sequence": 53,
+      "input": "chat",
+      "type": "round.state",
+      "phase": "preparing",
+      "atMs": 1528869183.377875,
+      "wallTime": "2026-11-01T18:12:42.579Z"
+    },
+    {
+      "sequence": 54,
+      "input": "chat",
+      "type": "machine.reset",
+      "atMs": 1528869183.978,
+      "wallTime": "2026-11-01T18:12:42.580Z"
+    },
+    {
+      "sequence": 55,
+      "input": "chat",
+      "type": "round.machine",
+      "atMs": 1528869184.011666,
+      "wallTime": "2026-11-01T18:12:42.580Z"
+    },
+    {
+      "sequence": 56,
+      "input": "chat",
+      "type": "machine.load",
+      "atMs": 1528869184.04,
+      "wallTime": "2026-11-01T18:12:42.580Z"
+    },
+    {
+      "sequence": 57,
+      "input": "chat",
+      "type": "round.mutation",
+      "atMs": 1528875524.225125,
+      "wallTime": "2026-11-01T18:12:48.920Z"
+    },
+    {
+      "sequence": 58,
+      "input": "chat",
+      "type": "game.build",
+      "phase": "broken",
+      "atMs": 1528875527.257958,
+      "wallTime": "2026-11-01T18:12:48.923Z"
+    },
+    {
+      "sequence": 59,
+      "input": "chat",
+      "type": "round.started",
+      "atMs": 1528875529.232041,
+      "wallTime": "2026-11-01T18:12:48.925Z"
+    },
+    {
+      "sequence": 60,
+      "input": "chat",
+      "type": "bug.active",
+      "atMs": 1528875529.352875,
+      "wallTime": "2026-11-01T18:12:48.925Z"
+    },
+    {
+      "sequence": 61,
+      "input": "chat",
+      "type": "round.symptom",
+      "atMs": 1528875529.387916,
+      "wallTime": "2026-11-01T18:12:48.925Z"
+    },
+    {
+      "sequence": 62,
+      "input": "chat",
+      "type": "boss.started",
+      "atMs": 1528875529.43625,
+      "wallTime": "2026-11-01T18:12:48.925Z"
+    },
+    {
+      "sequence": 63,
+      "input": "chat",
+      "type": "round.state",
+      "phase": "head-start",
+      "atMs": 1528875529.449583,
+      "wallTime": "2026-11-01T18:12:48.925Z"
+    },
+    {
+      "sequence": 64,
+      "input": "chat",
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1528890529.8825,
+      "wallTime": "2026-11-01T18:13:03.926Z"
+    },
+    {
+      "sequence": 65,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528896347.489875,
+      "wallTime": "2026-11-01T18:13:09.743Z"
+    },
+    {
+      "sequence": 66,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528897069.680375,
+      "wallTime": "2026-11-01T18:13:10.466Z"
+    },
+    {
+      "sequence": 67,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528898461.973291,
+      "wallTime": "2026-11-01T18:13:11.858Z"
+    },
+    {
+      "sequence": 68,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528898462.54625,
+      "wallTime": "2026-11-01T18:13:11.858Z"
+    },
+    {
+      "sequence": 69,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528898462.652,
+      "wallTime": "2026-11-01T18:13:11.858Z"
+    },
+    {
+      "sequence": 70,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528898465.958833,
+      "wallTime": "2026-11-01T18:13:11.862Z"
+    },
+    {
+      "sequence": 71,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528898466.332041,
+      "wallTime": "2026-11-01T18:13:11.862Z"
+    },
+    {
+      "sequence": 72,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528898466.824291,
+      "wallTime": "2026-11-01T18:13:11.863Z"
+    },
+    {
+      "sequence": 73,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528898552.873583,
+      "wallTime": "2026-11-01T18:13:11.949Z"
+    },
+    {
+      "sequence": 74,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528898973.325083,
+      "wallTime": "2026-11-01T18:13:12.369Z"
+    },
+    {
+      "sequence": 75,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528899049.183291,
+      "wallTime": "2026-11-01T18:13:12.445Z"
+    },
+    {
+      "sequence": 76,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528900099.5735,
+      "wallTime": "2026-11-01T18:13:13.495Z"
+    },
+    {
+      "sequence": 77,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528900101.39175,
+      "wallTime": "2026-11-01T18:13:13.497Z"
+    },
+    {
+      "sequence": 78,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528900102.808083,
+      "wallTime": "2026-11-01T18:13:13.499Z"
+    },
+    {
+      "sequence": 79,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528900103.1195,
+      "wallTime": "2026-11-01T18:13:13.499Z"
+    },
+    {
+      "sequence": 80,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528900103.204583,
+      "wallTime": "2026-11-01T18:13:13.499Z"
+    },
+    {
+      "sequence": 81,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528900103.549375,
+      "wallTime": "2026-11-01T18:13:13.499Z"
+    },
+    {
+      "sequence": 82,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528900104.122291,
+      "wallTime": "2026-11-01T18:13:13.500Z"
+    },
+    {
+      "sequence": 83,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528900104.340416,
+      "wallTime": "2026-11-01T18:13:13.500Z"
+    },
+    {
+      "sequence": 84,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528900104.838791,
+      "wallTime": "2026-11-01T18:13:13.501Z"
+    },
+    {
+      "sequence": 85,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528900105.029416,
+      "wallTime": "2026-11-01T18:13:13.501Z"
+    },
+    {
+      "sequence": 86,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528900105.335916,
+      "wallTime": "2026-11-01T18:13:13.501Z"
+    },
+    {
+      "sequence": 87,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528900105.800208,
+      "wallTime": "2026-11-01T18:13:13.502Z"
+    },
+    {
+      "sequence": 88,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528900148.037583,
+      "wallTime": "2026-11-01T18:13:13.544Z"
+    },
+    {
+      "sequence": 89,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528900148.311458,
+      "wallTime": "2026-11-01T18:13:13.544Z"
+    },
+    {
+      "sequence": 90,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528900148.384708,
+      "wallTime": "2026-11-01T18:13:13.544Z"
+    },
+    {
+      "sequence": 91,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528900302.705291,
+      "wallTime": "2026-11-01T18:13:13.699Z"
+    },
+    {
+      "sequence": 92,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528900618.9915,
+      "wallTime": "2026-11-01T18:13:14.015Z"
+    },
+    {
+      "sequence": 93,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528901021.238583,
+      "wallTime": "2026-11-01T18:13:14.417Z"
+    },
+    {
+      "sequence": 94,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528901430.356375,
+      "wallTime": "2026-11-01T18:13:14.826Z"
+    },
+    {
+      "sequence": 95,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528902066.322083,
+      "wallTime": "2026-11-01T18:13:15.462Z"
+    },
+    {
+      "sequence": 96,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528902887.225416,
+      "wallTime": "2026-11-01T18:13:16.283Z"
+    },
+    {
+      "sequence": 97,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528903110.914791,
+      "wallTime": "2026-11-01T18:13:16.507Z"
+    },
+    {
+      "sequence": 98,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528903332.025958,
+      "wallTime": "2026-11-01T18:13:16.728Z"
+    },
+    {
+      "sequence": 99,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528906297.370958,
+      "wallTime": "2026-11-01T18:13:19.693Z"
+    },
+    {
+      "sequence": 100,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528908405.80825,
+      "wallTime": "2026-11-01T18:13:21.802Z"
+    },
+    {
+      "sequence": 101,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528908596.945041,
+      "wallTime": "2026-11-01T18:13:21.993Z"
+    },
+    {
+      "sequence": 102,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528913371.898541,
+      "wallTime": "2026-11-01T18:13:26.768Z"
+    },
+    {
+      "sequence": 103,
+      "input": "chat",
+      "type": "round.state",
+      "phase": "validating",
+      "atMs": 1528913389.153041,
+      "wallTime": "2026-11-01T18:13:26.785Z"
+    },
+    {
+      "sequence": 104,
+      "input": "chat",
+      "type": "round.ghost",
+      "atMs": 1528913389.303208,
+      "wallTime": "2026-11-01T18:13:26.785Z"
+    },
+    {
+      "sequence": 105,
+      "input": "chat",
+      "type": "round.state",
+      "phase": "swapping",
+      "atMs": 1528913389.473125,
+      "wallTime": "2026-11-01T18:13:26.785Z"
+    },
+    {
+      "sequence": 106,
+      "input": "chat",
+      "type": "game.build",
+      "phase": "repaired",
+      "atMs": 1528913395.329333,
+      "wallTime": "2026-11-01T18:13:26.791Z"
+    },
+    {
+      "sequence": 107,
+      "input": "chat",
+      "type": "score.changed",
+      "atMs": 1528913399.318458,
+      "wallTime": "2026-11-01T18:13:26.795Z"
+    },
+    {
+      "sequence": 108,
+      "input": "chat",
+      "type": "bug.named",
+      "atMs": 1528913399.43475,
+      "wallTime": "2026-11-01T18:13:26.795Z"
+    },
+    {
+      "sequence": 109,
+      "input": "chat",
+      "type": "tests.green",
+      "atMs": 1528913399.470708,
+      "wallTime": "2026-11-01T18:13:26.795Z"
+    },
+    {
+      "sequence": 110,
+      "input": "chat",
+      "type": "round.state",
+      "phase": "resolved",
+      "atMs": 1528913399.501208,
+      "wallTime": "2026-11-01T18:13:26.795Z"
+    },
+    {
+      "sequence": 111,
+      "input": "chat",
+      "type": "round.boss-winner",
+      "atMs": 1528913399.640166,
+      "wallTime": "2026-11-01T18:13:26.795Z"
+    },
+    {
+      "sequence": 112,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528914598.943833,
+      "wallTime": "2026-11-01T18:13:27.995Z"
+    },
+    {
+      "sequence": 113,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528914599.548041,
+      "wallTime": "2026-11-01T18:13:27.995Z"
+    },
+    {
+      "sequence": 114,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528914613.599166,
+      "wallTime": "2026-11-01T18:13:28.009Z"
+    },
+    {
+      "sequence": 115,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528914614.031708,
+      "wallTime": "2026-11-01T18:13:28.010Z"
+    },
+    {
+      "sequence": 116,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528914689.203958,
+      "wallTime": "2026-11-01T18:13:28.085Z"
+    },
+    {
+      "sequence": 117,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528915167.025416,
+      "wallTime": "2026-11-01T18:13:28.563Z"
+    },
+    {
+      "sequence": 118,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528920482.824,
+      "wallTime": "2026-11-01T18:13:33.878Z"
+    },
+    {
+      "sequence": 119,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528920488.09025,
+      "wallTime": "2026-11-01T18:13:33.884Z"
+    },
+    {
+      "sequence": 120,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528920488.598416,
+      "wallTime": "2026-11-01T18:13:33.884Z"
+    },
+    {
+      "sequence": 121,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528920488.681208,
+      "wallTime": "2026-11-01T18:13:33.884Z"
+    },
+    {
+      "sequence": 122,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528920488.725166,
+      "wallTime": "2026-11-01T18:13:33.884Z"
+    },
+    {
+      "sequence": 123,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528920488.778291,
+      "wallTime": "2026-11-01T18:13:33.884Z"
+    },
+    {
+      "sequence": 124,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528920608.315541,
+      "wallTime": "2026-11-01T18:13:34.004Z"
+    },
+    {
+      "sequence": 125,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528921360.060875,
+      "wallTime": "2026-11-01T18:13:34.756Z"
+    },
+    {
+      "sequence": 126,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528924036.760625,
+      "wallTime": "2026-11-01T18:13:37.432Z"
+    },
+    {
+      "sequence": 127,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528925561.832166,
+      "wallTime": "2026-11-01T18:13:38.957Z"
+    },
+    {
+      "sequence": 128,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528926651.229958,
+      "wallTime": "2026-11-01T18:13:40.047Z"
+    },
+    {
+      "sequence": 129,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528926945.502791,
+      "wallTime": "2026-11-01T18:13:40.341Z"
+    },
+    {
+      "sequence": 130,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528926945.770583,
+      "wallTime": "2026-11-01T18:13:40.341Z"
+    },
+    {
+      "sequence": 131,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528927148.407666,
+      "wallTime": "2026-11-01T18:13:40.544Z"
+    },
+    {
+      "sequence": 132,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528927351.405041,
+      "wallTime": "2026-11-01T18:13:40.747Z"
+    },
+    {
+      "sequence": 133,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528928280.561833,
+      "wallTime": "2026-11-01T18:13:41.676Z"
+    },
+    {
+      "sequence": 134,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528933044.3285,
+      "wallTime": "2026-11-01T18:13:46.440Z"
+    },
+    {
+      "sequence": 135,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528933045.867166,
+      "wallTime": "2026-11-01T18:13:46.441Z"
+    },
+    {
+      "sequence": 136,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528933590.145541,
+      "wallTime": "2026-11-01T18:13:46.986Z"
+    },
+    {
+      "sequence": 137,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528939570.627916,
+      "wallTime": "2026-11-01T18:13:52.966Z"
+    },
+    {
+      "sequence": 138,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528943658.300125,
+      "wallTime": "2026-11-01T18:13:57.054Z"
+    },
+    {
+      "sequence": 139,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528949009.026666,
+      "wallTime": "2026-11-01T18:14:02.404Z"
+    },
+    {
+      "sequence": 140,
+      "input": "chat",
+      "type": "round.autopsy",
+      "atMs": 1528949237.113125,
+      "wallTime": "2026-11-01T18:14:02.633Z"
+    }
+  ],
+  "verification": {
+    "fullReplaySuite": true,
+    "heldOutReplay": true,
+    "statePreserved": true,
+    "finalStateHash": "22903b07",
+    "builds": [
+      {
+        "digest": "9284d4f463cc418b54c4a70bfa159e0be421ae27f2aa8e870974586db50e2bbe",
+        "frame": 54019,
+        "statePreserved": true
+      },
+      {
+        "digest": "4715351bcb89d1a766bac1607c4579201fd2d5c28e2a42227ead259d47d1b6ed",
+        "frame": 56664,
+        "statePreserved": true
+      },
+      {
+        "digest": "164497d37ee60f5eb4253bf65672e9b40631a75d8770623030e9358f606a9214",
+        "frame": 58642,
+        "statePreserved": true
+      },
+      {
+        "digest": "4715351bcb89d1a766bac1607c4579201fd2d5c28e2a42227ead259d47d1b6ed",
+        "frame": 60914,
+        "statePreserved": true
+      }
+    ]
+  }
+}

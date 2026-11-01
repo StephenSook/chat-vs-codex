@@ -20,6 +20,7 @@ export interface SeasonScoreboard {
   schemaVersion: 1;
   roundIds: string[];
   viewers: SeasonTotals;
+  bosses: SeasonTotals;
   tests: SeasonTotals & { fixtures: number; broadcasterTests: number };
 }
 export type SeasonReceipt = Pick<
@@ -52,6 +53,7 @@ export function deriveSeason(
     schemaVersion: 1,
     roundIds: [],
     viewers: empty(),
+    bosses: empty(),
     tests: { ...empty(), fixtures: 0, broadcasterTests: 0 },
   };
   const seen = new Set<string>();
@@ -66,8 +68,10 @@ export function deriveSeason(
       receipt.trigger === "broadcaster-test" ||
       receipt.autopsy?.trigger === "broadcaster-test" ||
       receipt.events.some((event) => event.trigger === "broadcaster-test");
-    const viewer = receipt.mode === "live-twitch" && !test;
-    const group = viewer ? result.viewers : result.tests;
+    const boss =
+      receipt.mode === "live-twitch" && !test && !!receipt.autopsy?.boss;
+    const viewer = receipt.mode === "live-twitch" && !test && !boss;
+    const group = boss ? result.bosses : viewer ? result.viewers : result.tests;
     group.rounds++;
     if (receipt.winner === "chat") group.chatWins++;
     else if (receipt.winner === "codex") group.codexWins++;
@@ -77,7 +81,7 @@ export function deriveSeason(
     if (!SEASON_INPUTS.includes(input))
       throw new Error(`Invalid season input: ${receipt.roundId}`);
     group.byInput[input]++;
-    if (!viewer) {
+    if (!viewer && !boss) {
       if (receipt.mode !== "live-twitch") result.tests.fixtures++;
       else result.tests.broadcasterTests++;
     }

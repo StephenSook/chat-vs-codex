@@ -466,6 +466,13 @@ export async function buildJudgeEvidence(
         ] as const;
       }),
   );
+  const notesPath = "docs/round-notes.json";
+  const notes: Record<
+    string,
+    NonNullable<JudgeEvidence["rounds"][number]["note"]>
+  > = source.list("docs").includes(notesPath)
+    ? JSON.parse(source.read(notesPath))
+    : {};
   const rounds: JudgeEvidence["rounds"] = source
     .list("docs/rounds")
     .filter((path) => /^docs\/rounds\/[a-f0-9-]{36}\.json$/.test(path))
@@ -497,7 +504,22 @@ export async function buildJudgeEvidence(
           receipt.autopsy.regressionTest.digest !== regression.digest)
       )
         throw new Error(`Regression does not match round receipt: ${path}`);
-      return { path: emit(path, text), digest: sha(text), receipt, regression };
+      const note = notes[receipt.roundId];
+      if (
+        note &&
+        (note.startedBy !== "streamer" ||
+          note.source !== "operator-notes" ||
+          !/^\d{4}-\d{2}-\d{2}$/.test(note.date) ||
+          !receipt.autopsy?.boss)
+      )
+        throw new Error(`Invalid committed round note: ${path}`);
+      return {
+        path: emit(path, text),
+        digest: sha(text),
+        receipt,
+        regression,
+        ...(note ? { note } : {}),
+      };
     });
   if (!rounds.length) throw new Error("No committed round receipts");
   const candidates: CanaryReceipt[] = [];

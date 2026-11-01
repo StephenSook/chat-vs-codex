@@ -1,0 +1,484 @@
+{
+  "schemaVersion": 1,
+  "machine": {
+    "load1m": 3.13037109375,
+    "coreCount": 8,
+    "busy": false,
+    "atMs": 1528793926.63825,
+    "wallTime": "2026-11-01T18:11:27.323Z"
+  },
+  "mutation": {
+    "path": "live-gated",
+    "sourceDigest": "640b912fe080f84003f4b3b90855a3acfe7a9d25a17d7c4b1218bb3c51bb9dfb",
+    "candidateDigest": "cb9f5c70e27b9ef1cc6aab5a37acee1722fc7dc31b33166e0dbd5b4eb2491ae3",
+    "enumerated": 160,
+    "eligible": 38,
+    "attempted": 1,
+    "budgetMs": 10000,
+    "elapsedMs": 2397.6650839999784,
+    "gates": {
+      "typecheck": true,
+      "differentMinifiedOutput": true,
+      "killed": true,
+      "visible": true,
+      "frameBudget": 3600,
+      "processBudgetMs": 3000,
+      "canaryFrames": 1200
+    }
+  },
+  "roundId": "ac8b50c7-1012-4f20-af7e-10dd718b9f1c",
+  "input": "chat",
+  "mode": "live-twitch",
+  "model": "gpt-6.1-terra",
+  "effort": "low",
+  "breaker": "viewer-a001ae0b5d3a515f",
+  "firstCorrectGuesser": "viewer-a001ae0b5d3a515f",
+  "validationReplay": {
+    "sourceDigest": "403c76c51327cb44d95d16b9ea2a6e7cefb331df83b775158f83fe2a9e63c28e",
+    "trackDigest": "bcca810f6178004b27e9befc22021e596ec847697710987ae493af1626d8d0ce",
+    "buildDigest": "4715351bcb89d1a766bac1607c4579201fd2d5c28e2a42227ead259d47d1b6ed",
+    "frameCount": 600,
+    "framesDigest": "bb3cc82edf8131ee1bb65c3bc0f8de96ab9dd34fe1c547a52f0dfecc7ba5ffd3"
+  },
+  "autopsy": {
+    "roundId": "ac8b50c7-1012-4f20-af7e-10dd718b9f1c",
+    "input": "chat",
+    "status": "verified",
+    "reason": null,
+    "breaker": "viewer-a001ae0b5d3a515f",
+    "firstCorrectGuesser": "viewer-a001ae0b5d3a515f",
+    "family": "gravity-sign",
+    "winner": "chat",
+    "patch": {
+      "added": 1,
+      "removed": 1,
+      "preview": [
+        "-  if (state.grounded) return vy - GRAVITY;",
+        "+  if (state.grounded) return vy + GRAVITY;"
+      ]
+    },
+    "explanation": "Changed the grounded settling probe to add gravity, keeping the player on the floor and preserving grounded movement speed. The requested Vitest run passed all 31 tests, including all seven replay tests.",
+    "headline": "Player stays grounded and follows the expected route",
+    "durations": {
+      "headStartMs": 15008.418291807175,
+      "repairMs": 25750.808666944504,
+      "validationMs": 2683.9234580993652,
+      "swapMs": 12.66825008392334,
+      "timeToGreenMs": 28471.25179195404
+    },
+    "previousRoundId": "1b4285af-fd5a-42a1-ad46-038d72959f96",
+    "deltaMs": 10802.06149983406,
+    "regressionTest": {
+      "path": "chat-found/ac8b50c7-1012-4f20-af7e-10dd718b9f1c.json",
+      "digest": "c1c0c16cb85b3e8341197fbb04e58bdd86feffb0aefa26c6dd0b604842c81ac6"
+    },
+    "regressionError": null
+  },
+  "family": "gravity-sign",
+  "winner": "chat",
+  "reason": null,
+  "scores": {
+    "chat": 1,
+    "codex": 0
+  },
+  "clock": "host-monotonic-ms",
+  "timingVersion": 1,
+  "durations": {
+    "headStartMs": 15008.418291807175,
+    "repairMs": 25750.808666944504,
+    "validationMs": 2683.9234580993652,
+    "swapMs": 12.66825008392334,
+    "timeToGreenMs": 28471.25179195404
+  },
+  "timingDefinition": "Time to green starts immediately before the SDK call and ends after verified build installation; head start is separate. Repair ends at submitted patch verification after the SDK turn.",
+  "completedAt": "2026-11-01T18:12:16.118Z",
+  "events": [
+    {
+      "sequence": 1,
+      "input": "chat",
+      "type": "round.state",
+      "phase": "preparing",
+      "atMs": 1528793932.63125,
+      "wallTime": "2026-11-01T18:11:27.329Z"
+    },
+    {
+      "sequence": 2,
+      "input": "chat",
+      "type": "machine.reset",
+      "atMs": 1528793938.624833,
+      "wallTime": "2026-11-01T18:11:27.335Z"
+    },
+    {
+      "sequence": 3,
+      "input": "chat",
+      "type": "round.machine",
+      "atMs": 1528793938.717375,
+      "wallTime": "2026-11-01T18:11:27.335Z"
+    },
+    {
+      "sequence": 4,
+      "input": "chat",
+      "type": "machine.load",
+      "atMs": 1528793938.777416,
+      "wallTime": "2026-11-01T18:11:27.335Z"
+    },
+    {
+      "sequence": 5,
+      "input": "chat",
+      "type": "round.mutation",
+      "atMs": 1528798485.58375,
+      "wallTime": "2026-11-01T18:11:31.882Z"
+    },
+    {
+      "sequence": 6,
+      "input": "chat",
+      "type": "game.build",
+      "phase": "broken",
+      "atMs": 1528798494.402583,
+      "wallTime": "2026-11-01T18:11:31.891Z"
+    },
+    {
+      "sequence": 7,
+      "input": "chat",
+      "type": "round.started",
+      "atMs": 1528798499.329666,
+      "wallTime": "2026-11-01T18:11:31.896Z"
+    },
+    {
+      "sequence": 8,
+      "input": "chat",
+      "type": "bug.active",
+      "atMs": 1528798499.460208,
+      "wallTime": "2026-11-01T18:11:31.896Z"
+    },
+    {
+      "sequence": 9,
+      "input": "chat",
+      "type": "round.symptom",
+      "atMs": 1528798499.56225,
+      "wallTime": "2026-11-01T18:11:31.896Z"
+    },
+    {
+      "sequence": 10,
+      "input": "chat",
+      "type": "round.state",
+      "phase": "head-start",
+      "atMs": 1528798499.745083,
+      "wallTime": "2026-11-01T18:11:31.896Z"
+    },
+    {
+      "sequence": 11,
+      "input": "chat",
+      "type": "bug.named",
+      "atMs": 1528807682.962375,
+      "wallTime": "2026-11-01T18:11:41.078Z"
+    },
+    {
+      "sequence": 12,
+      "input": "chat",
+      "type": "score.changed",
+      "atMs": 1528807684.047208,
+      "wallTime": "2026-11-01T18:11:41.081Z"
+    },
+    {
+      "sequence": 13,
+      "input": "chat",
+      "type": "round.state",
+      "phase": "head-start",
+      "atMs": 1528807684.10425,
+      "wallTime": "2026-11-01T18:11:41.081Z"
+    },
+    {
+      "sequence": 14,
+      "input": "chat",
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1528813509.482958,
+      "wallTime": "2026-11-01T18:11:46.906Z"
+    },
+    {
+      "sequence": 15,
+      "input": "chat",
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1528814113.10025,
+      "wallTime": "2026-11-01T18:11:47.510Z"
+    },
+    {
+      "sequence": 16,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528819256.034875,
+      "wallTime": "2026-11-01T18:11:52.652Z"
+    },
+    {
+      "sequence": 17,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528821522.34575,
+      "wallTime": "2026-11-01T18:11:54.919Z"
+    },
+    {
+      "sequence": 18,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528821523.372333,
+      "wallTime": "2026-11-01T18:11:54.920Z"
+    },
+    {
+      "sequence": 19,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528821527.794833,
+      "wallTime": "2026-11-01T18:11:54.924Z"
+    },
+    {
+      "sequence": 20,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528821529.819625,
+      "wallTime": "2026-11-01T18:11:54.926Z"
+    },
+    {
+      "sequence": 21,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528821642.483125,
+      "wallTime": "2026-11-01T18:11:55.039Z"
+    },
+    {
+      "sequence": 22,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528822118.501416,
+      "wallTime": "2026-11-01T18:11:55.515Z"
+    },
+    {
+      "sequence": 23,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528823375.694958,
+      "wallTime": "2026-11-01T18:11:56.772Z"
+    },
+    {
+      "sequence": 24,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528823376.886833,
+      "wallTime": "2026-11-01T18:11:56.773Z"
+    },
+    {
+      "sequence": 25,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528823438.514958,
+      "wallTime": "2026-11-01T18:11:56.835Z"
+    },
+    {
+      "sequence": 26,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528823438.821458,
+      "wallTime": "2026-11-01T18:11:56.835Z"
+    },
+    {
+      "sequence": 27,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528823620.885708,
+      "wallTime": "2026-11-01T18:11:57.017Z"
+    },
+    {
+      "sequence": 28,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528824005.122208,
+      "wallTime": "2026-11-01T18:11:57.401Z"
+    },
+    {
+      "sequence": 29,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528824204.68125,
+      "wallTime": "2026-11-01T18:11:57.601Z"
+    },
+    {
+      "sequence": 30,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528828839.036333,
+      "wallTime": "2026-11-01T18:12:02.235Z"
+    },
+    {
+      "sequence": 31,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528829918.022958,
+      "wallTime": "2026-11-01T18:12:03.314Z"
+    },
+    {
+      "sequence": 32,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528830076.987041,
+      "wallTime": "2026-11-01T18:12:03.473Z"
+    },
+    {
+      "sequence": 33,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528830251.387458,
+      "wallTime": "2026-11-01T18:12:03.648Z"
+    },
+    {
+      "sequence": 34,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528830393.259875,
+      "wallTime": "2026-11-01T18:12:03.790Z"
+    },
+    {
+      "sequence": 35,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528831860.485916,
+      "wallTime": "2026-11-01T18:12:05.257Z"
+    },
+    {
+      "sequence": 36,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528832360.36625,
+      "wallTime": "2026-11-01T18:12:05.757Z"
+    },
+    {
+      "sequence": 37,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528832596.012333,
+      "wallTime": "2026-11-01T18:12:05.992Z"
+    },
+    {
+      "sequence": 38,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528832766.579625,
+      "wallTime": "2026-11-01T18:12:06.163Z"
+    },
+    {
+      "sequence": 39,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528833924.228416,
+      "wallTime": "2026-11-01T18:12:07.321Z"
+    },
+    {
+      "sequence": 40,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528835443.813916,
+      "wallTime": "2026-11-01T18:12:08.840Z"
+    },
+    {
+      "sequence": 41,
+      "input": "chat",
+      "type": "codex.step",
+      "atMs": 1528837332.13875,
+      "wallTime": "2026-11-01T18:12:10.728Z"
+    },
+    {
+      "sequence": 42,
+      "input": "chat",
+      "type": "round.state",
+      "phase": "repairing",
+      "atMs": 1528839857.965458,
+      "wallTime": "2026-11-01T18:12:13.254Z"
+    },
+    {
+      "sequence": 43,
+      "input": "chat",
+      "type": "round.state",
+      "phase": "validating",
+      "atMs": 1528839861.872875,
+      "wallTime": "2026-11-01T18:12:13.258Z"
+    },
+    {
+      "sequence": 44,
+      "input": "chat",
+      "type": "round.ghost",
+      "atMs": 1528841734.653,
+      "wallTime": "2026-11-01T18:12:15.131Z"
+    },
+    {
+      "sequence": 45,
+      "input": "chat",
+      "type": "round.state",
+      "phase": "validating",
+      "atMs": 1528842548.8045,
+      "wallTime": "2026-11-01T18:12:15.945Z"
+    },
+    {
+      "sequence": 46,
+      "input": "chat",
+      "type": "round.state",
+      "phase": "swapping",
+      "atMs": 1528842565.1355,
+      "wallTime": "2026-11-01T18:12:15.961Z"
+    },
+    {
+      "sequence": 47,
+      "input": "chat",
+      "type": "game.build",
+      "phase": "repaired",
+      "atMs": 1528842569.023,
+      "wallTime": "2026-11-01T18:12:15.965Z"
+    },
+    {
+      "sequence": 48,
+      "input": "chat",
+      "type": "bug.named",
+      "atMs": 1528842721.311166,
+      "wallTime": "2026-11-01T18:12:16.118Z"
+    },
+    {
+      "sequence": 49,
+      "input": "chat",
+      "type": "tests.green",
+      "atMs": 1528842721.497208,
+      "wallTime": "2026-11-01T18:12:16.118Z"
+    },
+    {
+      "sequence": 50,
+      "input": "chat",
+      "type": "round.state",
+      "phase": "resolved",
+      "atMs": 1528842721.573958,
+      "wallTime": "2026-11-01T18:12:16.118Z"
+    },
+    {
+      "sequence": 51,
+      "input": "chat",
+      "type": "round.autopsy",
+      "atMs": 1528842745.746375,
+      "wallTime": "2026-11-01T18:12:16.142Z"
+    }
+  ],
+  "verification": {
+    "fullReplaySuite": true,
+    "heldOutReplay": true,
+    "statePreserved": true,
+    "finalStateHash": "fb6a9326",
+    "builds": [
+      {
+        "digest": "9284d4f463cc418b54c4a70bfa159e0be421ae27f2aa8e870974586db50e2bbe",
+        "frame": 54019,
+        "statePreserved": true
+      },
+      {
+        "digest": "4715351bcb89d1a766bac1607c4579201fd2d5c28e2a42227ead259d47d1b6ed",
+        "frame": 56664,
+        "statePreserved": true
+      }
+    ]
+  }
+}
