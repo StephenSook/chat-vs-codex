@@ -16,7 +16,7 @@ and repair the real TypeScript bug, checked by deterministic replay tests.
 
 **Codex receipts:** 16 turns, 1,831 commands, 167 file changes, 27 sub-agents and
 7 MCP calls at the [recorded session checkpoint](docs/BUILD-RECEIPT.json);
-105 commits on main and 787 tests at this documentation update.
+108 commits on main and 787 tests at this documentation update.
 
 211/212 fixes. Recompute: `pnpm bench:summary`.
 
