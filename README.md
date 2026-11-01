@@ -84,7 +84,7 @@ Recompute the current main count with `git rev-list --count main`.
 - Triage is off by default at 25.7% held-out accuracy.
 - No committed raid-round receipt exists. The [live boss receipt](docs/rounds/d4c4ec5f-b7e8-420e-bb16-91df94677f09.json) records Terra's win.
 - The iOS Live Activity was verified on one iPhone on Nov 1. Pit Wall on Android was verified on an emulator in a Nov 1 TEST round (dry-chat, round `37fc0072`): the heads-up notification, the head-start countdown, Codex's steps and the fix. It has not been tested on a physical Android phone.
-- Game Inspector is available to Codex; no committed receipt records an Inspector call.
+- In viewer round ac8b50c7, Codex called `first_divergence`, `diff_telemetry` and `replay_frames` on the Game Inspector before its first edit ([calls](docs/inspector/ac8b50c7-1012-4f20-af7e-10dd718b9f1c.inspector-calls.json), extracted from the runtime log). The benchmark does not measure whether the Inspector speeds up fixes.
 
 Requires Node 22 and pnpm. Run `pnpm ci:local` to mirror the workflow: frozen
 install, typecheck, lint, test and both Pit Wall bundles. `pnpm check` repeats
@@ -106,9 +106,10 @@ TypeScript or JavaScript game modules through the same six mutation gates.
 
 The [Game Inspector MCP](packages/inspector-mcp/README.md) gives runtime rounds
 read-only player and enemy telemetry from the original visible replays. Its SDK
-wiring is tested with a fake CLI and the real validation gate. The retained
-benchmark predates Inspector; a real Inspector round and timing comparison remain
-to be measured.
+wiring is tested with a fake CLI and the real validation gate. The
+[viewer-round call log](docs/inspector/ac8b50c7-1012-4f20-af7e-10dd718b9f1c.inspector-calls.json)
+records three completed calls. The retained benchmark predates Inspector and does
+not measure whether it speeds up fixes.
 
 `packages/sim` is a DOM-free 60 Hz platformer using Q8 integers (256 units per
 pixel). State and the level live outside paired mutation regions. The replay
