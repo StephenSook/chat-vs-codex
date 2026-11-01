@@ -432,7 +432,10 @@ test("round proof fragments open the committed receipt and reject unpublished id
     location.hash = `r=${id}`;
   }, boss);
   await expect(featured).toHaveAttribute("data-round-id", boss);
-  await expect(comparison).toHaveAttribute("data-state", "match");
+  await expect(comparison).toHaveAttribute("data-state", "unavailable");
+  await expect(featured).toContainText(
+    "The original and repaired installations are not bound by this receipt.",
+  );
   await expect(featured).toContainText("TWITCH BOSS ROUND / STREAMER START");
   await page.evaluate(() => {
     location.hash = "r=00000000-0000-4000-8000-000000000000";
@@ -469,7 +472,7 @@ test("the latest proof fragment wins when navigation changes during verification
     await blocked;
     await route.continue();
   });
-  const boss = "d4c4ec5f-b7e8-420e-bb16-91df94677f09";
+  const viewer = "ac8b50c7-1012-4f20-af7e-10dd718b9f1c";
   try {
     await page.evaluate((id) => {
       location.hash = `r=${id}`;
@@ -477,12 +480,12 @@ test("the latest proof fragment wins when navigation changes during verification
     await expect.poll(() => entered).toBe(true);
     await page.evaluate((id) => {
       location.hash = `r=${id}`;
-    }, boss);
+    }, viewer);
   } finally {
     release();
   }
-  await expect(featured).toHaveAttribute("data-round-id", boss);
+  await expect(featured).toHaveAttribute("data-round-id", viewer);
   await expect(comparison).toHaveAttribute("data-state", "match");
-  await expect(page.getByLabel("Round to re-simulate")).toHaveValue(boss);
+  await expect(page.getByLabel("Round to re-simulate")).toHaveValue(viewer);
   await page.unroute(artifact);
 });

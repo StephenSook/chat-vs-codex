@@ -387,7 +387,7 @@ describe("boss race over verified artifacts", () => {
       await controller.flush();
       expect(clip).toHaveBeenCalledOnce();
       expect(lines.filter((line) => line.startsWith("Codex fixed"))).toEqual([
-        "Codex fixed gravity-sign. GREEN 0:00.01",
+        `Codex fixed gravity-sign. GREEN 0:00.01 https://chat-vs-codex-judge.vercel.app/#r=${engine.snapshot().roundId}`,
       ]);
       expect(lines.some((line) => line.includes("+1 test"))).toBe(false);
       expect(engine.snapshot().autopsy).toBeNull();
