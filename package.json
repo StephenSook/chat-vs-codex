@@ -50,6 +50,7 @@
     "esbuild": "0.28.2",
     "tsx": "4.23.15",
     "typescript": "5.9.3",
-    "vitest": "4.0.18"
+    "vitest": "4.0.18",
+    "yoga-layout": "3.2.1"
   }
 }

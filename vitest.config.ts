@@ -1,6 +1,17 @@
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  resolve: {
+    alias: [
+      {
+        find: /^react-native$/,
+        replacement: fileURLToPath(
+          new URL("./apps/pit-wall/test/native-hosts.ts", import.meta.url),
+        ),
+      },
+    ],
+  },
   test: {
     include: [
       "packages/**/*.test.ts",

@@ -1,29 +1,20 @@
 import type { Action, BugFamily } from "@chat-vs-codex/pit-wall/protocol";
-import {
-  BUG_FAMILIES,
-  parseServerFrame,
-} from "@chat-vs-codex/pit-wall/protocol";
+import { parseServerFrame } from "@chat-vs-codex/pit-wall/protocol";
 import * as Haptics from "expo-haptics";
 import { useKeepAwake } from "expo-keep-awake";
 import { requireNativeModule } from "expo-modules-core";
 import * as Notifications from "expo-notifications";
 import * as SecureStore from "expo-secure-store";
 import { useEffect, useReducer, useRef, useState } from "react";
+import { AppState, Platform } from "react-native";
 import {
-  AppState,
-  Platform,
-  Pressable,
-  ScrollView,
-  StatusBar,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+  SafeAreaProvider,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { PitWallScreen } from "./src/screen";
 import {
   canHint,
   canVeto,
-  countdownSeconds,
   gatewayUrl,
   initialPhoneState,
   nativePayload,
@@ -31,31 +22,6 @@ import {
 } from "./src/state";
 
 const KEY = "pit-wall-pairing";
-const clay = {
-  paper: "#F5EADC",
-  ink: "#322C28",
-  orange: "#C34C24",
-  blue: "#2859B7",
-  card: "#FFF8EF",
-};
-const labels: Record<BugFamily, string> = {
-  "gravity-sign": "Gravity",
-  "collision-off-by-one": "Collision",
-  "swapped-controls": "Controls",
-  "coyote-never-expires": "Coyote time",
-  "jump-buffer": "Jump buffer",
-  "enemy-ledge-turn": "Enemy ledge",
-};
-const phaseLabels = {
-  idle: "Ready for chat",
-  preparing: "Preparing",
-  "head-start": "Chat's head start",
-  repairing: "CODEX at work",
-  validating: "Replay tests",
-  swapping: "Applying fix",
-  resolved: "Round complete",
-  "rolled-back": "Rolled back",
-};
 type Credentials = { url: string; token: string | null; code: string | null };
 type LiveModule = { update: (json: string) => Promise<void> };
 // Expo's DOM types omit RN's verified third constructor argument (native headers).
@@ -88,46 +54,16 @@ Notifications.setNotificationHandler({
   }),
 });
 
-function Button({
-  title,
-  onPress,
-  disabled = false,
-  orange = false,
-}: {
-  title: string;
-  onPress: () => void;
-  disabled?: boolean;
-  orange?: boolean;
-}) {
+export default function App() {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      style={{
-        backgroundColor: orange ? clay.orange : clay.blue,
-        opacity: disabled ? 0.4 : 1,
-        padding: 18,
-        borderRadius: 18,
-        minHeight: 56,
-      }}
-    >
-      <Text
-        style={{
-          color: "white",
-          fontSize: 19,
-          fontWeight: "800",
-          textAlign: "center",
-        }}
-      >
-        {title}
-      </Text>
-    </Pressable>
+    <SafeAreaProvider>
+      <ConnectedPitWall />
+    </SafeAreaProvider>
   );
 }
 
-export default function App() {
+function ConnectedPitWall() {
+  const insets = useSafeAreaInsets();
   useKeepAwake();
   const [state, dispatch] = useReducer(phoneReducer, initialPhoneState);
   const latest = useRef(state);
@@ -430,240 +366,22 @@ export default function App() {
       }),
     );
   };
-  const round = state.round;
   return (
-    <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: clay.paper }}>
-        <StatusBar barStyle="dark-content" />
-        <ScrollView
-          contentInsetAdjustmentBehavior="automatic"
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{
-            padding: 24,
-            paddingTop: 24,
-            paddingBottom: 48,
-            gap: 22,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ color: clay.ink, fontSize: 28, fontWeight: "900" }}>
-              PIT WALL
-            </Text>
-            <Text
-              accessibilityLiveRegion="polite"
-              style={{
-                color: state.connection === "live" ? clay.blue : clay.ink,
-                fontWeight: "700",
-              }}
-            >
-              {state.connection.toUpperCase()}
-            </Text>
-          </View>
-          {state.connection !== "live" && (
-            <View style={{ gap: 14 }}>
-              <Text style={{ color: clay.ink, fontSize: 18 }}>
-                Trusted Wi-Fi only. Pairing travels unencrypted on your LAN.
-              </Text>
-              <TextInput
-                accessibilityLabel="Mac LAN IPv4 address"
-                placeholder="Mac IPv4: 192.168.1.20"
-                value={host}
-                onChangeText={setHost}
-                keyboardType="decimal-pad"
-                autoCapitalize="none"
-                autoCorrect={false}
-                style={{
-                  backgroundColor: clay.card,
-                  padding: 18,
-                  borderRadius: 16,
-                  fontSize: 21,
-                  color: clay.ink,
-                }}
-              />
-              <TextInput
-                accessibilityLabel="Six-digit terminal pairing code"
-                placeholder="Terminal code"
-                value={code}
-                onChangeText={setCode}
-                keyboardType="number-pad"
-                maxLength={6}
-                secureTextEntry
-                style={{
-                  backgroundColor: clay.card,
-                  padding: 18,
-                  borderRadius: 16,
-                  fontSize: 24,
-                  color: clay.ink,
-                }}
-              />
-              <Button
-                title={loaded ? "Pair phone" : "Loading..."}
-                disabled={!loaded}
-                onPress={pair}
-              />
-            </View>
-          )}
-          {round && (
-            <>
-              <View style={{ flexDirection: "row", gap: 12 }}>
-                {[
-                  { name: "CHAT", score: round.chat, color: clay.orange },
-                  { name: "CODEX", score: round.codex, color: clay.blue },
-                ].map((team) => (
-                  <View
-                    key={team.name}
-                    style={{
-                      flex: 1,
-                      backgroundColor: team.color,
-                      borderRadius: 24,
-                      padding: 22,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: "white",
-                        fontSize: 19,
-                        fontWeight: "900",
-                      }}
-                    >
-                      {team.name}
-                    </Text>
-                    <Text
-                      style={{
-                        color: "white",
-                        fontSize: 64,
-                        fontWeight: "900",
-                      }}
-                    >
-                      {team.score}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-              <Text
-                style={{ color: clay.ink, fontSize: 19, fontWeight: "700" }}
-              >
-                ROUND {round.number} / DEATHS {round.deaths}
-              </Text>
-              <View
-                style={{
-                  backgroundColor: clay.card,
-                  borderRadius: 24,
-                  padding: 24,
-                  gap: 12,
-                }}
-              >
-                <Text
-                  style={{ fontSize: 19, fontWeight: "700", color: clay.ink }}
-                >
-                  {state.connection === "live"
-                    ? phaseLabels[round.phase]
-                    : "Last received"}
-                </Text>
-                {round.phase === "head-start" &&
-                  state.connection === "live" && (
-                    <Text
-                      style={{
-                        fontSize: 76,
-                        color: clay.orange,
-                        fontWeight: "900",
-                        fontVariant: ["tabular-nums"],
-                      }}
-                    >
-                      {countdownSeconds(state, now)}s
-                    </Text>
-                  )}
-                <Text
-                  style={{
-                    color: round.bug === "active" ? clay.orange : clay.blue,
-                    fontWeight: "900",
-                    fontSize: 30,
-                  }}
-                >
-                  {round.bug === "active"
-                    ? "BUG IN"
-                    : round.bug === "fixed"
-                      ? "FIX IN"
-                      : "Waiting"}
-                </Text>
-                {round.bugName && (
-                  <Text style={{ color: clay.ink, fontSize: 19 }}>
-                    {round.bugName}
-                  </Text>
-                )}
-                {round.step && (
-                  <Text
-                    style={{
-                      color: clay.blue,
-                      fontSize: 24,
-                      fontWeight: "700",
-                    }}
-                  >
-                    {round.step}
-                  </Text>
-                )}
-                {round.headline && (
-                  <Text
-                    accessibilityLiveRegion="polite"
-                    style={{ color: clay.ink, fontSize: 28, fontWeight: "900" }}
-                  >
-                    {round.headline}
-                  </Text>
-                )}
-              </View>
-              <Button
-                title="Veto round"
-                orange
-                disabled={!canVeto(state)}
-                onPress={() => sendAction("veto")}
-              />
-              <View style={{ gap: 10 }}>
-                <Text
-                  style={{ color: clay.ink, fontSize: 19, fontWeight: "800" }}
-                >
-                  Hint to CODEX
-                </Text>
-                <View
-                  style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}
-                >
-                  {BUG_FAMILIES.map((family) => (
-                    <View key={family} style={{ width: "48%" }}>
-                      <Button
-                        title={labels[family]}
-                        disabled={!canHint(state)}
-                        onPress={() => sendAction("hint", family)}
-                      />
-                    </View>
-                  ))}
-                </View>
-              </View>
-            </>
-          )}
-          {state.message && (
-            <Text
-              accessibilityLiveRegion="polite"
-              style={{ color: clay.ink, fontSize: 18 }}
-            >
-              {state.message}
-            </Text>
-          )}
-          {notificationWarning && (
-            <Text style={{ color: clay.orange }}>{notificationWarning}</Text>
-          )}
-          {nativeWarning && (
-            <Text style={{ color: clay.orange }}>{nativeWarning}</Text>
-          )}
-          {credentials && (
-            <Button title="Forget pairing" onPress={disconnect} />
-          )}
-        </ScrollView>
-      </SafeAreaView>
-    </SafeAreaProvider>
+    <PitWallScreen
+      state={state}
+      now={now}
+      insets={insets}
+      host={host}
+      code={code}
+      loaded={loaded}
+      credentialsPresent={credentials !== null}
+      notificationWarning={notificationWarning}
+      nativeWarning={nativeWarning}
+      pair={pair}
+      disconnect={disconnect}
+      setHost={setHost}
+      setCode={setCode}
+      sendAction={sendAction}
+    />
   );
 }
