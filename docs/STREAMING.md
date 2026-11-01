@@ -114,8 +114,10 @@ The terminal prints the sanitized receipt under `docs/rounds/`; the credited
 regression goes under `chat-found/`. Public records keep hashed viewer labels.
 The live overlay and chat use display names.
 
-Chat replies are sent while offline. Markers, clips and the autopsy pin each check
-Get Streams and are skipped while offline. If Twitch refuses a live action, the
+Chat replies are sent while offline. A bug-in marker is attempted at injection;
+fix-landed markers, clips and autopsy pins are attempted after verified fixes.
+These actions check Get Streams and are skipped while offline.
+If Twitch refuses a live action, the
 reason is retained in the private `twitch.jsonl`; it does not fail the round.
 A clip acceptance is a request receipt, not proof the clip was published.
 `pnpm round:live --dry-chat` listens and runs real repairs but only logs outgoing

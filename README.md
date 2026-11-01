@@ -90,7 +90,8 @@ runs the same checks serially without changing their assertions or time budgets.
 
 The [static judge site](apps/judge/README.md) recomputes benchmark numbers in the
 browser, presents committed round receipts and re-simulates recorded validation
-tracks when the matching build is available. Run `pnpm judge:build`; the static
+tracks only for receipts carrying replay data and a matching build.
+Run `pnpm judge:build`; the static
 output is `apps/judge/dist/`. Run `pnpm judge:smoke` for its Playwright preview check.
 
 [Clay Breakout](games/breakout/README.md) is an original second game with seeded
@@ -144,8 +145,8 @@ pnpm bench:canary && pnpm bench --run
 
 The isolation canary is one separate runtime check, excluded from the 212 repair
 trials. Its dedicated fixture puts a test file above the workspace and verifies
-parent and host-skill reads, test/fixture writes, and network access are denied,
-with positive controls. A trusted sandbox execution corroborates the SDK thread's
+that parent-file and host-skill read probes, test/fixture writes and network
+access are denied, with positive controls. A trusted sandbox execution corroborates the SDK thread's
 output. The canary also runs the real clean-source trial validator under the
 hotfix profile and checks that temporary files stay inside the workspace. The
 full bench requires its fresh local receipt, including this validation check.
@@ -153,6 +154,7 @@ Timing trial parents contain only `game`; dependencies are copied inside it, no 
 held-out inputs are present, and logs stay outside. Each game has one Git commit
 containing the already-mutated source. Tests and fixtures are read-only under
 the exact profile in `packages/bench/hotfix.toml`.
+The profile also permits `:minimal` system reads and reads under `/opt/homebrew`.
 
 The pinned SDK uses `runStreamed`, a final output schema, raw permission overrides
 and an exec launcher for flags the SDK does not expose. Runtime processes receive

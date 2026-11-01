@@ -107,6 +107,31 @@ test("committed evidence recomputes in a static preview at desktop and phone wid
   await expect(page.locator("#numbers .badge")).toHaveCount(0);
   await expect(page.locator("#rounds .race-rule")).toHaveText(RACE_RULE);
   await expect(page.locator("#rounds .race-rule")).toBeVisible();
+  await expect(
+    page
+      .locator("#replay")
+      .getByText(
+        "Re-simulate receipts with recorded replay data and a matching build.",
+        { exact: true },
+      ),
+  ).toBeVisible();
+  await expect(
+    page
+      .locator("#sandbox")
+      .getByText("Workspace writable. Tests readable, never writable.", {
+        exact: true,
+      }),
+  ).toBeVisible();
+  const sandboxDetails = page.locator("#sandbox details");
+  await expect(sandboxDetails).not.toHaveAttribute("open", "");
+  await sandboxDetails.locator(":scope > summary").click();
+  await expect(sandboxDetails).toContainText(
+    "The profile allows :minimal system reads and /opt/homebrew reads.",
+  );
+  await expect(sandboxDetails).toContainText(
+    "Parent-file and host-skill probes were denied; network access is disabled.",
+  );
+  await sandboxDetails.locator(":scope > summary").click();
   for (const { receipt } of evidence.rounds) {
     const card = page.locator(`[data-round-id="${receipt.roundId}"]`);
     const race = card.getByTestId("race-summary");
@@ -346,7 +371,7 @@ test("committed evidence recomputes in a static preview at desktop and phone wid
     await expect.poll(() => entered).toBe(true);
     await page
       .locator('[data-round-id="c37736fc-52d2-4ca0-9eee-dae78a5eff7b"]')
-      .getByRole("button", { name: "Recompute this round" })
+      .getByRole("button", { name: "Inspect replay proof" })
       .click();
     await expect(page.getByLabel("Round to re-simulate")).toHaveValue(
       pendingRound.receipt.roundId,

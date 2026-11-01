@@ -402,7 +402,7 @@ async function start(): Promise<void> {
   replay.append(
     element(
       "p",
-      "Re-run the validation inputs. Match the receipt's frame digest.",
+      "Re-simulate receipts with recorded replay data and a matching build.",
     ),
   );
   const select = element("select");
@@ -755,7 +755,7 @@ async function start(): Promise<void> {
           round.regression.path,
         ),
       );
-    const replayRound = element("button", "Recompute this round");
+    const replayRound = element("button", "Inspect replay proof");
     replayRound.type = "button";
     replayRound.addEventListener("click", () => {
       if (run.disabled) return;
@@ -822,10 +822,7 @@ async function start(): Promise<void> {
     "The repair stays in its lane.",
   );
   sandbox.append(
-    element(
-      "p",
-      "Workspace writes work. Parent files, host skills, tests and network stay protected.",
-    ),
+    element("p", "Workspace writable. Tests readable, never writable."),
   );
   const canary = element("div", undefined, "canary-controls");
   for (const [control, outcome] of Object.entries(evidence.canary.controls))
@@ -835,6 +832,10 @@ async function start(): Promise<void> {
   const canaryDetail = element("div");
   canaryDetail.append(
     canary,
+    element(
+      "p",
+      "The profile allows :minimal system reads and /opt/homebrew reads. Tests and fixtures are readable, not writable. Parent-file and host-skill probes were denied; network access is disabled.",
+    ),
     element(
       "p",
       "A completed SDK command and the kernel probe reported the same output; clean validation also passed.",
