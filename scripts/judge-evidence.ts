@@ -20,6 +20,7 @@ import {
   summarizeSecondGamePool,
   summarizeSecondGameTrials,
 } from "../apps/judge/src/second-game.js";
+import { judgeStatus } from "../apps/judge/src/status.js";
 import type { RegressionRecord } from "../packages/bench/src/regressions.js";
 import {
   parseResultsJsonl,
@@ -418,6 +419,7 @@ export async function committedComparison(
 
 export async function buildJudgeEvidence(
   source = committedSource(),
+  builtAt = new Date().toISOString(),
 ): Promise<{ manifest: JudgeEvidence; files: Map<string, string> }> {
   const files = new Map<string, string>();
   const emit = (path: string, bytes: string): string => {
@@ -439,7 +441,7 @@ export async function buildJudgeEvidence(
     .sort((a, b) => b.count - a.count || a.batchId.localeCompare(b.batchId));
   const batchId = ranked[0]?.batchId;
   if (!batchId) throw new Error("No committed benchmark results");
-  summarizeResults(rows, { batchId });
+  const benchmarkSummary = summarizeResults(rows, { batchId });
   const regressions = new Map(
     source
       .list("chat-found")
@@ -572,5 +574,20 @@ export async function buildJudgeEvidence(
     secondGame: committedSecondGame(source, emit),
   };
   emit("index.json", `${JSON.stringify(manifest)}\n`);
+  // Root asset, rather than evidence/status.json: Vite preview and static hosts
+  // expose the same credential-free receipt at /status.json.
+  files.set(
+    "status.json",
+    `${JSON.stringify(
+      judgeStatus(
+        source.commit,
+        builtAt,
+        rounds.map((row) => row.receipt),
+        benchmarkSummary,
+      ),
+      null,
+      2,
+    )}\n`,
+  );
   return { manifest, files };
 }

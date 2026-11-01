@@ -64,3 +64,7 @@ The scheduled check and default manual target still check the hosted deployment.
 Result chat links use `/#r=<round-id>`. A committed receipt opens directly;
 an unpublished or invalid ID shows "Round not published yet." Hash navigation
 waits for in-flight verification, then opens the latest requested receipt.
+
+`/status.json` is emitted at build time from the same pinned commit: build SHA
+and time, viewer / TEST / boss round counts, and the scored benchmark summary.
+It is a static JSON asset with no account, server or credentials.

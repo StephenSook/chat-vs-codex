@@ -9,6 +9,7 @@ import { RULE } from "../src/framing.js";
 import { benchmarkRaceLine, featuredRound } from "../src/hero.js";
 import { RACE_RULE, raceSummary } from "../src/race-summary.js";
 import { summarizeSecondGameTrials } from "../src/second-game.js";
+import { type JudgeStatus, judgeStatus } from "../src/status.js";
 
 test("committed evidence recomputes in a static preview at desktop and phone widths", async ({
   page,
@@ -120,6 +121,23 @@ test("committed evidence recomputes in a static preview at desktop and phone wid
         round.receipt,
     ),
   );
+  const statusResponse = await page.request.get("/status.json");
+  expect(statusResponse.status()).toBe(200);
+  expect(statusResponse.headers()["content-type"]).toContain(
+    "application/json",
+  );
+  const status = (await statusResponse.json()) as JudgeStatus;
+  expect(status).toEqual(
+    judgeStatus(
+      evidence.commit,
+      status.builtAt,
+      evidence.rounds.map((round) => round.receipt),
+      benchmark,
+    ),
+  );
+  await expect(
+    page.getByRole("link", { name: "Build status" }),
+  ).toHaveAttribute("href", "status.json");
   const scoreboard = page.getByTestId("season-scoreboard");
   if (season.viewers.rounds > 0) {
     await expect(scoreboard).toContainText(

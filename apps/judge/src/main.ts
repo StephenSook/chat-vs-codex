@@ -856,6 +856,7 @@ async function start(): Promise<void> {
       `Static evidence / ${evidence.commit.slice(0, 8)} / no account or key required`,
     ),
     link("Source on GitHub", REPO),
+    link("Build status", "status.json"),
   );
   app.append(footer);
   window.addEventListener("hashchange", followRoundHash);
