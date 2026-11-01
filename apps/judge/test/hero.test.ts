@@ -59,7 +59,7 @@ describe("first-paint race evidence", () => {
       bootstrapSamples: 100,
     });
     expect(benchmarkRaceLine(summary)).toBe(
-      "Codex median 14.5 s · chat's head start 15 s",
+      "Terra median 14.5 s · chat's head start 15 s",
     );
     const model = summary.models.find((row) => row.model === "gpt-6.1-terra");
     if (!model) throw new Error("Missing committed runtime model");
@@ -71,6 +71,6 @@ describe("first-paint race evidence", () => {
           { ...model, overall: { ...model.overall, medianGreenMs: 3200 } },
         ],
       }),
-    ).toBe("Codex median 3.2 s · chat's head start 7.5 s");
+    ).toBe("Terra median 3.2 s · chat's head start 7.5 s");
   });
 });

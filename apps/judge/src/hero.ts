@@ -25,5 +25,5 @@ export function benchmarkRaceLine(summary: BatchSummary): string {
   const median = summary.models.find(
     (model) => model.model === "gpt-6.1-terra" && model.effort === "low",
   )?.overall.medianGreenMs;
-  return `Codex median ${median == null ? "unavailable" : `${(median / 1000).toFixed(1)} s`} · chat's head start ${Number((summary.headStartMs / 1000).toFixed(1))} s`;
+  return `Terra median ${median == null ? "unavailable" : `${(median / 1000).toFixed(1)} s`} · chat's head start ${Number((summary.headStartMs / 1000).toFixed(1))} s`;
 }

@@ -101,6 +101,9 @@ test("committed evidence recomputes in a static preview at desktop and phone wid
   await expect(page.getByTestId("benchmark-race-line")).toHaveText(
     benchmarkRaceLine(benchmark),
   );
+  await expect(page.getByTestId("benchmark-race-line")).toContainText(
+    "Terra median ",
+  );
   await expect(page.locator("#numbers .badge")).toHaveCount(0);
   await expect(page.locator("#rounds .race-rule")).toHaveText(RACE_RULE);
   await expect(page.locator("#rounds .race-rule")).toBeVisible();
