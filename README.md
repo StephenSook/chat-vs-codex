@@ -38,7 +38,12 @@ a follow camera, keyboard play and a typed event contract. The
 [Twitch foundation](packages/twitch/README.md) provides device authorization,
 inbound EventSub routing and offline fixture replay. The [round loop](packages/round/README.md)
 connects fixtures or `pnpm round:live` to runtime Codex, enum-only hint voting,
-replay validation, state-preserving hot swap and rollback. A [real viewer won the race](docs/rounds/ac8b50c7-1012-4f20-af7e-10dd718b9f1c.json), and a
+replay validation, state-preserving hot swap and rollback.
+During the 15 s head start, guesses count as votes, the top vote reaches Codex as a
+one-word hint and the streamer's Pit Wall hint overrides it; benchmark batch
+`0fb7de68` ran with no hints ([engine.ts:210](packages/round/src/engine.ts#L210),
+[runtime-execution.ts:209](packages/round/src/runtime-execution.ts#L209)).
+A [real viewer won the race](docs/rounds/ac8b50c7-1012-4f20-af7e-10dd718b9f1c.json), and a
 [live boss round](docs/rounds/d4c4ec5f-b7e8-420e-bb16-91df94677f09.json) verified Terra against Sol.
 [Playtest sessions](docs/PLAYTESTS.md) keep viewer, boss and TEST evidence separate.
 The [streaming guide](docs/STREAMING.md) covers the offline channel test, OBS scene
