@@ -13,6 +13,11 @@ import type {
 } from "../../twitch/src/rewards.js";
 import { eventStamp, monotonicMs } from "./clocks.js";
 import type { RoundAutopsy, RoundEvent } from "./contracts.js";
+import {
+  type FixedRoundMessage,
+  failedRoundMessage,
+  fixedRoundMessage,
+} from "./proof-link.js";
 
 /** Covers early echoes that arrive before Send Chat Message returns its ID. */
 export const BOT_REPLY_PREFIXES = [
@@ -524,12 +529,7 @@ export class LiveRoundController {
       card.status === "verified" && card.durations.timeToGreenMs !== null;
     if (!green) {
       this.schedule(`${card.roundId}:failed`, async () => {
-        await this.chat(
-          card.reason === "rollback-failed" ||
-            card.reason === "rollback-timeout"
-            ? "Codex failed. Restore needs attention."
-            : "Codex failed. The game was rolled back.",
-        );
+        await this.chat(failedRoundMessage(card));
       });
       return;
     }
@@ -540,15 +540,8 @@ export class LiveRoundController {
       regression: card.regressionTest !== null,
     });
   }
-  private announceFix(card: {
-    roundId: string;
-    family: RoundAutopsy["family"];
-    timeToGreenMs: number;
-    regression: boolean;
-  }): void {
-    const total = Math.round(card.timeToGreenMs / 10);
-    const split = `${Math.floor(total / 6000)}:${String(Math.floor(total / 100) % 60).padStart(2, "0")}.${String(total % 100).padStart(2, "0")}`;
-    const line = `Codex fixed ${card.family}. GREEN ${split}${card.regression ? " | +1 test" : ""}`;
+  private announceFix(card: FixedRoundMessage): void {
+    const line = fixedRoundMessage(card);
     this.schedule(`${card.roundId}:clip`, () =>
       this.liveOnly("fix-landed clip", async () => {
         const title = `Codex fixed ${card.family} in ${(card.timeToGreenMs / 1000).toFixed(1)} s`;

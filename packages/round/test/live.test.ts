@@ -355,7 +355,7 @@ describe("live Twitch fixture entry point", () => {
     await controller.flush();
     expect(helix.chat).toHaveBeenCalledTimes(2);
     expect(helix.chat).toHaveBeenLastCalledWith(
-      "Codex fixed gravity-sign. GREEN 0:17.67 | +1 test",
+      "Codex fixed gravity-sign. GREEN 0:17.67 | +1 test https://chat-vs-codex-judge.vercel.app/#r=round-1",
     );
     expect(helix.marker).not.toHaveBeenCalled();
     expect(helix.clip).not.toHaveBeenCalled();
@@ -411,7 +411,7 @@ describe("live Twitch fixture entry point", () => {
     controller.observe(autopsy(false));
     await controller.close();
     expect(helix.chat).toHaveBeenCalledWith(
-      "Codex failed. The game was rolled back.",
+      "Codex failed. The game was rolled back. https://chat-vs-codex-judge.vercel.app/#r=round-1",
     );
     expect(helix.clip).not.toHaveBeenCalled();
     expect(helix.pin).not.toHaveBeenCalled();
@@ -428,7 +428,7 @@ describe("live Twitch fixture entry point", () => {
       controller.observe(event);
       await controller.flush();
       expect(helix.chat).toHaveBeenCalledExactlyOnceWith(
-        "Codex failed. Restore needs attention.",
+        "Codex failed. Restore needs attention. https://chat-vs-codex-judge.vercel.app/#r=round-1",
       );
       expect(helix.clip).not.toHaveBeenCalled();
     },
@@ -573,7 +573,7 @@ describe("fixture controller and real round engine integration", () => {
           "Something broke. Chat has 15 s.",
         );
         expect(helix.chat).toHaveBeenLastCalledWith(
-          "Codex fixed gravity-sign. GREEN 0:00.30",
+          `Codex fixed gravity-sign. GREEN 0:00.30 https://chat-vs-codex-judge.vercel.app/#r=${result.roundId}`,
         );
         expect(
           vi

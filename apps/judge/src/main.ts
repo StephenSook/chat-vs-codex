@@ -26,6 +26,7 @@ import "./style.css";
 import { RULE } from "./framing.js";
 import { benchmarkRaceLine, featuredRound } from "./hero.js";
 import { RACE_RULE, raceSummary } from "./race-summary.js";
+import { parseRoundHash } from "./round-route.js";
 import { summarizeSecondGameTrials } from "./second-game.js";
 
 const REPO = "https://github.com/StephenSook/chat-vs-codex";
@@ -409,7 +410,7 @@ async function start(): Promise<void> {
   for (const round of evidence.rounds) {
     const option = element(
       "option",
-      `${roundLabel(round.receipt)} / ${round.receipt.roundId.slice(0, 8)}`,
+      `${roundLabel(round.receipt, round.note)} / ${round.receipt.roundId.slice(0, 8)}`,
     );
     option.value = round.receipt.roundId;
     select.append(option);
@@ -445,6 +446,7 @@ async function start(): Promise<void> {
   featured.append(comparisonView.element);
   controls.append(select, run);
   let autoplayNext = false;
+  let routeQueued = false;
   function openReplay(roundId: string, autoplay = false): boolean {
     if (
       run.disabled ||
@@ -467,6 +469,31 @@ async function start(): Promise<void> {
   );
   let game: GameModule | null = null;
   let frames: ValidatedReplayFrame[] = [];
+  function followRoundHash(): void {
+    routeQueued = false;
+    if (!location.hash.startsWith("#r=")) return;
+    if (run.disabled) {
+      routeQueued = true;
+      return;
+    }
+    const id = parseRoundHash(
+      location.hash,
+      evidence.rounds.map((row) => row.receipt.roundId),
+    );
+    if (id) {
+      openReplay(id, true);
+      featured.scrollIntoView({ block: "start" });
+      return;
+    }
+    select.dispatchEvent(new Event("change"));
+    const message = "Round not published yet.";
+    comparisonView.reset(message);
+    comparisonView.element.dataset.state = "unavailable";
+    delete featured.dataset.roundId;
+    featuredLabel.textContent = message;
+    result.textContent = message;
+    result.dataset.state = "unavailable";
+  }
   const draw = () => {
     if (!game || !frames.length) return;
     const context = canvas.getContext("2d");
@@ -530,9 +557,10 @@ async function start(): Promise<void> {
       (row) => row.receipt.roundId === select.value,
     );
     if (!round) return;
+    history.replaceState(null, "", `#r=${round.receipt.roundId}`);
     const autoplay = autoplayNext;
     autoplayNext = false;
-    featuredLabel.textContent = `${roundLabel(round.receipt)} / ${round.receipt.roundId.slice(0, 8)}`;
+    featuredLabel.textContent = `${roundLabel(round.receipt, round.note)} / ${round.receipt.roundId.slice(0, 8)}`;
     featured.dataset.roundId = round.receipt.roundId;
     run.disabled = true;
     select.disabled = true;
@@ -633,6 +661,7 @@ async function start(): Promise<void> {
     } finally {
       run.disabled = false;
       select.disabled = false;
+      if (routeQueued) followRoundHash();
     }
   });
 
@@ -729,7 +758,10 @@ async function start(): Promise<void> {
     const replayRound = element("button", "Recompute this round");
     replayRound.type = "button";
     replayRound.addEventListener("click", () => {
-      if (openReplay(receipt.roundId)) location.hash = "watch";
+      if (run.disabled) return;
+      const hash = `#r=${receipt.roundId}`;
+      if (location.hash === hash) followRoundHash();
+      else location.hash = hash;
     });
     card.append(
       details(`Autopsy / ${receipt.roundId.slice(0, 8)}`, detail),
@@ -826,7 +858,9 @@ async function start(): Promise<void> {
     link("Source on GitHub", REPO),
   );
   app.append(footer);
-  if (featuredId) openReplay(featuredId, true);
+  window.addEventListener("hashchange", followRoundHash);
+  if (location.hash.startsWith("#r=")) followRoundHash();
+  else if (featuredId) openReplay(featuredId, true);
   document.documentElement.dataset.ready = "true";
 }
 

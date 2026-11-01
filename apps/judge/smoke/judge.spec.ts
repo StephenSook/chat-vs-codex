@@ -416,3 +416,73 @@ test("phone hero has one VS, one scrolling nav row and readable labels", async (
     fullPage: false,
   });
 });
+
+test("round proof fragments open the committed receipt and reject unpublished ids", async ({
+  page,
+}) => {
+  const first = "8a34be05-c8b6-45b1-b8ee-a04735d68cc4";
+  const boss = "d4c4ec5f-b7e8-420e-bb16-91df94677f09";
+  await page.goto(`/#r=${first}`);
+  const featured = page.getByTestId("featured-replay");
+  const comparison = featured.getByTestId("comparison-view");
+  await expect(featured).toHaveAttribute("data-round-id", first);
+  await expect(comparison).toHaveAttribute("data-state", "match");
+  await expect(featured).toContainText("TWITCH CHAT ROUND / TEST");
+  await page.evaluate((id) => {
+    location.hash = `r=${id}`;
+  }, boss);
+  await expect(featured).toHaveAttribute("data-round-id", boss);
+  await expect(comparison).toHaveAttribute("data-state", "match");
+  await expect(featured).toContainText("TWITCH BOSS ROUND / STREAMER START");
+  await page.evaluate(() => {
+    location.hash = "r=00000000-0000-4000-8000-000000000000";
+  });
+  await expect(comparison).toHaveAttribute("data-state", "unavailable");
+  await expect(featured).toContainText("Round not published yet.");
+  await expect(featured.getByTestId("broken-view")).toBeHidden();
+  await expect(featured).not.toHaveAttribute("data-round-id", boss);
+});
+
+test("the latest proof fragment wins when navigation changes during verification", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const featured = page.getByTestId("featured-replay");
+  const comparison = featured.getByTestId("comparison-view");
+  await expect(comparison).toHaveAttribute("data-state", "match");
+  const evidence = (await (
+    await page.request.get("/evidence/index.json")
+  ).json()) as JudgeEvidence;
+  const slow = evidence.rounds.find((row) =>
+    row.receipt.roundId.startsWith("c81bdc19"),
+  );
+  if (slow?.comparison?.status !== "available")
+    throw new Error("Missing exact fixture artifact");
+  let release!: () => void;
+  let entered = false;
+  const blocked = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const artifact = new URL(slow.comparison.brokenArtifactPath, page.url()).href;
+  await page.route(artifact, async (route) => {
+    entered = true;
+    await blocked;
+    await route.continue();
+  });
+  const boss = "d4c4ec5f-b7e8-420e-bb16-91df94677f09";
+  try {
+    await page.evaluate((id) => {
+      location.hash = `r=${id}`;
+    }, slow.receipt.roundId);
+    await expect.poll(() => entered).toBe(true);
+    await page.evaluate((id) => {
+      location.hash = `r=${id}`;
+    }, boss);
+  } finally {
+    release();
+  }
+  await expect(featured).toHaveAttribute("data-round-id", boss);
+  await expect(comparison).toHaveAttribute("data-state", "match");
+  await expect(page.getByLabel("Round to re-simulate")).toHaveValue(boss);
+  await page.unroute(artifact);
+});
